@@ -1,6 +1,6 @@
 export default {
-    name: 'Your Name',
-    role: 'Software Engineer',
-    bio: 'Building systems at the intersection of infrastructure, AI, and developer experience. Passionate about automation, scalable architecture, and making complex systems feel simple.',
-    location: 'Earth'
+    name: 'Kartikaye Chaturvedi',
+    role: 'Software & Systems Engineer',
+    bio: 'Building systems at the intersection of infrastructure, backend, and algorithms. Passionate about scalable architecture, problem solving, and building high-performance applications.',
+    location: 'India'
 }
