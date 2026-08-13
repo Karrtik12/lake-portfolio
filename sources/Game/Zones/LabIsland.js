@@ -577,12 +577,19 @@ export class LabIsland
         this.isFocused = true
         this.lastFocusTime = performance.now()
 
-        // Perfectly framed cinematic view matching Bruno Simon:
-        // Center of workstation is at (36, 3.4, -20)
-        // Camera positioned directly in front at (36, 3.4, -10.8) framing the board, rack, chalkboard, and table props!
-        const targetCamPos = new THREE.Vector3(36, 3.4, -10.8)
-        const targetLookAt = new THREE.Vector3(36, 3.4, -20)
-        this.game.view.setCinematic(targetCamPos, targetLookAt, 1.2)
+        // Calculate exact mathematical distance so billboard display goes 100% full screen
+        const camera = this.game.view.camera
+        const aspect = camera.aspect || (window.innerWidth / window.innerHeight)
+        const fovRad = THREE.MathUtils.degToRad(camera.fov || 45)
+
+        // Screen size: 7.2 width, 4.5 height
+        const distH = (4.5 * 0.5) / Math.tan(fovRad * 0.5)
+        const distW = (7.2 * 0.5) / (aspect * Math.tan(fovRad * 0.5))
+        const d = Math.max(distH, distW) * 1.02 // Perfectly fills viewport edge-to-edge
+
+        const targetLookAt = new THREE.Vector3(36, 3.6, -19.78)
+        const targetCamPos = new THREE.Vector3(36, 3.6, -19.78 + d)
+        this.game.view.setCinematic(targetCamPos, targetLookAt, 1.0)
 
         // Hide ground diamond marker during focus
         if(this.marker?.group)
