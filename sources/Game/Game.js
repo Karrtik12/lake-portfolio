@@ -4,6 +4,7 @@ import { Viewport } from './Viewport.js'
 import { Rendering } from './Rendering.js'
 import { View } from './View.js'
 import { Inputs } from './Inputs/Inputs.js'
+import { World } from './World/World.js'
 
 /**
  * Game — singleton that bootstraps and orchestrates all systems.
@@ -43,11 +44,11 @@ export class Game
         // Camera
         this.view = new View()
 
+        // World Environment
+        this.world = new World()
+
         // Boat state placeholder (will be set by Boat.js later)
         this.boat = null
-
-        // --- Temporary: simple scene to verify rendering works ---
-        this.setupTestScene()
 
         // Loading screen
         this.setupLoadingScreen()
@@ -59,46 +60,6 @@ export class Game
         this.showStartButton()
     }
 
-    /**
-     * Temporary test scene — a colored plane + sphere to confirm rendering.
-     * Will be replaced by World.js in Milestone 2.
-     */
-    setupTestScene()
-    {
-        // Water-like plane
-        const planeGeometry = new THREE.PlaneGeometry(100, 100)
-        const planeMaterial = new THREE.MeshStandardNodeMaterial({
-            color: 0x1a4a6e,
-            roughness: 0.3,
-            metalness: 0.1
-        })
-        const plane = new THREE.Mesh(planeGeometry, planeMaterial)
-        plane.rotation.x = -Math.PI * 0.5
-        plane.position.y = -0.1
-        this.scene.add(plane)
-
-        // Small marker sphere
-        const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32)
-        const sphereMaterial = new THREE.MeshStandardNodeMaterial({
-            color: 0x60a5fa,
-            roughness: 0.2,
-            metalness: 0.5
-        })
-        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-        sphere.position.y = 0.5
-        this.scene.add(sphere)
-
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xb0c4de, 0.6)
-        this.scene.add(ambientLight)
-
-        const directionalLight = new THREE.DirectionalLight(0xfff4e6, 1.5)
-        directionalLight.position.set(10, 20, 10)
-        this.scene.add(directionalLight)
-
-        // Sky color
-        this.scene.background = new THREE.Color(0x87ceeb)
-    }
 
     setupLoadingScreen()
     {
