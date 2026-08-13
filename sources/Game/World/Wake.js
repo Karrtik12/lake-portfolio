@@ -2,8 +2,8 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Wake — generates high-fidelity V-shaped wake trails expanding outward from the boat's port and starboard sides,
- * along with churning motor propeller foam.
+ * Wake — realistic V-shaped motorboat wake spray ribbons & churning propeller foam.
+ * Generates two distinct expanding white water spray wings (port & starboard) and central motor froth.
  */
 export class Wake
 {
@@ -11,26 +11,44 @@ export class Wake
     {
         this.game = Game.getInstance()
 
-        this.maxPairs = 50 // 50 left + 50 right wake waves + 50 center foam
-        this.totalParticles = this.maxPairs * 3
+        this.maxPairs = 60
+        this.totalParticles = this.maxPairs * 3 // Port wing, Starboard wing, Center churn
         this.particles = []
         this.currentIndex = 0
-        this.emitInterval = 0.04
+        this.emitInterval = 0.035
         this.emitTimer = 0
 
-        // Wake ribbon geometry
-        this.geometry = new THREE.PlaneGeometry(1.4, 0.9)
+        // Create soft circular foam sprite texture
+        const canvas = document.createElement('canvas')
+        canvas.width = 128
+        canvas.height = 128
+        const ctx = canvas.getContext('2d')
+
+        const radGrad = ctx.createRadialGradient(64, 64, 4, 64, 64, 60)
+        radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)')
+        radGrad.addColorStop(0.4, 'rgba(240, 249, 255, 0.75)')
+        radGrad.addColorStop(0.75, 'rgba(224, 242, 254, 0.35)')
+        radGrad.addColorStop(1, 'rgba(255, 255, 255, 0.0)')
+
+        ctx.fillStyle = radGrad
+        ctx.fillRect(0, 0, 128, 128)
+
+        const foamTex = new THREE.CanvasTexture(canvas)
+
+        // Instanced mesh for high performance
+        this.geometry = new THREE.PlaneGeometry(1.2, 1.2)
         this.geometry.rotateX(-Math.PI * 0.5)
 
         this.material = new THREE.MeshBasicNodeMaterial({
-            color: '#e0f2fe',
+            map: foamTex,
             transparent: true,
             opacity: 0.85,
             depthWrite: false
         })
 
         this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, this.totalParticles)
-        this.instancedMesh.position.y = 0.04 // Just above water surface
+        this.instancedMesh.position.y = 0.10 // Sits right at water level
+        this.instancedMesh.frustumCulled = false
         this.game.scene.add(this.instancedMesh)
 
         // Initialize particle pool
@@ -46,11 +64,10 @@ export class Wake
                 active: false,
                 position: new THREE.Vector3(),
                 velocity: new THREE.Vector3(),
-                scale: new THREE.Vector3(0.1, 1.0, 0.1),
-                maxScale: new THREE.Vector3(3.0, 1.0, 1.8),
-                rotation: 0,
+                scale: 0.1,
+                maxScale: 2.2,
                 life: 0,
-                maxLife: 2.2
+                maxLife: 2.0
             })
         }
         this.instancedMesh.instanceMatrix.needsUpdate = true
@@ -62,52 +79,50 @@ export class Wake
         })
     }
 
-    emitV(boat, speed)
+    emit(boat, speed)
     {
         const forwardDir = new THREE.Vector3(-Math.sin(boat.rotation), 0, -Math.cos(boat.rotation))
         const rightDir = new THREE.Vector3(forwardDir.z, 0, -forwardDir.x)
-        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-1.8))
+        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-1.4))
 
-        const speedNorm = Math.min(speed / 16.0, 1.0)
-        const vAngle = 0.55 // V-wake spread angle
+        const speedRatio = Math.min(speed / 16.0, 1.0)
+        const isBoost = this.game.inputs?.getAxes()?.boost
 
-        // 1. Port (Left) V-Wave
-        const portIndex = this.currentIndex * 3 + 0
-        const pPort = this.particles[portIndex]
+        // 1. Port (Left) V-Wing Spray
+        const portIdx = this.currentIndex * 3 + 0
+        const pPort = this.particles[portIdx]
         pPort.active = true
-        pPort.position.copy(sternPos).add(rightDir.clone().multiplyScalar(-0.8))
-        // Expand outward-left and back
-        pPort.velocity.copy(rightDir).multiplyScalar(-1.8 - speedNorm * 1.5).add(forwardDir.clone().multiplyScalar(-0.5))
-        pPort.scale.set(0.6, 1.0, 0.4)
-        pPort.maxScale.set(2.4 + speedNorm * 2.8, 1.0, 1.2 + speedNorm * 1.5)
-        pPort.rotation = boat.rotation - vAngle
+        pPort.position.copy(sternPos).add(rightDir.clone().multiplyScalar(-0.6))
+        pPort.position.y = 0.10
+        pPort.velocity.copy(rightDir).multiplyScalar(-2.2 - speedRatio * 1.8).add(forwardDir.clone().multiplyScalar(-0.4))
+        pPort.scale = 0.5 + speedRatio * 0.3
+        pPort.maxScale = 2.4 + speedRatio * (isBoost ? 3.5 : 2.0)
         pPort.life = 0
-        pPort.maxLife = 1.8 + speedNorm * 1.2
+        pPort.maxLife = 1.8 + speedRatio * 1.0
 
-        // 2. Starboard (Right) V-Wave
-        const starIndex = this.currentIndex * 3 + 1
-        const pStar = this.particles[starIndex]
+        // 2. Starboard (Right) V-Wing Spray
+        const starIdx = this.currentIndex * 3 + 1
+        const pStar = this.particles[starIdx]
         pStar.active = true
-        pStar.position.copy(sternPos).add(rightDir.clone().multiplyScalar(0.8))
-        // Expand outward-right and back
-        pStar.velocity.copy(rightDir).multiplyScalar(1.8 + speedNorm * 1.5).add(forwardDir.clone().multiplyScalar(-0.5))
-        pStar.scale.set(0.6, 1.0, 0.4)
-        pStar.maxScale.set(2.4 + speedNorm * 2.8, 1.0, 1.2 + speedNorm * 1.5)
-        pStar.rotation = boat.rotation + vAngle
+        pStar.position.copy(sternPos).add(rightDir.clone().multiplyScalar(0.6))
+        pStar.position.y = 0.10
+        pStar.velocity.copy(rightDir).multiplyScalar(2.2 + speedRatio * 1.8).add(forwardDir.clone().multiplyScalar(-0.4))
+        pStar.scale = 0.5 + speedRatio * 0.3
+        pStar.maxScale = 2.4 + speedRatio * (isBoost ? 3.5 : 2.0)
         pStar.life = 0
-        pStar.maxLife = 1.8 + speedNorm * 1.2
+        pStar.maxLife = 1.8 + speedRatio * 1.0
 
         // 3. Center Propeller Churn Foam
-        const centerIndex = this.currentIndex * 3 + 2
-        const pCenter = this.particles[centerIndex]
+        const centerIdx = this.currentIndex * 3 + 2
+        const pCenter = this.particles[centerIdx]
         pCenter.active = true
-        pCenter.position.copy(sternPos).add(forwardDir.clone().multiplyScalar(-0.4))
-        pCenter.velocity.copy(forwardDir).multiplyScalar(-0.8)
-        pCenter.scale.set(0.8, 1.0, 0.8)
-        pCenter.maxScale.set(1.6 + speedNorm * 1.5, 1.0, 2.2 + speedNorm * 2.0)
-        pCenter.rotation = boat.rotation
+        pCenter.position.copy(sternPos).add(forwardDir.clone().multiplyScalar(-0.3))
+        pCenter.position.y = 0.11
+        pCenter.velocity.copy(forwardDir).multiplyScalar(-0.8 - speedRatio * 1.0)
+        pCenter.scale = 0.7 + speedRatio * 0.4
+        pCenter.maxScale = 1.6 + speedRatio * (isBoost ? 2.5 : 1.4)
         pCenter.life = 0
-        pCenter.maxLife = 1.2 + speedNorm * 0.8
+        pCenter.maxLife = 1.2 + speedRatio * 0.6
 
         this.currentIndex = (this.currentIndex + 1) % this.maxPairs
     }
@@ -115,17 +130,16 @@ export class Wake
     update(delta)
     {
         const boat = this.game.boat
-        if(boat && Math.abs(boat.speed) > 0.6)
+        if(boat && Math.abs(boat.speed) > 0.5)
         {
             this.emitTimer += delta
             if(this.emitTimer >= this.emitInterval)
             {
                 this.emitTimer = 0
-                this.emitV(boat, Math.abs(boat.speed))
+                this.emit(boat, Math.abs(boat.speed))
             }
         }
 
-        // Animate all active wake particles
         const dummy = new THREE.Object3D()
         let needsUpdate = false
 
@@ -148,18 +162,13 @@ export class Wake
                 continue
             }
 
-            // Move particle outward along V-expansion
             p.position.addScaledVector(p.velocity, delta)
 
-            // Grow scale
-            const growth = progress
-            const currentScaleX = p.scale.x + (p.maxScale.x - p.scale.x) * growth
-            const currentScaleZ = p.scale.z + (p.maxScale.z - p.scale.z) * growth
+            // Grow outward then fade
+            const currentScale = p.scale + (p.maxScale - p.scale) * Math.sin(progress * Math.PI * 0.5)
 
             dummy.position.copy(p.position)
-            dummy.rotation.set(0, 0, 0)
-            dummy.rotateY(p.rotation)
-            dummy.scale.set(currentScaleX, 1.0, currentScaleZ)
+            dummy.scale.set(currentScale, 1.0, currentScale)
             dummy.updateMatrix()
 
             this.instancedMesh.setMatrixAt(i, dummy.matrix)

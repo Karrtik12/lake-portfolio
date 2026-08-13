@@ -10,7 +10,6 @@ import { Trees } from './Trees.js'
 import { Props } from './Props.js'
 import { BoatVisual } from './BoatVisual.js'
 import { Wake } from './Wake.js'
-import { WakeTrail } from './WakeTrail.js'
 import { BoostEffect } from './BoostEffect.js'
 
 /**
@@ -34,7 +33,6 @@ export class World
         this.trees = new Trees()
         this.props = new Props()
         this.wake = new Wake()
-        this.wakeTrail = new WakeTrail()
         this.boatVisual = new BoatVisual()
         this.boostEffect = new BoostEffect()
     }

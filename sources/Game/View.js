@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu'
+import gsap from 'gsap'
 import { Game } from './Game.js'
 import { lerp } from './utilities/maths.js'
 

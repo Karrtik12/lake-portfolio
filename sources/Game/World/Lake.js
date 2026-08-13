@@ -94,7 +94,7 @@ export class Lake
             const nx = slope1.mul(0.707).add(slope2.mul(0.819)).add(ripX)
             const nz = slope1.mul(0.707).sub(slope2.mul(0.574)).add(ripZ)
 
-            return vec3(nx.negate(), float(1.0), nz.negate()).normalize()
+            return vec3(nx.mul(0.35).negate(), float(1.0), nz.mul(0.35).negate()).normalize()
         })
 
         // Color Node: Smooth depth gradient + soft Fresnel sheen and foam crests
@@ -135,8 +135,8 @@ export class Lake
         })
 
         this.material = new THREE.MeshStandardNodeMaterial({
-            roughness: 0.16,
-            metalness: 0.25,
+            roughness: 0.22,
+            metalness: 0.15,
             transparent: true,
             opacity: 0.94,
             flatShading: false
