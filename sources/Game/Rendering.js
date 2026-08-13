@@ -54,6 +54,6 @@ export class Rendering
         if(!this.renderer || !this.game.view?.camera)
             return
 
-        this.renderer.renderAsync(this.game.scene, this.game.view.camera)
+        this.renderer.render(this.game.scene, this.game.view.camera)
     }
 }

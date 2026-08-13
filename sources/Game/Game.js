@@ -7,6 +7,15 @@ import { Inputs } from './Inputs/Inputs.js'
 import { Physics } from './Physics/Physics.js'
 import { Boat } from './Physics/Boat.js'
 import { World } from './World/World.js'
+import { Title } from './Title.js'
+import { Modals } from './Modals.js'
+import { RayCursor } from './RayCursor.js'
+import { InteractivePoints } from './InteractivePoints.js'
+import { Zones } from './Zones/Zones.js'
+import { AreaManager } from './Zones/AreaManager.js'
+import { Map } from './Map.js'
+import { Audio } from './Audio.js'
+import { Quality } from './Quality.js'
 
 /**
  * Game — singleton that bootstraps and orchestrates all systems.
@@ -55,6 +64,17 @@ export class Game
         // World Environment (lake, shoreline, islands, trees, boat visual, wake)
         this.world = new World()
 
+        // UI & Interaction Systems
+        this.title = new Title()
+        this.modals = new Modals()
+        this.rayCursor = new RayCursor()
+        this.interactivePoints = new InteractivePoints()
+        this.zones = new Zones()
+        this.areaManager = new AreaManager()
+        this.map = new Map()
+        this.audio = new Audio()
+        this.quality = new Quality()
+
         // Loading screen
         this.setupLoadingScreen()
 
@@ -65,7 +85,6 @@ export class Game
         this.showStartButton()
     }
 
-
     setupLoadingScreen()
     {
         this.loadingElement = document.querySelector('.js-loading')
@@ -74,9 +93,9 @@ export class Game
         this.loadingStart = document.querySelector('.js-loading-start')
         this.controlsElement = document.querySelector('.js-controls')
 
-        // Simulate loading progress (will be replaced by real loader)
+        // Ready state
         this.loadingBar.style.width = '100%'
-        this.loadingText.textContent = 'Ready'
+        this.loadingText.textContent = 'Ready to sail'
     }
 
     showStartButton()

@@ -1,8 +1,9 @@
 import * as THREE from 'three/webgpu'
+import { color, float, Fn, mix, positionGeometry, positionLocal, positionWorld, sin, cos, smoothstep, uniform, vec3, vec4 } from 'three/tsl'
 import { Game } from '../Game.js'
 
 /**
- * Lake — the primary navigable body of water with animated waves and stylized shading.
+ * Lake — the primary navigable body of water with animated waves and stylized TSL node shading.
  */
 export class Lake
 {
@@ -12,96 +13,70 @@ export class Lake
 
         // High-density plane geometry for fluid vertex wave displacement
         this.size = 180
-        this.segments = 120
+        this.segments = 100
         this.geometry = new THREE.PlaneGeometry(this.size, this.size, this.segments, this.segments)
         this.geometry.rotateX(-Math.PI * 0.5)
 
-        // Shader uniforms
-        this.uniforms = {
-            uTime: { value: 0 },
-            uDeepColor: { value: new THREE.Color('#0c2b48') },
-            uSurfaceColor: { value: new THREE.Color('#1e6896') },
-            uFoamColor: { value: new THREE.Color('#78c0e0') },
-            uWaveElevation: { value: 0.22 },
-            uWaveFrequency: { value: 0.12 },
-            uWaveSpeed: { value: 1.1 }
-        }
+        // Uniforms
+        this.time = uniform(float(0))
+        this.deepColor = uniform(color('#0a2e50'))
+        this.surfaceColor = uniform(color('#1b6598'))
+        this.foamColor = uniform(color('#93d5fb'))
+        this.waveElevation = uniform(float(0.24))
+        this.waveFrequency = uniform(float(0.12))
+        this.waveSpeed = uniform(float(1.1))
 
-        const vertexShader = `
-            uniform float uTime;
-            uniform float uWaveElevation;
-            uniform float uWaveFrequency;
-            uniform float uWaveSpeed;
+        // Position Node for wave vertex displacement
+        const positionNode = Fn(() =>
+        {
+            const pos = positionGeometry.toVar()
+            const worldX = pos.x
+            const worldZ = pos.z
 
-            varying vec2 vUv;
-            varying float vElevation;
-            varying vec3 vNormalWorld;
-            varying vec3 vWorldPosition;
+            // Multi-frequency directional waves
+            const w1 = sin(worldX.mul(this.waveFrequency).add(this.time.mul(this.waveSpeed)))
+                .mul(cos(worldZ.mul(this.waveFrequency.mul(0.8)).add(this.time.mul(this.waveSpeed.mul(0.6)))))
+            const w2 = sin(worldX.mul(this.waveFrequency.mul(2.2)).sub(this.time.mul(this.waveSpeed.mul(1.3)))).mul(0.35)
+            const w3 = cos(worldZ.mul(this.waveFrequency.mul(1.8)).add(this.time.mul(this.waveSpeed.mul(0.9)))).mul(0.25)
 
-            void main() {
-                vUv = uv;
-                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            const elev = w1.add(w2).add(w3).mul(this.waveElevation)
+            pos.y.addAssign(elev)
 
-                // Multi-frequency directional waves
-                float wave1 = sin(worldPosition.x * uWaveFrequency + uTime * uWaveSpeed) * cos(worldPosition.z * uWaveFrequency * 0.8 + uTime * uWaveSpeed * 0.6);
-                float wave2 = sin(worldPosition.x * uWaveFrequency * 2.2 - uTime * uWaveSpeed * 1.3) * 0.35;
-                float wave3 = cos(worldPosition.z * uWaveFrequency * 1.8 + uTime * uWaveSpeed * 0.9) * 0.25;
-
-                float elevation = (wave1 + wave2 + wave3) * uWaveElevation;
-                worldPosition.y += elevation;
-                vElevation = elevation;
-
-                // Approximate normal via finite differences
-                float d = 0.3;
-                float waveX = (sin((worldPosition.x + d) * uWaveFrequency + uTime * uWaveSpeed) - sin((worldPosition.x - d) * uWaveFrequency + uTime * uWaveSpeed)) * uWaveElevation;
-                float waveZ = (cos((worldPosition.z + d) * uWaveFrequency * 0.8 + uTime * uWaveSpeed * 0.6) - cos((worldPosition.z - d) * uWaveFrequency * 0.8 + uTime * uWaveSpeed * 0.6)) * uWaveElevation;
-                vec3 normalApprox = normalize(vec3(-waveX, 1.0, -waveZ));
-                vNormalWorld = normalApprox;
-
-                vWorldPosition = worldPosition.xyz;
-                gl_Position = projectionMatrix * viewMatrix * worldPosition;
-            }
-        `
-
-        const fragmentShader = `
-            uniform vec3 uDeepColor;
-            uniform vec3 uSurfaceColor;
-            uniform vec3 uFoamColor;
-            uniform float uWaveElevation;
-
-            varying vec2 vUv;
-            varying float vElevation;
-            varying vec3 vNormalWorld;
-            varying vec3 vWorldPosition;
-
-            void main() {
-                // Base water color mix based on wave height
-                float colorMix = (vElevation + uWaveElevation) / (uWaveElevation * 2.0);
-                colorMix = clamp(colorMix, 0.0, 1.0);
-                vec3 waterColor = mix(uDeepColor, uSurfaceColor, colorMix);
-
-                // Subtle foam at peak crests
-                float foam = smoothstep(uWaveElevation * 0.55, uWaveElevation * 0.9, vElevation);
-                waterColor = mix(waterColor, uFoamColor, foam * 0.65);
-
-                // Sun specular highlight
-                vec3 sunDir = normalize(vec3(0.5, 0.8, 0.4));
-                vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-                vec3 halfVector = normalize(sunDir + viewDir);
-                float spec = pow(max(dot(vNormalWorld, halfVector), 0.0), 32.0);
-                waterColor += vec3(1.0, 0.95, 0.85) * spec * 0.5;
-
-                gl_FragColor = vec4(waterColor, 0.94);
-            }
-        `
-
-        this.material = new THREE.ShaderMaterial({
-            vertexShader,
-            fragmentShader,
-            uniforms: this.uniforms,
-            transparent: true,
-            depthWrite: true
+            return pos
         })
+
+        // Color Node for deep-to-surface color gradient and foam highlights
+        const colorNode = Fn(() =>
+        {
+            const pos = positionGeometry
+            const worldX = pos.x
+            const worldZ = pos.z
+
+            const w1 = sin(worldX.mul(this.waveFrequency).add(this.time.mul(this.waveSpeed)))
+                .mul(cos(worldZ.mul(this.waveFrequency.mul(0.8)).add(this.time.mul(this.waveSpeed.mul(0.6)))))
+            const w2 = sin(worldX.mul(this.waveFrequency.mul(2.2)).sub(this.time.mul(this.waveSpeed.mul(1.3)))).mul(0.35)
+            const w3 = cos(worldZ.mul(this.waveFrequency.mul(1.8)).add(this.time.mul(this.waveSpeed.mul(0.9)))).mul(0.25)
+            const elev = w1.add(w2).add(w3).mul(this.waveElevation)
+
+            const normElev = elev.div(this.waveElevation.mul(2.0)).add(0.5)
+            const baseWater = mix(this.deepColor, this.surfaceColor, normElev)
+
+            const foamFactor = smoothstep(this.waveElevation.mul(0.6), this.waveElevation.mul(0.95), elev)
+            const finalColor = mix(baseWater, this.foamColor, foamFactor.mul(0.7))
+
+            return finalColor
+        })
+
+        this.material = new THREE.MeshStandardNodeMaterial({
+            roughness: 0.15,
+            metalness: 0.25,
+            transparent: true,
+            opacity: 0.94,
+            flatShading: false
+        })
+
+        this.material.positionNode = positionNode()
+        this.material.colorNode = colorNode()
 
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.mesh.receiveShadow = true
@@ -118,11 +93,11 @@ export class Lake
     {
         if(this.game.wind)
         {
-            this.uniforms.uTime.value = this.game.wind.time
+            this.time.value = this.game.wind.time
         }
         else
         {
-            this.uniforms.uTime.value += 0.016
+            this.time.value += 0.016
         }
     }
 }
