@@ -2,7 +2,8 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Islands — manages the 3 organically sculpted high-resolution island landmasses in the lake.
+ * Islands — manages the 3 organically sculpted island landmasses in the lake.
+ * Built using radial disc geometry to ensure 100% smooth, circular underwater shelves with zero rectangular edges.
  */
 export class Islands
 {
@@ -17,8 +18,8 @@ export class Islands
                 id: 'socials',
                 name: 'Socials Island',
                 position: new THREE.Vector3(-36, 0, -22),
-                radiusX: 15,
-                radiusZ: 12,
+                radiusX: 14,
+                radiusZ: 11,
                 maxHeight: 3.8,
                 seed: 1.4,
                 colorSand: '#d4b483',
@@ -30,9 +31,9 @@ export class Islands
                 id: 'lab',
                 name: 'Lab Island',
                 position: new THREE.Vector3(36, 0, -20),
-                radiusX: 17,
-                radiusZ: 14,
-                maxHeight: 4.4,
+                radiusX: 16,
+                radiusZ: 13,
+                maxHeight: 4.2,
                 seed: 2.8,
                 colorSand: '#d4b483',
                 colorGrass: '#2f6b52',
@@ -43,8 +44,8 @@ export class Islands
                 id: 'about',
                 name: 'About Island',
                 position: new THREE.Vector3(-30, 0, 24),
-                radiusX: 13,
-                radiusZ: 13,
+                radiusX: 12,
+                radiusZ: 12,
                 maxHeight: 3.4,
                 seed: 4.2,
                 colorSand: '#d4b483',
@@ -68,10 +69,12 @@ export class Islands
 
     createOrganicIsland(def)
     {
-        // High density radial geometry: 120 rings x 96 radial segments for perfectly smooth organic contours
-        const meshSize = Math.max(def.radiusX, def.radiusZ) * 2.8
-        const segments = 128
-        const geometry = new THREE.PlaneGeometry(meshSize, meshSize, segments, segments)
+        // 100% Radial Disc Geometry: 96 radial rays x 64 concentric rings (ZERO straight/rectangular edges!)
+        const maxRadius = Math.max(def.radiusX, def.radiusZ) * 1.6
+        const radialSegments = 96
+        const ringSegments = 64
+
+        const geometry = new THREE.RingGeometry(0.001, maxRadius, radialSegments, ringSegments)
         geometry.rotateX(-Math.PI * 0.5)
 
         const posAttr = geometry.attributes.position
@@ -82,6 +85,7 @@ export class Islands
         const grassCol = new THREE.Color(def.colorGrass)
         const highCol = new THREE.Color(def.colorHighland)
         const rockCol = new THREE.Color(def.colorRock)
+        const abyssCol = new THREE.Color('#030b18') // Deep underwater abyss color
 
         for(let i = 0; i < count; i++)
         {
@@ -95,68 +99,80 @@ export class Islands
             const angle = Math.atan2(z, x)
 
             // Organic multi-octave boundary noise (natural bays, inlets, points)
-            const noise1 = Math.sin(angle * 3.0 + def.seed) * 0.20 + Math.cos(angle * 5.0 - def.seed) * 0.14
-            const noise2 = Math.sin(angle * 9.0 + def.seed * 2.0) * 0.06
+            const noise1 = Math.sin(angle * 3.0 + def.seed) * 0.18 + Math.cos(angle * 5.0 - def.seed) * 0.12
+            const noise2 = Math.sin(angle * 8.0 + def.seed * 2.0) * 0.05
             const organicDist = baseDist + noise1 + noise2
 
-            // Elevation profile: smooth bell curve with flat plateau and gentle beach slope
+            // Elevation profile
             let height = 0
             if(def.id === 'lab')
             {
-                // Level flat plaza top for Lab Island (no bumps or terrain blocking the workstation)
-                if(organicDist < 0.75)
+                // Level flat plaza top for Lab Island (elevation 1.2 across entire central area)
+                if(organicDist < 0.72)
                 {
                     height = 1.2
                 }
                 else if(organicDist < 1.0)
                 {
-                    const t = (organicDist - 0.75) / 0.25
+                    // Beach slope down to water level
+                    const t = (organicDist - 0.72) / 0.28
                     const smoothT = t * t * (3 - 2 * t)
                     height = 1.2 * (1.0 - smoothT) - 0.15
                 }
-                else if(organicDist < 1.25)
+                else if(organicDist < 1.35)
                 {
-                    const t = (organicDist - 1.0) / 0.25
+                    // Smooth underwater circular shelf
+                    const t = (organicDist - 1.0) / 0.35
                     const smoothT = t * t * (3 - 2 * t)
-                    height = -0.15 - smoothT * 3.0
+                    height = -0.15 - smoothT * 7.0
                 }
                 else
                 {
-                    height = -4.0
+                    // Deep abyss
+                    const t = Math.min(1.0, (organicDist - 1.35) / 0.25)
+                    height = -7.15 - t * 8.0
                 }
-            }
-            else if(organicDist < 1.0)
-            {
-                // Smooth plateau shaping
-                const plateauFactor = Math.cos(organicDist * Math.PI * 0.5)
-                const smoothNoise = Math.sin(x * 0.3 + def.seed) * Math.cos(z * 0.3 - def.seed) * 0.35
-                height = Math.pow(plateauFactor, 1.25) * def.maxHeight + (smoothNoise * plateauFactor)
-
-                // Shore slope down to water level
-                if(organicDist > 0.72)
-                {
-                    const t = (organicDist - 0.72) / 0.28
-                    const smoothT = t * t * (3 - 2 * t) // smoothstep
-                    height = height * (1.0 - smoothT * 0.85) - 0.15
-                }
-            }
-            else if(organicDist < 1.25)
-            {
-                // Underwater shelf slope
-                const t = (organicDist - 1.0) / 0.25
-                const smoothT = t * t * (3 - 2 * t)
-                height = -0.15 - smoothT * 3.0
             }
             else
             {
-                height = -4.0 // Deep underwater
+                // Organic hill shaping for Socials and About islands
+                if(organicDist < 1.0)
+                {
+                    const plateauFactor = Math.cos(organicDist * Math.PI * 0.5)
+                    const smoothNoise = Math.sin(x * 0.3 + def.seed) * Math.cos(z * 0.3 - def.seed) * 0.35
+                    height = Math.pow(plateauFactor, 1.25) * def.maxHeight + (smoothNoise * plateauFactor)
+
+                    if(organicDist > 0.72)
+                    {
+                        const t = (organicDist - 0.72) / 0.28
+                        const smoothT = t * t * (3 - 2 * t)
+                        height = height * (1.0 - smoothT * 0.85) - 0.15
+                    }
+                }
+                else if(organicDist < 1.35)
+                {
+                    const t = (organicDist - 1.0) / 0.35
+                    const smoothT = t * t * (3 - 2 * t)
+                    height = -0.15 - smoothT * 7.0
+                }
+                else
+                {
+                    const t = Math.min(1.0, (organicDist - 1.35) / 0.25)
+                    height = -7.15 - t * 8.0
+                }
             }
 
             posAttr.setY(i, height)
 
             // Vertex coloring based on elevation & smooth slope transitions
             const vertexColor = new THREE.Color()
-            if(height < 0.6)
+            if(height < -0.5)
+            {
+                // Deep underwater shelf: blend into dark abyss
+                const t = Math.min(1.0, (-height - 0.5) / 3.5)
+                vertexColor.lerpColors(sandCol, abyssCol, t)
+            }
+            else if(height < 0.6)
             {
                 // Sandy beach
                 vertexColor.copy(sandCol)
@@ -190,12 +206,11 @@ export class Islands
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
         geometry.computeVertexNormals()
 
-        // High-quality smooth terrain material without faceted rectangular lines
         const material = new THREE.MeshStandardNodeMaterial({
             vertexColors: true,
             roughness: 0.82,
             metalness: 0.05,
-            flatShading: false // Smooth shaded normals
+            flatShading: false
         })
 
         const mesh = new THREE.Mesh(geometry, material)

@@ -57,9 +57,31 @@ export class InteractivePoints
         // Listen for keyboard interact (Enter / Space)
         this.game.inputs.events.on('interact', () =>
         {
-            if(this.activeItem && this.activeItem.state === InteractivePoints.STATE_OPEN)
+            if(this.activeItem)
             {
                 this.activeItem.interact()
+                return
+            }
+
+            // Fallback: check if player boat is within 22m of any item
+            if(!this.game.boat) return
+            const boatPos = new THREE.Vector2(this.game.boat.position.x, this.game.boat.position.z)
+            let nearest = null
+            let minDist = 22.0
+
+            for(const item of this.items)
+            {
+                const d = item.position.distanceTo(boatPos)
+                if(d < minDist)
+                {
+                    minDist = d
+                    nearest = item
+                }
+            }
+
+            if(nearest)
+            {
+                nearest.interact()
             }
         })
 
@@ -316,7 +338,7 @@ export class InteractivePoints
 
             // Proximity check to player boat
             const dist = item.position.distanceTo(boatPos)
-            const isNear = dist < 14.0
+            const isNear = dist < 22.0
 
             item.isPlayerNear = isNear
 
