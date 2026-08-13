@@ -4,6 +4,8 @@ import { Viewport } from './Viewport.js'
 import { Rendering } from './Rendering.js'
 import { View } from './View.js'
 import { Inputs } from './Inputs/Inputs.js'
+import { Physics } from './Physics/Physics.js'
+import { Boat } from './Physics/Boat.js'
 import { World } from './World/World.js'
 
 /**
@@ -44,11 +46,14 @@ export class Game
         // Camera
         this.view = new View()
 
-        // World Environment
-        this.world = new World()
+        // Physics engine
+        this.physics = new Physics()
 
-        // Boat state placeholder (will be set by Boat.js later)
-        this.boat = null
+        // Boat player physics
+        this.boat = new Boat()
+
+        // World Environment (lake, shoreline, islands, trees, boat visual, wake)
+        this.world = new World()
 
         // Loading screen
         this.setupLoadingScreen()
@@ -87,6 +92,9 @@ export class Game
     {
         // Hide loading screen
         this.loadingElement.classList.add('is-hidden')
+
+        // Switch camera to follow boat
+        this.view.setMode(View.MODE_FOLLOW)
 
         // Show controls overlay
         this.controlsElement.style.display = 'block'
