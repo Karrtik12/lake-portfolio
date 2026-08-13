@@ -145,7 +145,6 @@ export class LabIsland
             onClick: () =>
             {
                 if(!this.isFocused) this.focus()
-                else this.openCurrentProject()
             },
             onEnter: () => {},
             onLeave: () => {}
@@ -313,17 +312,16 @@ export class LabIsland
         ctx.textAlign = 'left'
 
         ctx.font = 'bold 36px "Space Grotesk", sans-serif'
-        ctx.fillText('NEXT  ► [D]', 40, 80)
-        ctx.fillText('PREV  ◄ [A]', 40, 160)
-        ctx.fillText('SCROLL  ↕', 40, 240)
-        ctx.fillText('OPEN  ↵ [ENTER]', 40, 320)
+        ctx.fillText('NEXT  ► [D]', 40, 90)
+        ctx.fillText('PREV  ◄ [A]', 40, 180)
+        ctx.fillText('SCROLL  ↕', 40, 270)
 
         ctx.fillStyle = '#f87171'
-        ctx.fillText('EXIT  [ESC]', 40, 420)
+        ctx.fillText('EXIT  [ESC]', 40, 380)
 
         ctx.font = '20px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#94a3b8'
-        ctx.fillText('Click cards to select', 40, 490)
+        ctx.fillText('Click cards to select', 40, 470)
 
         const chalkTex = new THREE.CanvasTexture(canvas)
         const boardMat = new THREE.MeshBasicNodeMaterial({ map: chalkTex })
@@ -652,13 +650,6 @@ export class LabIsland
             else if(e.code === 'KeyD' || e.code === 'ArrowRight')
             {
                 this.next()
-            }
-            else if(e.code === 'Enter' || e.code === 'KeyO')
-            {
-                // Prevent the initial focus Enter from triggering this
-                if(performance.now() - (this.lastFocusTime || 0) < 600) return
-
-                this.openCurrentProject()
             }
             else if(e.code === 'Escape' || e.code === 'KeyS' || e.code === 'ArrowDown')
             {
