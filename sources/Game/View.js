@@ -27,8 +27,8 @@ export class View
         this.camera.position.set(0, 40, 40)
         this.camera.lookAt(0, 0, 0)
 
-        // Follow camera state
-        this.followOffset = new THREE.Vector3(0, 12, 18)
+        // Follow camera configuration
+        this.followOffset = new THREE.Vector3(0, 7.5, 14)
         this.lookAtTarget = new THREE.Vector3()
         this.currentPosition = new THREE.Vector3().copy(this.camera.position)
         this.currentLookAt = new THREE.Vector3()
@@ -57,32 +57,49 @@ export class View
         if(this.mode === View.MODE_FOLLOW && this.game.boat)
         {
             const boat = this.game.boat
-            const speed = this.game.ticker.deltaScaled
+            const delta = this.game.ticker.delta
 
-            // Calculate desired camera position behind the boat
+            // Behind vector (opposite of forward heading)
             const behindDir = new THREE.Vector3(
+                Math.sin(boat.rotation),
+                0,
+                Math.cos(boat.rotation)
+            )
+
+            // Dynamic follow distance increases slightly at higher speeds
+            const speedRatio = Math.min(Math.abs(boat.speed) / 16.0, 1.0)
+            const currentDistance = this.followOffset.z + speedRatio * 3.0
+            const currentHeight = this.followOffset.y + speedRatio * 0.8
+
+            const desiredPosition = new THREE.Vector3(
+                boat.position.x + behindDir.x * currentDistance,
+                boat.position.y + currentHeight,
+                boat.position.z + behindDir.z * currentDistance
+            )
+
+            // Smooth camera follow interpolation
+            const followSpeed = 4.5
+            this.currentPosition.x = lerp(this.currentPosition.x, desiredPosition.x, followSpeed * delta)
+            this.currentPosition.y = lerp(this.currentPosition.y, desiredPosition.y, followSpeed * delta)
+            this.currentPosition.z = lerp(this.currentPosition.z, desiredPosition.z, followSpeed * delta)
+
+            this.camera.position.copy(this.currentPosition)
+
+            // Forward vector for look-ahead
+            const forwardDir = new THREE.Vector3(
                 -Math.sin(boat.rotation),
                 0,
                 -Math.cos(boat.rotation)
             )
 
-            const desiredPosition = new THREE.Vector3(
-                boat.position.x + behindDir.x * this.followOffset.z,
-                this.followOffset.y,
-                boat.position.z + behindDir.z * this.followOffset.z
+            // Look slightly ahead of the boat for better visibility while navigating
+            this.lookAtTarget.set(
+                boat.position.x + forwardDir.x * 4.0,
+                boat.position.y + 1.2,
+                boat.position.z + forwardDir.z * 4.0
             )
 
-            // Smooth follow
-            const followSpeed = 3
-            this.currentPosition.x = lerp(this.currentPosition.x, desiredPosition.x, followSpeed * this.game.ticker.delta)
-            this.currentPosition.y = lerp(this.currentPosition.y, desiredPosition.y, followSpeed * this.game.ticker.delta)
-            this.currentPosition.z = lerp(this.currentPosition.z, desiredPosition.z, followSpeed * this.game.ticker.delta)
-
-            this.camera.position.copy(this.currentPosition)
-
-            // Look at boat
-            this.lookAtTarget.set(boat.position.x, boat.position.y + 1, boat.position.z)
-            this.currentLookAt.lerp(this.lookAtTarget, followSpeed * this.game.ticker.delta)
+            this.currentLookAt.lerp(this.lookAtTarget, followSpeed * delta)
             this.camera.lookAt(this.currentLookAt)
         }
     }

@@ -90,7 +90,7 @@ export class Map
             // Directional pointer triangle
             ctx.save()
             ctx.translate(bp.x, bp.y)
-            ctx.rotate(b.rotation + Math.PI) // Align with heading
+            ctx.rotate(-b.rotation) // Align with heading (0 = North)
 
             ctx.fillStyle = '#60a5fa'
             ctx.strokeStyle = '#ffffff'
