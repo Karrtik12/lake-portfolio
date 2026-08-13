@@ -101,7 +101,31 @@ export class Islands
 
             // Elevation profile: smooth bell curve with flat plateau and gentle beach slope
             let height = 0
-            if(organicDist < 1.0)
+            if(def.id === 'lab')
+            {
+                // Level flat plaza top for Lab Island (no bumps or terrain blocking the workstation)
+                if(organicDist < 0.75)
+                {
+                    height = 1.2
+                }
+                else if(organicDist < 1.0)
+                {
+                    const t = (organicDist - 0.75) / 0.25
+                    const smoothT = t * t * (3 - 2 * t)
+                    height = 1.2 * (1.0 - smoothT) - 0.15
+                }
+                else if(organicDist < 1.25)
+                {
+                    const t = (organicDist - 1.0) / 0.25
+                    const smoothT = t * t * (3 - 2 * t)
+                    height = -0.15 - smoothT * 3.0
+                }
+                else
+                {
+                    height = -4.0
+                }
+            }
+            else if(organicDist < 1.0)
             {
                 // Smooth plateau shaping
                 const plateauFactor = Math.cos(organicDist * Math.PI * 0.5)

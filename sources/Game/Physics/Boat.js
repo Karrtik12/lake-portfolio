@@ -76,16 +76,16 @@ export class Boat
     {
         if(!this.body) return
 
-        // If camera is in cinematic mode (e.g. Lab billboard focused), disable boat inputs completely
+        let axes = this.game.inputs.getAxes()
+
+        // If camera is in cinematic mode (e.g. Lab billboard focused), ignore movement & steering inputs
         const isCinematic = this.game.view && this.game.view.mode === 3
         const isLabFocused = this.game.areaManager?.lab?.isFocused
         if(isCinematic || isLabFocused)
         {
+            axes = { forward: 0, right: 0, boost: false }
             this.angularVelocity = lerp(this.angularVelocity, 0, this.angularDamping * delta)
-            return
         }
-
-        const axes = this.game.inputs.getAxes()
 
         // Determine current speed & turn parameters based on Shift boost
         const currentEngineForce = axes.boost ? this.boostEngineForce : this.baseEngineForce
@@ -95,7 +95,7 @@ export class Boat
         // 1. Rudder Steering (Rotate boat around Y axis)
         // Realistic rudder physics: turning requires water flow/momentum past the rudder
         const speedFactor = clamp(Math.abs(this.speed) / 3.5, 0.08, 1.0)
-        if(axes.right !== 0)
+        if(axes.right !== 0 && !isCinematic && !isLabFocused)
         {
             // Invert steering when reversing
             const reverseSign = this.speed < -0.5 ? -1 : 1

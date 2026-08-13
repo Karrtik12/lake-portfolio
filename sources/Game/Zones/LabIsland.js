@@ -5,7 +5,7 @@ import projectsData from '../../data/projects.js'
 
 /**
  * LabIsland — 3D interactive Lab workstation inspired by Bruno Simon's portfolio:
- * elevated securely on a wooden deck stage platform with a central wooden display,
+ * elevated on a large wooden deck stage platform with a central wooden display,
  * 3D purple navigation buttons, right-side project rack, left-side chalk instruction easel,
  * and foreground laboratory workbench props.
  */
@@ -14,7 +14,7 @@ export class LabIsland
     constructor()
     {
         this.game = Game.getInstance()
-        this.position = new THREE.Vector3(36, 1.8, -20)
+        this.position = new THREE.Vector3(36, 1.2, -18)
         this.currentIndex = 0
         this.isFocused = false
 
@@ -78,10 +78,10 @@ export class LabIsland
         this.group = new THREE.Group()
         this.group.position.copy(this.position)
 
-        // 1. Solid Elevated Wooden Deck Stage Platform (Ensures nothing hides inside island terrain)
+        // 1. Large Raised Wooden Deck Stage Platform (Ensures nothing hides inside island terrain)
         this.createStagePlatform()
 
-        // 2. Central Screen Canvas & Mesh (Elevated on stage)
+        // 2. Central Screen Canvas & Mesh
         this.screenCanvas = document.createElement('canvas')
         this.screenCanvas.width = 1200
         this.screenCanvas.height = 750
@@ -94,22 +94,22 @@ export class LabIsland
         const screenGeo = new THREE.PlaneGeometry(7.2, 4.5)
         const screenMat = new THREE.MeshBasicNodeMaterial({ map: this.screenTexture })
         this.screenMesh = new THREE.Mesh(screenGeo, screenMat)
-        this.screenMesh.position.set(0, 3.8, 0.22)
+        this.screenMesh.position.set(0, 3.6, 0.22)
         this.group.add(this.screenMesh)
 
         // Screen Frame Structure
         const frameTop = new THREE.Mesh(new THREE.BoxGeometry(7.8, 0.5, 0.5), this.woodMat)
-        frameTop.position.set(0, 6.25, 0.1)
+        frameTop.position.set(0, 6.05, 0.1)
         frameTop.castShadow = true
         this.group.add(frameTop)
 
-        const postL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.4, 0.5), this.darkWoodMat)
-        postL.position.set(-3.85, 3.4, 0.1)
+        const postL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.2, 0.5), this.darkWoodMat)
+        postL.position.set(-3.85, 3.2, 0.1)
         postL.castShadow = true
         this.group.add(postL)
 
-        const postR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.4, 0.5), this.darkWoodMat)
-        postR.position.set(3.85, 3.4, 0.1)
+        const postR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.2, 0.5), this.darkWoodMat)
+        postR.position.set(3.85, 3.2, 0.1)
         postR.castShadow = true
         this.group.add(postR)
 
@@ -117,24 +117,24 @@ export class LabIsland
         const arrowGeo = new THREE.BoxGeometry(0.85, 0.85, 0.5)
 
         this.prevArrowMesh = new THREE.Mesh(arrowGeo, this.purpleMat)
-        this.prevArrowMesh.position.set(-3.85, 3.8, 0.45)
+        this.prevArrowMesh.position.set(-3.85, 3.6, 0.45)
         this.group.add(this.prevArrowMesh)
 
         this.nextArrowMesh = new THREE.Mesh(arrowGeo, this.purpleMat)
-        this.nextArrowMesh.position.set(3.85, 3.8, 0.45)
+        this.nextArrowMesh.position.set(3.85, 3.6, 0.45)
         this.group.add(this.nextArrowMesh)
 
         // Add 3D arrow text labels onto the blocks
         this.addArrowLabel(this.prevArrowMesh, '◄')
         this.addArrowLabel(this.nextArrowMesh, '►')
 
-        // 4. Right-Side Project Selector Rack (Elevated on stage)
+        // 4. Right-Side Project Selector Rack (Mounted on stage)
         this.createProjectRack()
 
-        // 5. Left-Side Chalkboard Instructions Easel (Elevated on stage)
+        // 5. Left-Side Chalkboard Instructions Easel (Mounted on stage)
         this.createInstructionsChalkboard()
 
-        // 6. Foreground Laboratory Workbench & Props (Elevated on stage)
+        // 6. Foreground Laboratory Workbench & Props (Mounted on stage)
         this.createWorkbenchProps()
 
         this.game.scene.add(this.group)
@@ -144,7 +144,7 @@ export class LabIsland
 
         // 7. Interactive Ground Diamond Marker for approaching Lab Island
         this.marker = this.game.interactivePoints.create(
-            new THREE.Vector3(36, 0.8, -13.5),
+            new THREE.Vector3(36, 0.8, -12.5),
             '🔬 View Lab Showcase (Enter)',
             () =>
             {
@@ -186,9 +186,9 @@ export class LabIsland
         const stageGroup = new THREE.Group()
 
         // Main Stage Deck Box
-        const stageWidth = 15.5
-        const stageDepth = 9.0
-        const stageHeight = 0.85
+        const stageWidth = 16.5
+        const stageDepth = 9.5
+        const stageHeight = 0.75
 
         const mainDeck = new THREE.Mesh(
             new THREE.BoxGeometry(stageWidth, stageHeight, stageDepth),
@@ -206,13 +206,13 @@ export class LabIsland
         stageGroup.add(borderMesh)
 
         // Front Entrance Steps
-        const step1 = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.4, 1.4), this.stageWoodMat)
-        step1.position.set(0, 0.2, stageDepth * 0.5 + 0.9)
+        const step1 = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.35, 1.4), this.stageWoodMat)
+        step1.position.set(0, 0.18, stageDepth * 0.5 + 0.9)
         step1.castShadow = true
         stageGroup.add(step1)
 
-        const step2 = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.25, 1.2), this.stageWoodMat)
-        step2.position.set(0, 0.12, stageDepth * 0.5 + 2.0)
+        const step2 = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.2, 1.2), this.stageWoodMat)
+        step2.position.set(0, 0.1, stageDepth * 0.5 + 2.0)
         step2.castShadow = true
         stageGroup.add(step2)
 
@@ -269,7 +269,7 @@ export class LabIsland
     createProjectRack()
     {
         const rackGroup = new THREE.Group()
-        rackGroup.position.set(5.5, 3.8, 0.1)
+        rackGroup.position.set(5.5, 3.6, 0.1)
 
         // Vertical support posts
         const post = new THREE.Mesh(new THREE.BoxGeometry(0.3, 5.4, 0.3), this.woodMat)
@@ -365,7 +365,7 @@ export class LabIsland
     createInstructionsChalkboard()
     {
         const easelGroup = new THREE.Group()
-        easelGroup.position.set(-5.6, 2.4, 0.8)
+        easelGroup.position.set(-5.6, 2.2, 0.8)
         easelGroup.rotation.y = 0.35 // Angled towards viewer
 
         // Chalkboard canvas
@@ -432,7 +432,7 @@ export class LabIsland
     createWorkbenchProps()
     {
         const tableGroup = new THREE.Group()
-        tableGroup.position.set(0, 0.85, 1.2) // Mounted firmly on top of stage
+        tableGroup.position.set(0, 0.75, 1.2) // Mounted firmly on top of stage
 
         // Wooden table top
         const tableTop = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.35, 1.6), this.woodMat)
@@ -589,7 +589,7 @@ export class LabIsland
         ctx.font = 'bold 22px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#c084fc'
         ctx.textAlign = 'center'
-        ctx.fillText('◄ [A] PREV PROJECT  •  [D] NEXT PROJECT ►  •  [ESC] EXIT TO BOAT', 600, 668)
+        ctx.fillText('◄ [A] PREV PROJECT  •  [D] NEXT PROJECT ►  •  [ESC / S] EXIT TO BOAT', 600, 668)
 
         this.screenTexture.needsUpdate = true
     }
@@ -650,20 +650,14 @@ export class LabIsland
         const aspect = camera.aspect || (window.innerWidth / window.innerHeight)
         const fovRad = THREE.MathUtils.degToRad(camera.fov || 45)
 
-        // Screen size: 7.2 width, 4.5 height on raised stage (y = 1.8 + 3.8 = 5.6)
+        // Screen size: 7.2 width, 4.5 height on raised stage (y = 1.2 + 3.6 = 4.8)
         const distH = (4.5 * 0.5) / Math.tan(fovRad * 0.5)
         const distW = (7.2 * 0.5) / (aspect * Math.tan(fovRad * 0.5))
         const d = Math.max(distH, distW) * 1.02 // Perfectly fills viewport edge-to-edge
 
-        const targetLookAt = new THREE.Vector3(36, 5.6, -19.78)
-        const targetCamPos = new THREE.Vector3(36, 5.6, -19.78 + d)
-        this.game.view.setCinematic(targetCamPos, targetLookAt, 1.0)
-
-        // Hide ground diamond marker during focus
-        if(this.marker?.group)
-        {
-            this.marker.group.visible = false
-        }
+        const targetLookAt = new THREE.Vector3(36, 4.8, -17.78)
+        const targetCamPos = new THREE.Vector3(36, 4.8, -17.78 + d)
+        this.game.view.setCinematic(targetCamPos, targetLookAt, 0.8)
 
         // Hide distracting HUD overlays during focus
         if(this.minimapEl) this.minimapEl.style.display = 'none'
@@ -682,16 +676,12 @@ export class LabIsland
         if(!this.isFocused) return
         this.isFocused = false
 
-        // Restore ground marker and HUD elements
-        if(this.marker?.group)
-        {
-            this.marker.group.visible = true
-        }
+        // Restore HUD elements
         if(this.minimapEl) this.minimapEl.style.display = 'block'
         if(this.menuToggleEl) this.menuToggleEl.style.display = 'flex'
 
         // Smoothly zoom out camera and return to boat follow mode
-        this.game.view.exitCinematic(1.0)
+        this.game.view.exitCinematic()
     }
 
     setupKeyboardAndMouseControls()
@@ -726,7 +716,7 @@ export class LabIsland
             {
                 this.next()
             }
-            else if(e.code === 'Escape' || e.code === 'KeyS' || e.code === 'ArrowDown')
+            else if(e.code === 'Escape' || e.code === 'KeyS' || e.code === 'ArrowDown' || e.code === 'KeyW' || e.code === 'ArrowUp')
             {
                 this.exitFocus()
             }

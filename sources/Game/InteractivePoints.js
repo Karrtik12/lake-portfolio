@@ -267,6 +267,25 @@ export class InteractivePoints
     {
         if(!this.game.boat) return
 
+        // If in cinematic mode (e.g. Lab focus), hide all floating diamond markers & toast prompts
+        const isCinematic = this.game.view && this.game.view.mode === 3
+        if(isCinematic)
+        {
+            for(const item of this.items)
+            {
+                item.group.visible = false
+            }
+            if(this.toastEl) this.toastEl.style.display = 'none'
+            return
+        }
+        else
+        {
+            for(const item of this.items)
+            {
+                item.group.visible = true
+            }
+        }
+
         const boatPos = new THREE.Vector2(this.game.boat.position.x, this.game.boat.position.z)
         const time = performance.now() * 0.001
 
