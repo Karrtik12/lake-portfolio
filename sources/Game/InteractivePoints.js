@@ -49,6 +49,11 @@ export class InteractivePoints
             opacity: 0.9
         })
 
+        // Toast prompt element
+        this.toastEl = document.querySelector('.js-interact-toast')
+        this.toastTextEl = document.querySelector('.js-interact-toast-text')
+        this.isToastVisible = false
+
         // Listen for keyboard interact (Enter / Space)
         this.game.inputs.events.on('interact', () =>
         {
@@ -321,6 +326,40 @@ export class InteractivePoints
             else
             {
                 this.setFocusState(item, false)
+            }
+        }
+
+        // Manage on-screen interaction toast prompt
+        if(closestItem && !this.isToastVisible)
+        {
+            this.isToastVisible = true
+            if(this.toastEl && this.toastTextEl)
+            {
+                this.toastTextEl.textContent = `Open ${closestItem.labelText}`
+                this.toastEl.style.display = 'flex'
+                gsap.killTweensOf(this.toastEl)
+                gsap.fromTo(this.toastEl, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' })
+            }
+        }
+        else if(closestItem && this.isToastVisible && this.toastTextEl)
+        {
+            this.toastTextEl.textContent = `Open ${closestItem.labelText}`
+        }
+        else if(!closestItem && this.isToastVisible)
+        {
+            this.isToastVisible = false
+            if(this.toastEl)
+            {
+                gsap.killTweensOf(this.toastEl)
+                gsap.to(this.toastEl, {
+                    opacity: 0,
+                    y: 10,
+                    duration: 0.25,
+                    onComplete: () =>
+                    {
+                        this.toastEl.style.display = 'none'
+                    }
+                })
             }
         }
 

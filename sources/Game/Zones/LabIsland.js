@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu'
+import gsap from 'gsap'
 import { Game } from '../Game.js'
 import projectsData from '../../data/projects.js'
 
@@ -14,6 +15,12 @@ export class LabIsland
         this.position = new THREE.Vector3(36, 4.5, -20)
         this.currentIndex = 0
         this.isFocused = false
+
+        // HUD elements
+        this.focusBarEl = document.querySelector('.js-lab-focus-bar')
+        this.prevBtn = document.querySelector('.js-lab-nav-prev')
+        this.nextBtn = document.querySelector('.js-lab-nav-next')
+        this.exitBtn = document.querySelector('.js-lab-exit-btn')
 
         this.createBillboard3D()
         this.setupKeyboardControls()
@@ -191,7 +198,7 @@ export class LabIsland
 
         ctx.textAlign = 'center'
         ctx.fillStyle = '#f8fafc'
-        ctx.fillText('PRESS [ENTER] TO VISIT REPO  •  [ESC] TO EXIT', 512, 578)
+        ctx.fillText('PRESS [ESC] TO RETURN TO BOAT', 512, 578)
 
         ctx.textAlign = 'right'
         ctx.fillStyle = '#38bdf8'
@@ -223,14 +230,37 @@ export class LabIsland
         ctx.fillText(line, x, y)
     }
 
+    next()
+    {
+        this.currentIndex = (this.currentIndex + 1) % projectsData.length
+        this.renderBillboardCanvas()
+        if(this.game.audio) this.game.audio.playChime()
+    }
+
+    prev()
+    {
+        this.currentIndex = (this.currentIndex - 1 + projectsData.length) % projectsData.length
+        this.renderBillboardCanvas()
+        if(this.game.audio) this.game.audio.playChime()
+    }
+
     focus()
     {
+        if(this.isFocused) return
         this.isFocused = true
 
         // Smoothly position camera in front of 3D display billboard
         const targetCamPos = new THREE.Vector3(36, 5.0, -11.5)
         const targetLookAt = new THREE.Vector3(36, 4.6, -20)
         this.game.view.setCinematic(targetCamPos, targetLookAt, 1.2)
+
+        // Show HUD bar
+        if(this.focusBarEl)
+        {
+            this.focusBarEl.style.display = 'flex'
+            gsap.killTweensOf(this.focusBarEl)
+            gsap.fromTo(this.focusBarEl, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' })
+        }
 
         if(this.game.audio)
         {
@@ -241,36 +271,55 @@ export class LabIsland
     exitFocus()
     {
         if(!this.isFocused) return
-
         this.isFocused = false
+
+        // Hide HUD bar
+        if(this.focusBarEl)
+        {
+            gsap.killTweensOf(this.focusBarEl)
+            gsap.to(this.focusBarEl, {
+                opacity: 0,
+                y: 15,
+                duration: 0.25,
+                onComplete: () =>
+                {
+                    this.focusBarEl.style.display = 'none'
+                }
+            })
+        }
+
+        // Return camera smoothly to follow mode behind boat
         this.game.view.exitCinematic(0.8)
     }
 
     setupKeyboardControls()
     {
+        // HUD buttons
+        if(this.prevBtn) this.prevBtn.addEventListener('click', () => this.prev())
+        if(this.nextBtn) this.nextBtn.addEventListener('click', () => this.next())
+        if(this.exitBtn) this.exitBtn.addEventListener('click', () => this.exitFocus())
+
+        // Escape event from inputs system
+        this.game.inputs.events.on('escape', () =>
+        {
+            if(this.isFocused)
+            {
+                this.exitFocus()
+            }
+        })
+
+        // Keyboard listener
         window.addEventListener('keydown', (e) =>
         {
             if(!this.isFocused) return
 
             if(e.code === 'KeyA' || e.code === 'ArrowLeft')
             {
-                this.currentIndex = (this.currentIndex - 1 + projectsData.length) % projectsData.length
-                this.renderBillboardCanvas()
-                if(this.game.audio) this.game.audio.playChime()
+                this.prev()
             }
             else if(e.code === 'KeyD' || e.code === 'ArrowRight')
             {
-                this.currentIndex = (this.currentIndex + 1) % projectsData.length
-                this.renderBillboardCanvas()
-                if(this.game.audio) this.game.audio.playChime()
-            }
-            else if(e.code === 'Enter')
-            {
-                const p = projectsData[this.currentIndex]
-                if(p.link)
-                {
-                    window.open(p.link, '_blank', 'noopener,noreferrer')
-                }
+                this.next()
             }
             else if(e.code === 'Escape' || e.code === 'KeyS' || e.code === 'ArrowDown')
             {
