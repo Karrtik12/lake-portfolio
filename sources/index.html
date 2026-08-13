@@ -46,8 +46,26 @@
         </div>
 
         <!-- Minimap -->
-        <div class="minimap js-minimap">
+        <div class="minimap js-minimap" title="Click to enlarge map">
             <canvas class="minimap-canvas js-minimap-canvas" width="160" height="160"></canvas>
+            <div class="minimap-hint">🔍 Expand Map</div>
+        </div>
+
+        <!-- Big Map Overlay Modal -->
+        <div class="big-map-modal js-big-map-modal" style="display: none;">
+            <div class="big-map-backdrop js-big-map-backdrop"></div>
+            <div class="big-map-container js-big-map-container">
+                <div class="big-map-header">
+                    <h2 class="big-map-title">🗺️ Lake Map & Island Destinations</h2>
+                    <button class="big-map-close js-big-map-close">✕</button>
+                </div>
+                <div class="big-map-body">
+                    <div class="big-map-canvas-wrap">
+                        <canvas class="big-map-canvas js-big-map-canvas" width="540" height="540"></canvas>
+                    </div>
+                    <div class="big-map-sidebar js-big-map-sidebar"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Settings Menu -->

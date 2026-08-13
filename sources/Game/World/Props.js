@@ -1,8 +1,10 @@
 import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
+import { clamp, lerp } from '../utilities/maths.js'
 
 /**
- * Props — decorative elements: wooden docks, rocks, billboards, and navigation buoys.
+ * Props — decorative elements: wooden piers, island docks, shore-embedded boulders,
+ * and interactive bouncy navigation buoys that physically wobble, ring, and splash when bumped by the boat.
  */
 export class Props
 {
@@ -26,27 +28,26 @@ export class Props
 
         this.rockMaterial = new THREE.MeshStandardNodeMaterial({
             color: '#5a626a',
-            roughness: 0.9,
+            roughness: 0.88,
             flatShading: true
         })
 
         this.metalMaterial = new THREE.MeshStandardNodeMaterial({
-            color: '#e64c3c',
+            color: '#e64c3c', // Maritime red
             roughness: 0.4,
-            metalness: 0.3,
+            metalness: 0.35,
             flatShading: true
         })
 
         this.createSpawnPier()
         this.createIslandDocks()
-        this.createRocks()
-        this.createBuoys()
-        this.createStructures()
+        this.createShoreEmbeddedRocks()
+        this.createInteractiveBuoys()
 
-        // Bob buoys on water
-        this.game.ticker.events.on('tick', () =>
+        // Update loop for buoy physics & wave bobbing
+        this.game.ticker.events.on('tick', (delta) =>
         {
-            this.update()
+            this.update(delta)
         })
     }
 
@@ -111,8 +112,8 @@ export class Props
     {
         // Small landing docks on each island facing the center
         const dockConfigs = [
-            { pos: new THREE.Vector3(-26, 0, -18), rot: 0.7 },  // Socials dock
-            { pos: new THREE.Vector3(26, 0, -16),  rot: -0.7 }, // Lab dock
+            { pos: new THREE.Vector3(-25, 0, -16), rot: 0.7 },  // Socials dock
+            { pos: new THREE.Vector3(25, 0, -14),  rot: -0.7 }, // Lab dock
             { pos: new THREE.Vector3(-22, 0, 18),  rot: 2.3 }   // About dock
         ]
 
@@ -133,21 +134,20 @@ export class Props
         }
     }
 
-    createRocks()
+    createShoreEmbeddedRocks()
     {
-        // Instanced or individual stylized low-poly rocks
-        const rockGeo = new THREE.DodecahedronGeometry(1.4, 1)
+        // Only place rocks firmly on the shoreline terrain edge (NO floating rocks in open water!)
+        const rockGeo = new THREE.DodecahedronGeometry(1.6, 1)
 
-        const rockPositions = [
-            [-50, 0.5, -45], [45, 0.8, -48], [15, 0.4, -60],
-            [-60, 0.6, 10],  [55, 0.5, 25],  [-15, 0.4, 62],
-            [12, 0.3, -25],  [-10, 0.5, -5], [5, 0.4, 18],
-            [-42, 0.4, -8],  [40, 0.6, 0]
+        const shoreRockPositions = [
+            [-68, 0.6, -30], [68, 0.8, -25], [0, 0.5, -72],
+            [-65, 0.7, 20],  [66, 0.6, 25],  [-28, 0.8, 66], [28, 0.8, 66],
+            [-44, 0.5, -28], [42, 0.5, -27], [-38, 0.5, 30]
         ]
 
-        for(const pos of rockPositions)
+        for(const pos of shoreRockPositions)
         {
-            const scale = 0.8 + Math.random() * 1.4
+            const scale = 1.0 + Math.random() * 1.2
             const rock = new THREE.Mesh(rockGeo, this.rockMaterial)
             rock.position.set(pos[0], pos[1], pos[2])
             rock.scale.set(scale, scale * (0.6 + Math.random() * 0.6), scale)
@@ -158,74 +158,126 @@ export class Props
         }
     }
 
-    createBuoys()
+    createInteractiveBuoys()
     {
+        // 4 Key navigation buoys marking navigable water channels
         const buoyPositions = [
-            new THREE.Vector3(-12, 0, 15),
-            new THREE.Vector3(12, 0, 15),
-            new THREE.Vector3(-15, 0, -10),
-            new THREE.Vector3(15, 0, -10)
+            new THREE.Vector3(-14, 0, 16),
+            new THREE.Vector3(14, 0, 16),
+            new THREE.Vector3(-16, 0, -12),
+            new THREE.Vector3(16, 0, -12)
         ]
 
-        const buoyGeo = new THREE.CylinderGeometry(0.4, 0.6, 1.4, 8)
-        const lanternGeo = new THREE.SphereGeometry(0.18, 8, 8)
+        const buoyGeo = new THREE.CylinderGeometry(0.45, 0.75, 1.6, 8)
+        const stripeGeo = new THREE.CylinderGeometry(0.46, 0.65, 0.4, 8)
+        const stripeMat = new THREE.MeshStandardNodeMaterial({ color: '#ffffff', roughness: 0.4 })
+
+        const lanternGeo = new THREE.SphereGeometry(0.2, 8, 8)
         const lanternMat = new THREE.MeshBasicNodeMaterial({ color: '#ffea79' })
 
         for(const pos of buoyPositions)
         {
             const buoyGroup = new THREE.Group()
+
+            // Buoy body
             const base = new THREE.Mesh(buoyGeo, this.metalMaterial)
-            base.position.y = 0.5
+            base.position.y = 0.55
             base.castShadow = true
             buoyGroup.add(base)
 
+            // White reflective stripe
+            const stripe = new THREE.Mesh(stripeGeo, stripeMat)
+            stripe.position.y = 0.65
+            buoyGroup.add(stripe)
+
+            // Warning beacon light
             const light = new THREE.Mesh(lanternGeo, lanternMat)
-            light.position.y = 1.3
+            light.position.y = 1.45
             buoyGroup.add(light)
 
             buoyGroup.position.copy(pos)
-            buoyGroup.userData = { initialY: pos.y, phase: Math.random() * Math.PI * 2 }
-            this.buoys.push(buoyGroup)
+
+            const buoyData = {
+                group: buoyGroup,
+                basePos: pos.clone(),
+                radius: 1.2,
+                wobbleTilt: new THREE.Vector2(0, 0),
+                wobbleVelocity: new THREE.Vector2(0, 0),
+                phase: Math.random() * Math.PI * 2,
+                lastHitTime: 0
+            }
+
+            this.buoys.push(buoyData)
             this.game.scene.add(buoyGroup)
         }
     }
 
-    createStructures()
-    {
-        // Lab Island: Billboard / Research board structure
-        const labBillboardGroup = new THREE.Group()
-        const frameGeo = new THREE.BoxGeometry(6.5, 4.2, 0.3)
-        const boardGeo = new THREE.PlaneGeometry(6.0, 3.8)
-        const boardMat = new THREE.MeshStandardNodeMaterial({ color: '#1a2332', roughness: 0.7 })
-
-        const frame = new THREE.Mesh(frameGeo, this.woodMaterial)
-        const board = new THREE.Mesh(boardGeo, boardMat)
-        board.position.z = 0.16
-
-        labBillboardGroup.add(frame)
-        labBillboardGroup.add(board)
-
-        const legGeo = new THREE.CylinderGeometry(0.2, 0.22, 4.5, 8)
-        const leg1 = new THREE.Mesh(legGeo, this.darkWoodMaterial)
-        leg1.position.set(-2.6, -2.2, 0)
-        const leg2 = new THREE.Mesh(legGeo, this.darkWoodMaterial)
-        leg2.position.set(2.6, -2.2, 0)
-        labBillboardGroup.add(leg1)
-        labBillboardGroup.add(leg2)
-
-        labBillboardGroup.position.set(36, 4.5, -20)
-        labBillboardGroup.rotation.y = -0.5
-        this.game.scene.add(labBillboardGroup)
-    }
-
-    update()
+    update(delta)
     {
         const time = this.game.wind ? this.game.wind.time : performance.now() * 0.001
+        const boat = this.game.boat
+
         for(const buoy of this.buoys)
         {
-            buoy.position.y = buoy.userData.initialY + Math.sin(time * 2.0 + buoy.userData.phase) * 0.12
-            buoy.rotation.z = Math.sin(time * 1.5 + buoy.userData.phase) * 0.08
-            buoy.rotation.x = Math.cos(time * 1.3 + buoy.userData.phase) * 0.06
+            // 1. Boat Collision & Interaction Check
+            if(boat)
+            {
+                const boatDist = buoy.basePos.distanceTo(new THREE.Vector3(boat.position.x, 0, boat.position.z))
+                if(boatDist < buoy.radius + 1.4)
+                {
+                    // Hit reaction!
+                    const now = performance.now()
+                    if(now - buoy.lastHitTime > 800)
+                    {
+                        buoy.lastHitTime = now
+
+                        // Calculate impact direction from boat velocity
+                        const speed = Math.max(Math.abs(boat.speed), 3.0)
+                        const impactDir = new THREE.Vector2(
+                            buoy.basePos.x - boat.position.x,
+                            buoy.basePos.z - boat.position.z
+                        ).normalize()
+
+                        // Push buoy into strong wobble oscillation
+                        buoy.wobbleVelocity.x += impactDir.x * speed * 0.4
+                        buoy.wobbleVelocity.y += impactDir.y * speed * 0.4
+
+                        // Play metallic chime/bell sound
+                        if(this.game.audio)
+                        {
+                            this.game.audio.playChime()
+                        }
+                    }
+                }
+            }
+
+            // 2. Spring-Damped Wobble Physics Simulation
+            const springStiffness = 14.0
+            const damping = 3.5
+
+            // Spring force towards center (0, 0)
+            const forceX = -buoy.wobbleTilt.x * springStiffness - buoy.wobbleVelocity.x * damping
+            const forceY = -buoy.wobbleTilt.y * springStiffness - buoy.wobbleVelocity.y * damping
+
+            buoy.wobbleVelocity.x += forceX * delta
+            buoy.wobbleVelocity.y += forceY * delta
+
+            buoy.wobbleTilt.x += buoy.wobbleVelocity.x * delta
+            buoy.wobbleTilt.y += buoy.wobbleVelocity.y * delta
+
+            // Clamp max tilt
+            buoy.wobbleTilt.x = clamp(buoy.wobbleTilt.x, -0.8, 0.8)
+            buoy.wobbleTilt.y = clamp(buoy.wobbleTilt.y, -0.8, 0.8)
+
+            // 3. Gentle Ambient Wave Bobbing
+            const waveBob = Math.sin(time * 2.2 + buoy.phase) * 0.12
+            const waveRockX = Math.cos(time * 1.6 + buoy.phase) * 0.06
+            const waveRockZ = Math.sin(time * 1.8 + buoy.phase) * 0.06
+
+            buoy.group.position.y = buoy.basePos.y + waveBob
+            buoy.group.rotation.set(0, 0, 0)
+            buoy.group.rotation.x = buoy.wobbleTilt.y + waveRockX
+            buoy.group.rotation.z = -buoy.wobbleTilt.x + waveRockZ
         }
     }
 }

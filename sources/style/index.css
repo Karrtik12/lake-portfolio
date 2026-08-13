@@ -227,15 +227,167 @@ html, body {
     height: 160px;
     border-radius: 12px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(10, 14, 23, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(10, 14, 23, 0.7);
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.minimap:hover {
+    transform: scale(1.05);
+    border-color: rgba(96, 165, 250, 0.5);
 }
 
 .minimap-canvas {
     width: 100%;
     height: 100%;
+}
+
+.minimap-hint {
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(10, 14, 23, 0.7);
+    padding: 2px 0;
+    pointer-events: none;
+}
+
+/* --- Big Map Modal --- */
+.big-map-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.big-map-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 8, 16, 0.75);
+    backdrop-filter: blur(8px);
+}
+
+.big-map-container {
+    position: relative;
+    width: min(92vw, 920px);
+    max-height: 90vh;
+    padding: 1.8rem;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 20px;
+    backdrop-filter: blur(24px);
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.big-map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.big-map-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.big-map-close {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.big-map-close:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+}
+
+.big-map-body {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.big-map-canvas-wrap {
+    flex-shrink: 0;
+    width: min(500px, 50vw);
+    height: min(500px, 50vw);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.big-map-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.big-map-sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.big-map-card {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.big-map-card:hover {
+    background: rgba(56, 189, 248, 0.08);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.big-map-card-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+.big-map-card-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 0.4rem;
+}
+
+.big-map-card-dist {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #38bdf8;
 }
 
 /* --- Settings Menu --- */

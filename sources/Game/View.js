@@ -9,6 +9,7 @@ export class View
 {
     static MODE_OVERVIEW = 1
     static MODE_FOLLOW = 2
+    static MODE_CINEMATIC = 3
 
     constructor()
     {
@@ -33,6 +34,10 @@ export class View
         this.currentPosition = new THREE.Vector3().copy(this.camera.position)
         this.currentLookAt = new THREE.Vector3()
 
+        // Cinematic focus target
+        this.cinematicPosition = new THREE.Vector3()
+        this.cinematicLookAt = new THREE.Vector3()
+
         // Resize
         this.game.viewport.events.on('resize', () =>
         {
@@ -50,6 +55,36 @@ export class View
     setMode(mode)
     {
         this.mode = mode
+    }
+
+    setCinematic(targetPos, targetLookAt, duration = 1.0)
+    {
+        this.mode = View.MODE_CINEMATIC
+        this.cinematicPosition.copy(targetPos)
+        this.cinematicLookAt.copy(targetLookAt)
+
+        gsap.killTweensOf([this.currentPosition, this.currentLookAt])
+        gsap.to(this.currentPosition, {
+            x: targetPos.x,
+            y: targetPos.y,
+            z: targetPos.z,
+            duration,
+            ease: 'power2.inOut'
+        })
+        gsap.to(this.currentLookAt, {
+            x: targetLookAt.x,
+            y: targetLookAt.y,
+            z: targetLookAt.z,
+            duration,
+            ease: 'power2.inOut'
+        })
+    }
+
+    exitCinematic(duration = 0.8)
+    {
+        if(this.mode !== View.MODE_CINEMATIC) return
+
+        this.mode = View.MODE_FOLLOW
     }
 
     update()
@@ -100,6 +135,11 @@ export class View
             )
 
             this.currentLookAt.lerp(this.lookAtTarget, followSpeed * delta)
+            this.camera.lookAt(this.currentLookAt)
+        }
+        else if(this.mode === View.MODE_CINEMATIC)
+        {
+            this.camera.position.copy(this.currentPosition)
             this.camera.lookAt(this.currentLookAt)
         }
     }
