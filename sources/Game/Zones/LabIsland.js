@@ -5,15 +5,16 @@ import projectsData from '../../data/projects.js'
 
 /**
  * LabIsland — 3D interactive Lab workstation inspired by Bruno Simon's portfolio:
- * featuring a central wooden display screen with 3D purple arrow buttons, right-side project rack,
- * left-side chalk instruction easel, and foreground laboratory workbench props.
+ * elevated securely on a wooden deck stage platform with a central wooden display,
+ * 3D purple navigation buttons, right-side project rack, left-side chalk instruction easel,
+ * and foreground laboratory workbench props.
  */
 export class LabIsland
 {
     constructor()
     {
         this.game = Game.getInstance()
-        this.position = new THREE.Vector3(36, 0.2, -20)
+        this.position = new THREE.Vector3(36, 1.8, -20)
         this.currentIndex = 0
         this.isFocused = false
 
@@ -24,6 +25,18 @@ export class LabIsland
         this.zoneTitleEl = document.querySelector('.js-zone-title')
 
         // Materials
+        this.stageWoodMat = new THREE.MeshStandardNodeMaterial({
+            color: '#422814',
+            roughness: 0.85,
+            flatShading: true
+        })
+
+        this.stageBorderMat = new THREE.MeshStandardNodeMaterial({
+            color: '#2a1608',
+            roughness: 0.9,
+            flatShading: true
+        })
+
         this.woodMat = new THREE.MeshStandardNodeMaterial({
             color: '#704828',
             roughness: 0.85,
@@ -54,8 +67,6 @@ export class LabIsland
             color: '#c084fc'
         })
 
-        this.chalkboardMat = new THREE.MeshBasicNodeMaterial()
-
         this.projectRackMeshes = []
 
         this.createWorkstation3D()
@@ -67,7 +78,10 @@ export class LabIsland
         this.group = new THREE.Group()
         this.group.position.copy(this.position)
 
-        // 1. Central Screen Canvas & Mesh
+        // 1. Solid Elevated Wooden Deck Stage Platform (Ensures nothing hides inside island terrain)
+        this.createStagePlatform()
+
+        // 2. Central Screen Canvas & Mesh (Elevated on stage)
         this.screenCanvas = document.createElement('canvas')
         this.screenCanvas.width = 1200
         this.screenCanvas.height = 750
@@ -80,47 +94,47 @@ export class LabIsland
         const screenGeo = new THREE.PlaneGeometry(7.2, 4.5)
         const screenMat = new THREE.MeshBasicNodeMaterial({ map: this.screenTexture })
         this.screenMesh = new THREE.Mesh(screenGeo, screenMat)
-        this.screenMesh.position.set(0, 3.4, 0.22)
+        this.screenMesh.position.set(0, 3.8, 0.22)
         this.group.add(this.screenMesh)
 
         // Screen Frame Structure
         const frameTop = new THREE.Mesh(new THREE.BoxGeometry(7.8, 0.5, 0.5), this.woodMat)
-        frameTop.position.set(0, 5.85, 0.1)
+        frameTop.position.set(0, 6.25, 0.1)
         frameTop.castShadow = true
         this.group.add(frameTop)
 
-        const postL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.2, 0.5), this.darkWoodMat)
-        postL.position.set(-3.85, 3.1, 0.1)
+        const postL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.4, 0.5), this.darkWoodMat)
+        postL.position.set(-3.85, 3.4, 0.1)
         postL.castShadow = true
         this.group.add(postL)
 
-        const postR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.2, 0.5), this.darkWoodMat)
-        postR.position.set(3.85, 3.1, 0.1)
+        const postR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.4, 0.5), this.darkWoodMat)
+        postR.position.set(3.85, 3.4, 0.1)
         postR.castShadow = true
         this.group.add(postR)
 
-        // 2. 3D Purple Navigation Arrow Buttons on the Frame Sides
+        // 3. 3D Purple Navigation Arrow Buttons on the Frame Sides
         const arrowGeo = new THREE.BoxGeometry(0.85, 0.85, 0.5)
 
         this.prevArrowMesh = new THREE.Mesh(arrowGeo, this.purpleMat)
-        this.prevArrowMesh.position.set(-3.85, 3.4, 0.45)
+        this.prevArrowMesh.position.set(-3.85, 3.8, 0.45)
         this.group.add(this.prevArrowMesh)
 
         this.nextArrowMesh = new THREE.Mesh(arrowGeo, this.purpleMat)
-        this.nextArrowMesh.position.set(3.85, 3.4, 0.45)
+        this.nextArrowMesh.position.set(3.85, 3.8, 0.45)
         this.group.add(this.nextArrowMesh)
 
         // Add 3D arrow text labels onto the blocks
         this.addArrowLabel(this.prevArrowMesh, '◄')
         this.addArrowLabel(this.nextArrowMesh, '►')
 
-        // 3. Right-Side Project Selector Rack
+        // 4. Right-Side Project Selector Rack (Elevated on stage)
         this.createProjectRack()
 
-        // 4. Left-Side Chalkboard Instructions Easel
+        // 5. Left-Side Chalkboard Instructions Easel (Elevated on stage)
         this.createInstructionsChalkboard()
 
-        // 5. Foreground Laboratory Workbench & Props
+        // 6. Foreground Laboratory Workbench & Props (Elevated on stage)
         this.createWorkbenchProps()
 
         this.game.scene.add(this.group)
@@ -128,10 +142,10 @@ export class LabIsland
         // Render initial screen canvas
         this.renderScreenCanvas()
 
-        // 6. Interactive Ground Diamond Marker for approaching Lab Island
+        // 7. Interactive Ground Diamond Marker for approaching Lab Island
         this.marker = this.game.interactivePoints.create(
             new THREE.Vector3(36, 0.8, -13.5),
-            '🔬 Enter Lab Showcase (Enter)',
+            '🔬 View Lab Showcase (Enter)',
             () =>
             {
                 this.focus()
@@ -167,6 +181,68 @@ export class LabIsland
         })
     }
 
+    createStagePlatform()
+    {
+        const stageGroup = new THREE.Group()
+
+        // Main Stage Deck Box
+        const stageWidth = 15.5
+        const stageDepth = 9.0
+        const stageHeight = 0.85
+
+        const mainDeck = new THREE.Mesh(
+            new THREE.BoxGeometry(stageWidth, stageHeight, stageDepth),
+            this.stageWoodMat
+        )
+        mainDeck.position.set(0, stageHeight * 0.5, 0.4)
+        mainDeck.receiveShadow = true
+        mainDeck.castShadow = true
+        stageGroup.add(mainDeck)
+
+        // Dark Wood Perimeter Framing
+        const borderGeo = new THREE.BoxGeometry(stageWidth + 0.3, 0.3, stageDepth + 0.3)
+        const borderMesh = new THREE.Mesh(borderGeo, this.stageBorderMat)
+        borderMesh.position.set(0, stageHeight, 0.4)
+        stageGroup.add(borderMesh)
+
+        // Front Entrance Steps
+        const step1 = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.4, 1.4), this.stageWoodMat)
+        step1.position.set(0, 0.2, stageDepth * 0.5 + 0.9)
+        step1.castShadow = true
+        stageGroup.add(step1)
+
+        const step2 = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.25, 1.2), this.stageWoodMat)
+        step2.position.set(0, 0.12, stageDepth * 0.5 + 2.0)
+        step2.castShadow = true
+        stageGroup.add(step2)
+
+        // 4 Corner Lantern Posts on Stage
+        const postGeo = new THREE.BoxGeometry(0.3, 1.6, 0.3)
+        const lanternGeo = new THREE.SphereGeometry(0.18, 8, 8)
+        const lanternMat = new THREE.MeshBasicNodeMaterial({ color: '#fef08a' })
+
+        const cornerPositions = [
+            [-stageWidth * 0.47, stageHeight + 0.8, -stageDepth * 0.45],
+            [ stageWidth * 0.47, stageHeight + 0.8, -stageDepth * 0.45],
+            [-stageWidth * 0.47, stageHeight + 0.8,  stageDepth * 0.45],
+            [ stageWidth * 0.47, stageHeight + 0.8,  stageDepth * 0.45]
+        ]
+
+        for(const pos of cornerPositions)
+        {
+            const p = new THREE.Mesh(postGeo, this.darkWoodMat)
+            p.position.set(pos[0], pos[1], pos[2])
+            p.castShadow = true
+            stageGroup.add(p)
+
+            const light = new THREE.Mesh(lanternGeo, lanternMat)
+            light.position.set(pos[0], pos[1] + 0.85, pos[2])
+            stageGroup.add(light)
+        }
+
+        this.group.add(stageGroup)
+    }
+
     addArrowLabel(parentMesh, text)
     {
         const canvas = document.createElement('canvas')
@@ -193,7 +269,7 @@ export class LabIsland
     createProjectRack()
     {
         const rackGroup = new THREE.Group()
-        rackGroup.position.set(5.5, 3.4, 0.1)
+        rackGroup.position.set(5.5, 3.8, 0.1)
 
         // Vertical support posts
         const post = new THREE.Mesh(new THREE.BoxGeometry(0.3, 5.4, 0.3), this.woodMat)
@@ -256,7 +332,7 @@ export class LabIsland
 
     renderRackCard(cardData, isActive)
     {
-        const { ctx, canvas, texture, project, index } = cardData
+        const { ctx, texture, project, index } = cardData
         ctx.clearRect(0, 0, 400, 200)
 
         // Background
@@ -289,7 +365,7 @@ export class LabIsland
     createInstructionsChalkboard()
     {
         const easelGroup = new THREE.Group()
-        easelGroup.position.set(-5.6, 2.0, 0.8)
+        easelGroup.position.set(-5.6, 2.4, 0.8)
         easelGroup.rotation.y = 0.35 // Angled towards viewer
 
         // Chalkboard canvas
@@ -356,7 +432,7 @@ export class LabIsland
     createWorkbenchProps()
     {
         const tableGroup = new THREE.Group()
-        tableGroup.position.set(0, 0, 1.2)
+        tableGroup.position.set(0, 0.85, 1.2) // Mounted firmly on top of stage
 
         // Wooden table top
         const tableTop = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.35, 1.6), this.woodMat)
@@ -413,7 +489,6 @@ export class LabIsland
     {
         const ctx = this.screenCtx
         const p = projectsData[this.currentIndex]
-        const total = projectsData.length
 
         // Background
         ctx.fillStyle = '#0a0e17'
@@ -505,16 +580,16 @@ export class LabIsland
             badgeX += badgeWidth + 18
         }
 
-        // Footer Bar: Visit Repo Action
-        ctx.fillStyle = 'rgba(147, 51, 234, 0.9)'
+        // Footer Bar: Instructions
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)'
         ctx.beginPath()
         ctx.roundRect(80, 620, 1040, 75, 16)
         ctx.fill()
 
-        ctx.font = 'bold 26px "Space Grotesk", sans-serif'
-        ctx.fillStyle = '#ffffff'
+        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
+        ctx.fillStyle = '#c084fc'
         ctx.textAlign = 'center'
-        ctx.fillText('🔗 PRESS [ENTER] OR CLICK TO OPEN GITHUB REPOSITORY', 600, 668)
+        ctx.fillText('◄ [A] PREV PROJECT  •  [D] NEXT PROJECT ►  •  [ESC] EXIT TO BOAT', 600, 668)
 
         this.screenTexture.needsUpdate = true
     }
@@ -564,13 +639,6 @@ export class LabIsland
         this.updateAllViews()
     }
 
-    openCurrentProject()
-    {
-        const p = projectsData[this.currentIndex]
-        const url = p.link || 'https://github.com/Karrtik12?tab=repositories'
-        window.open(url, '_blank', 'noopener,noreferrer')
-    }
-
     focus()
     {
         if(this.isFocused) return
@@ -582,13 +650,13 @@ export class LabIsland
         const aspect = camera.aspect || (window.innerWidth / window.innerHeight)
         const fovRad = THREE.MathUtils.degToRad(camera.fov || 45)
 
-        // Screen size: 7.2 width, 4.5 height
+        // Screen size: 7.2 width, 4.5 height on raised stage (y = 1.8 + 3.8 = 5.6)
         const distH = (4.5 * 0.5) / Math.tan(fovRad * 0.5)
         const distW = (7.2 * 0.5) / (aspect * Math.tan(fovRad * 0.5))
         const d = Math.max(distH, distW) * 1.02 // Perfectly fills viewport edge-to-edge
 
-        const targetLookAt = new THREE.Vector3(36, 3.6, -19.78)
-        const targetCamPos = new THREE.Vector3(36, 3.6, -19.78 + d)
+        const targetLookAt = new THREE.Vector3(36, 5.6, -19.78)
+        const targetCamPos = new THREE.Vector3(36, 5.6, -19.78 + d)
         this.game.view.setCinematic(targetCamPos, targetLookAt, 1.0)
 
         // Hide ground diamond marker during focus

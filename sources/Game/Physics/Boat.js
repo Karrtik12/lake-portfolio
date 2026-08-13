@@ -22,20 +22,20 @@ export class Boat
         this.angularVelocity = 0
         this.speed = 0
 
-        // Base Physics parameters (relaxed cruising for easy control)
+        // Base Physics parameters (relaxed cruising with realistic wide rudder turning radius)
         this.baseEngineForce = 9.5
         this.baseReverseForce = 5.5
-        this.baseTurnSpeed = 1.55
+        this.baseTurnSpeed = 1.05  // Wider turning radius
         this.baseTopSpeed = 9.0
 
         // Boost parameters (holding Shift)
         this.boostEngineForce = 18.5
         this.boostTopSpeed = 17.0
-        this.boostTurnSpeed = 2.1
+        this.boostTurnSpeed = 1.35
 
         this.linearDamping = 1.6   // Water resistance
         this.angularDamping = 4.5  // Steering resistance
-        this.lateralDamping = 0.90 // Keel grip (prevents sliding sideways)
+        this.lateralDamping = 0.94 // Keel grip (prevents sliding sideways)
 
         // Create dynamic rigid body in Rapier
         this.initPhysicsBody()
@@ -76,6 +76,15 @@ export class Boat
     {
         if(!this.body) return
 
+        // If camera is in cinematic mode (e.g. Lab billboard focused), disable boat inputs completely
+        const isCinematic = this.game.view && this.game.view.mode === 3
+        const isLabFocused = this.game.areaManager?.lab?.isFocused
+        if(isCinematic || isLabFocused)
+        {
+            this.angularVelocity = lerp(this.angularVelocity, 0, this.angularDamping * delta)
+            return
+        }
+
         const axes = this.game.inputs.getAxes()
 
         // Determine current speed & turn parameters based on Shift boost
@@ -83,9 +92,9 @@ export class Boat
         const currentTopSpeed = axes.boost ? this.boostTopSpeed : this.baseTopSpeed
         const currentTurnSpeed = axes.boost ? this.boostTurnSpeed : this.baseTurnSpeed
 
-        // 1. Steering (Rotate boat around Y axis)
-        // Turning is more effective when moving
-        const speedFactor = clamp(Math.abs(this.speed) / 2.5, 0.4, 1.0)
+        // 1. Rudder Steering (Rotate boat around Y axis)
+        // Realistic rudder physics: turning requires water flow/momentum past the rudder
+        const speedFactor = clamp(Math.abs(this.speed) / 3.5, 0.08, 1.0)
         if(axes.right !== 0)
         {
             // Invert steering when reversing
