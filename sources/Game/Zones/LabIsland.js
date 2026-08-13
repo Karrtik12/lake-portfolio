@@ -4,8 +4,8 @@ import { Game } from '../Game.js'
 import projectsData from '../../data/projects.js'
 
 /**
- * LabIsland — in-world 3D interactive project billboard with smooth cinematic camera focus
- * and direct 3D project pagination without popup modals.
+ * LabIsland — in-world 3D interactive project billboard with fullscreen cinematic zoom
+ * and seamless ESC return-to-boat camera transition.
  */
 export class LabIsland
 {
@@ -21,6 +21,10 @@ export class LabIsland
         this.prevBtn = document.querySelector('.js-lab-nav-prev')
         this.nextBtn = document.querySelector('.js-lab-nav-next')
         this.exitBtn = document.querySelector('.js-lab-exit-btn')
+        this.minimapEl = document.querySelector('.js-minimap')
+        this.menuToggleEl = document.querySelector('.js-menu-toggle')
+        this.toastEl = document.querySelector('.js-interact-toast')
+        this.zoneTitleEl = document.querySelector('.js-zone-title')
 
         this.createBillboard3D()
         this.setupKeyboardControls()
@@ -33,8 +37,8 @@ export class LabIsland
 
         // 1. High-Resolution Display Canvas Texture
         this.canvas = document.createElement('canvas')
-        this.canvas.width = 1024
-        this.canvas.height = 640
+        this.canvas.width = 1200
+        this.canvas.height = 750
         this.ctx = this.canvas.getContext('2d')
 
         this.displayTexture = new THREE.CanvasTexture(this.canvas)
@@ -43,7 +47,7 @@ export class LabIsland
 
         this.renderBillboardCanvas()
 
-        // 2. Display Screen Mesh
+        // 2. Display Screen Mesh (8.8 width x 5.5 height)
         const screenGeo = new THREE.PlaneGeometry(8.8, 5.5)
         const screenMat = new THREE.MeshBasicNodeMaterial({
             map: this.displayTexture
@@ -52,10 +56,10 @@ export class LabIsland
         this.screenMesh.position.set(0, 0, 0.22)
         this.group.add(this.screenMesh)
 
-        // 3. Wooden / Metal Frame
-        const frameGeo = new THREE.BoxGeometry(9.4, 6.0, 0.4)
+        // 3. Frame
+        const frameGeo = new THREE.BoxGeometry(9.2, 5.9, 0.4)
         const frameMat = new THREE.MeshStandardNodeMaterial({
-            color: '#1e293b',
+            color: '#0f172a',
             roughness: 0.6,
             metalness: 0.4,
             flatShading: true
@@ -82,8 +86,8 @@ export class LabIsland
 
         // 5. Interactive Point Marker for approaching the Lab
         this.marker = this.game.interactivePoints.create(
-            new THREE.Vector3(36, 0.8, -13),
-            '🔬 View Lab Projects (Enter)',
+            new THREE.Vector3(36, 0.8, -13.5),
+            '🔬 View Projects (Enter)',
             () =>
             {
                 this.focus()
@@ -107,102 +111,102 @@ export class LabIsland
         const total = projectsData.length
 
         // Background
-        ctx.fillStyle = '#0f172a'
-        ctx.fillRect(0, 0, 1024, 640)
+        ctx.fillStyle = '#090d16'
+        ctx.fillRect(0, 0, 1200, 750)
 
         // Tech grid pattern overlay
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.07)'
-        ctx.lineWidth = 1
-        for(let x = 0; x < 1024; x += 40)
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)'
+        ctx.lineWidth = 1.5
+        for(let x = 0; x < 1200; x += 45)
         {
             ctx.beginPath()
             ctx.moveTo(x, 0)
-            ctx.lineTo(x, 640)
+            ctx.lineTo(x, 750)
             ctx.stroke()
         }
-        for(let y = 0; y < 640; y += 40)
+        for(let y = 0; y < 750; y += 45)
         {
             ctx.beginPath()
             ctx.moveTo(0, y)
-            ctx.lineTo(1024, y)
+            ctx.lineTo(1200, y)
             ctx.stroke()
         }
 
         // Glowing outer border
         ctx.strokeStyle = '#38bdf8'
-        ctx.lineWidth = 6
-        ctx.strokeRect(12, 12, 1000, 616)
+        ctx.lineWidth = 8
+        ctx.strokeRect(16, 16, 1168, 718)
 
         // Header bar: Project Counter + Lab Title
-        ctx.fillStyle = 'rgba(56, 189, 248, 0.15)'
-        ctx.fillRect(24, 24, 976, 60)
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.14)'
+        ctx.fillRect(32, 32, 1136, 70)
 
-        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
+        ctx.font = 'bold 26px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#38bdf8'
         ctx.textAlign = 'left'
-        ctx.fillText('LAB // SYSTEMS & AI PROJECTS', 48, 62)
+        ctx.fillText('LAB // SYSTEMS & AI PROJECTS', 60, 76)
 
         ctx.textAlign = 'right'
         ctx.fillStyle = '#94a3b8'
-        ctx.fillText(`[ ${this.currentIndex + 1} OF ${total} ]`, 976, 62)
+        ctx.fillText(`[ ${this.currentIndex + 1} OF ${total} ]`, 1136, 76)
 
         // Project Title
-        ctx.font = 'bold 44px "Space Grotesk", sans-serif'
+        ctx.font = 'bold 52px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#ffffff'
         ctx.textAlign = 'left'
-        ctx.fillText(p.title, 48, 160)
+        ctx.fillText(p.title, 60, 190)
 
         // Project Description (Multi-line text wrapping)
-        ctx.font = '24px "Inter", sans-serif'
+        ctx.font = '26px "Inter", sans-serif'
         ctx.fillStyle = '#cbd5e1'
-        this.wrapText(ctx, p.description, 48, 230, 928, 38)
+        this.wrapText(ctx, p.description, 60, 270, 1080, 44)
 
         // Tech Stack Badges
-        ctx.font = 'bold 18px "Space Grotesk", sans-serif'
+        ctx.font = 'bold 20px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#64748b'
-        ctx.fillText('TECHNOLOGIES & STACK', 48, 415)
+        ctx.fillText('TECHNOLOGIES & ARCHITECTURE', 60, 490)
 
-        let badgeX = 48
+        let badgeX = 60
         for(const tech of p.stack || [])
         {
-            ctx.font = 'bold 20px "Space Grotesk", sans-serif'
+            ctx.font = 'bold 22px "Space Grotesk", sans-serif'
             const textWidth = ctx.measureText(tech).width
-            const badgeWidth = textWidth + 32
+            const badgeWidth = textWidth + 36
 
             ctx.fillStyle = 'rgba(56, 189, 248, 0.18)'
             ctx.strokeStyle = '#38bdf8'
             ctx.lineWidth = 2
             ctx.beginPath()
-            ctx.roundRect(badgeX, 435, badgeWidth, 42, 10)
+            ctx.roundRect(badgeX, 515, badgeWidth, 48, 12)
             ctx.fill()
             ctx.stroke()
 
             ctx.fillStyle = '#e0f2fe'
             ctx.textAlign = 'center'
-            ctx.fillText(tech, badgeX + badgeWidth * 0.5, 463)
+            ctx.fillText(tech, badgeX + badgeWidth * 0.5, 548)
 
-            badgeX += badgeWidth + 16
+            badgeX += badgeWidth + 20
         }
 
         // Navigation Footer Bar
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'
-        ctx.fillRect(24, 530, 976, 80)
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)'
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)'
+        ctx.fillRect(32, 630, 1136, 88)
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)'
         ctx.lineWidth = 2
-        ctx.strokeRect(24, 530, 976, 80)
+        ctx.strokeRect(32, 630, 1136, 88)
 
-        ctx.font = 'bold 20px "Space Grotesk", sans-serif'
+        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#38bdf8'
         ctx.textAlign = 'left'
-        ctx.fillText('◄ [A] PREV PROJECT', 48, 578)
+        ctx.fillText('◄ [A] PREV PROJECT', 60, 684)
 
         ctx.textAlign = 'center'
         ctx.fillStyle = '#f8fafc'
-        ctx.fillText('PRESS [ESC] TO RETURN TO BOAT', 512, 578)
+        ctx.fillText('PRESS [ESC] TO ZOOM OUT & RETURN TO BOAT', 600, 684)
 
         ctx.textAlign = 'right'
         ctx.fillStyle = '#38bdf8'
-        ctx.fillText('NEXT PROJECT [D] ►', 976, 578)
+        ctx.fillText('NEXT PROJECT [D] ►', 1136, 684)
 
         this.displayTexture.needsUpdate = true
     }
@@ -249,12 +253,24 @@ export class LabIsland
         if(this.isFocused) return
         this.isFocused = true
 
-        // Smoothly position camera in front of 3D display billboard
-        const targetCamPos = new THREE.Vector3(36, 5.0, -11.5)
-        const targetLookAt = new THREE.Vector3(36, 4.6, -20)
-        this.game.view.setCinematic(targetCamPos, targetLookAt, 1.2)
+        // Exact fullscreen zoom distance:
+        // Height = 5.5, vertical FOV = 45 deg -> dist = 2.75 / tan(22.5) = 6.64
+        // Screen position is at z = -19.78, y = 4.5, x = 36
+        const targetCamPos = new THREE.Vector3(36, 4.5, -13.15)
+        const targetLookAt = new THREE.Vector3(36, 4.5, -19.78)
+        this.game.view.setCinematic(targetCamPos, targetLookAt, 1.0)
 
-        // Show HUD bar
+        // Hide diamond marker and obscuring HUD elements for completely unobstructed fullscreen view
+        if(this.marker?.group)
+        {
+            this.marker.group.visible = false
+        }
+        if(this.minimapEl) this.minimapEl.style.display = 'none'
+        if(this.menuToggleEl) this.menuToggleEl.style.display = 'none'
+        if(this.toastEl) this.toastEl.style.display = 'none'
+        if(this.zoneTitleEl) this.zoneTitleEl.style.display = 'none'
+
+        // Show dedicated Lab bottom navigation controls
         if(this.focusBarEl)
         {
             this.focusBarEl.style.display = 'flex'
@@ -273,7 +289,7 @@ export class LabIsland
         if(!this.isFocused) return
         this.isFocused = false
 
-        // Hide HUD bar
+        // Hide Lab HUD bar
         if(this.focusBarEl)
         {
             gsap.killTweensOf(this.focusBarEl)
@@ -288,8 +304,16 @@ export class LabIsland
             })
         }
 
+        // Restore diamond marker and HUD elements
+        if(this.marker?.group)
+        {
+            this.marker.group.visible = true
+        }
+        if(this.minimapEl) this.minimapEl.style.display = 'block'
+        if(this.menuToggleEl) this.menuToggleEl.style.display = 'flex'
+
         // Return camera smoothly to follow mode behind boat
-        this.game.view.exitCinematic(0.8)
+        this.game.view.exitCinematic(0.9)
     }
 
     setupKeyboardControls()

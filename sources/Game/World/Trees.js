@@ -50,6 +50,13 @@ export class Trees
                 const r = 2.0 + Math.random() * (island.radius - 2.5)
                 const x = island.center[0] + Math.cos(angle) * r
                 const z = island.center[1] + Math.sin(angle) * r
+
+                // Keep clear sightline in front of Lab billboard (x: 36, z: -20)
+                if(island.center[0] === 36 && z > -20.5 && Math.abs(x - 36) < 6.0)
+                {
+                    continue
+                }
+
                 const y = 2.0 + Math.random() * 0.8
                 const scale = 0.75 + Math.random() * 0.5
                 const variant = Math.floor(Math.random() * 3)

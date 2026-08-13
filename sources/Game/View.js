@@ -80,11 +80,58 @@ export class View
         })
     }
 
-    exitCinematic(duration = 0.8)
+    exitCinematic(duration = 0.9)
     {
         if(this.mode !== View.MODE_CINEMATIC) return
 
-        this.mode = View.MODE_FOLLOW
+        if(this.game.boat)
+        {
+            const boat = this.game.boat
+            const behindDir = new THREE.Vector3(
+                Math.sin(boat.rotation),
+                0,
+                Math.cos(boat.rotation)
+            )
+            const targetPos = new THREE.Vector3(
+                boat.position.x + behindDir.x * this.followOffset.z,
+                boat.position.y + this.followOffset.y,
+                boat.position.z + behindDir.z * this.followOffset.z
+            )
+            const forwardDir = new THREE.Vector3(
+                -Math.sin(boat.rotation),
+                0,
+                -Math.cos(boat.rotation)
+            )
+            const targetLook = new THREE.Vector3(
+                boat.position.x + forwardDir.x * 4.0,
+                boat.position.y + 1.2,
+                boat.position.z + forwardDir.z * 4.0
+            )
+
+            gsap.killTweensOf([this.currentPosition, this.currentLookAt])
+            gsap.to(this.currentPosition, {
+                x: targetPos.x,
+                y: targetPos.y,
+                z: targetPos.z,
+                duration,
+                ease: 'power2.inOut',
+                onComplete: () =>
+                {
+                    this.mode = View.MODE_FOLLOW
+                }
+            })
+            gsap.to(this.currentLookAt, {
+                x: targetLook.x,
+                y: targetLook.y,
+                z: targetLook.z,
+                duration,
+                ease: 'power2.inOut'
+            })
+        }
+        else
+        {
+            this.mode = View.MODE_FOLLOW
+        }
     }
 
     update()
