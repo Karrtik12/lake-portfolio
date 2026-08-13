@@ -649,19 +649,22 @@ export class LabIsland
         this.isFocused = true
         this.lastFocusTime = performance.now()
 
-        // Calculate exact mathematical distance so billboard display goes 100% full screen
+        // Calculate exact distance to comfortably frame the ENTIRE workstation:
+        // Left chalkboard instructions, central display screen, right project carousel rack, and workbench props
         const camera = this.game.view.camera
         const aspect = camera.aspect || (window.innerWidth / window.innerHeight)
         const fovRad = THREE.MathUtils.degToRad(camera.fov || 45)
 
-        // Screen size: 7.2 width, 4.5 height on raised stage (y = 1.2 + 3.6 = 4.8)
-        const distH = (4.5 * 0.5) / Math.tan(fovRad * 0.5)
-        const distW = (7.2 * 0.5) / (aspect * Math.tan(fovRad * 0.5))
-        const d = Math.max(distH, distW) * 1.02 // Perfectly fills viewport edge-to-edge
+        const totalW = 14.8
+        const totalH = 6.2
 
-        const targetLookAt = new THREE.Vector3(36, 4.8, -17.78)
-        const targetCamPos = new THREE.Vector3(36, 4.8, -17.78 + d)
-        this.game.view.setCinematic(targetCamPos, targetLookAt, 0.8)
+        const distH = (totalH * 0.5) / Math.tan(fovRad * 0.5)
+        const distW = (totalW * 0.5) / (aspect * Math.tan(fovRad * 0.5))
+        const d = Math.max(distH, distW) * 1.05
+
+        const targetLookAt = new THREE.Vector3(36, 4.4, -17.78)
+        const targetCamPos = new THREE.Vector3(36, 4.4, -17.78 + d)
+        this.game.view.setCinematic(targetCamPos, targetLookAt, 1.0)
 
         // Hide distracting HUD overlays during focus
         if(this.minimapEl) this.minimapEl.style.display = 'none'

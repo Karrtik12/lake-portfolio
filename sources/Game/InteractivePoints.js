@@ -293,12 +293,24 @@ export class InteractivePoints
         const isCinematic = this.game.view && this.game.view.mode === 3
         if(isCinematic)
         {
+            this.wasCinematic = true
             for(const item of this.items)
             {
                 item.group.visible = false
             }
             if(this.toastEl) this.toastEl.style.display = 'none'
             return
+        }
+        else if(this.wasCinematic)
+        {
+            this.wasCinematic = false
+            this.isToastVisible = false // Reset so toast re-animates immediately
+            for(const item of this.items)
+            {
+                item.group.visible = true
+                item.state = null
+                item.isFocused = null
+            }
         }
         else
         {
