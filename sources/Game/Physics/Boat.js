@@ -22,14 +22,20 @@ export class Boat
         this.angularVelocity = 0
         this.speed = 0
 
-        // Physics parameters
-        this.engineForce = 18.0
-        this.reverseForce = 8.0
-        this.turnSpeed = 2.4
-        this.topSpeed = 16.0
-        this.linearDamping = 1.8   // Water resistance
-        this.angularDamping = 4.0  // Steering resistance
-        this.lateralDamping = 0.88 // Keel grip (prevents sliding sideways)
+        // Base Physics parameters (relaxed cruising for easy control)
+        this.baseEngineForce = 9.5
+        this.baseReverseForce = 5.5
+        this.baseTurnSpeed = 1.55
+        this.baseTopSpeed = 9.0
+
+        // Boost parameters (holding Shift)
+        this.boostEngineForce = 18.5
+        this.boostTopSpeed = 17.0
+        this.boostTurnSpeed = 2.1
+
+        this.linearDamping = 1.6   // Water resistance
+        this.angularDamping = 4.5  // Steering resistance
+        this.lateralDamping = 0.90 // Keel grip (prevents sliding sideways)
 
         // Create dynamic rigid body in Rapier
         this.initPhysicsBody()
@@ -72,14 +78,19 @@ export class Boat
 
         const axes = this.game.inputs.getAxes()
 
+        // Determine current speed & turn parameters based on Shift boost
+        const currentEngineForce = axes.boost ? this.boostEngineForce : this.baseEngineForce
+        const currentTopSpeed = axes.boost ? this.boostTopSpeed : this.baseTopSpeed
+        const currentTurnSpeed = axes.boost ? this.boostTurnSpeed : this.baseTurnSpeed
+
         // 1. Steering (Rotate boat around Y axis)
         // Turning is more effective when moving
-        const speedFactor = clamp(Math.abs(this.speed) / 3.0, 0.35, 1.0)
+        const speedFactor = clamp(Math.abs(this.speed) / 2.5, 0.4, 1.0)
         if(axes.right !== 0)
         {
             // Invert steering when reversing
             const reverseSign = this.speed < -0.5 ? -1 : 1
-            this.angularVelocity = -axes.right * this.turnSpeed * speedFactor * reverseSign
+            this.angularVelocity = -axes.right * currentTurnSpeed * speedFactor * reverseSign
         }
         else
         {
@@ -104,11 +115,11 @@ export class Boat
         let forceMagnitude = 0
         if(axes.forward > 0)
         {
-            forceMagnitude = this.engineForce * axes.forward
+            forceMagnitude = currentEngineForce * axes.forward
         }
         else if(axes.forward < 0)
         {
-            forceMagnitude = this.reverseForce * axes.forward
+            forceMagnitude = this.baseReverseForce * axes.forward
         }
 
         const force = {
@@ -132,9 +143,9 @@ export class Boat
             .add(rightDir.clone().multiplyScalar(lateralSpeed * this.lateralDamping))
 
         // Cap maximum speed
-        if(adjustedLinvel.length() > this.topSpeed)
+        if(adjustedLinvel.length() > currentTopSpeed)
         {
-            adjustedLinvel.normalize().multiplyScalar(this.topSpeed)
+            adjustedLinvel.normalize().multiplyScalar(currentTopSpeed)
         }
 
         // Lock Y translation to water plane (y = 0.2)

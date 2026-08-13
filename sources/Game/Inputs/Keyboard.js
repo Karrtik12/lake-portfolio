@@ -13,6 +13,7 @@ export class Keyboard
             backward: false,
             left: false,
             right: false,
+            boost: false,
             interact: false,
             reset: false
         }
@@ -40,6 +41,10 @@ export class Keyboard
             case 'KeyD':
             case 'ArrowRight':
                 this.keys.right = pressed
+                break
+            case 'ShiftLeft':
+            case 'ShiftRight':
+                this.keys.boost = pressed
                 break
             case 'Enter':
             case 'Space':

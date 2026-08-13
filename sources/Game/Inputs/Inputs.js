@@ -35,12 +35,13 @@ export class Inputs
     {
         let forward = 0
         let right = 0
+        const boost = !!this.keyboard.keys.boost
 
         if(this.keyboard.keys.forward) forward += 1
         if(this.keyboard.keys.backward) forward -= 1
         if(this.keyboard.keys.left) right -= 1
         if(this.keyboard.keys.right) right += 1
 
-        return { forward, right }
+        return { forward, right, boost }
     }
 }
