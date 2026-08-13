@@ -1,0 +1,21 @@
+{
+  "name": "lake-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --mode development",
+    "build": "vite build --mode production",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d": "^0.17.3",
+    "gsap": "^3.12.5",
+    "howler": "^2.2.4",
+    "three": "^0.183.2",
+    "tweakpane": "^4.0.4",
+    "vite": "^7.2.4",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.5.0"
+  }
+}

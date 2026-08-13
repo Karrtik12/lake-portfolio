@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lake Portfolio</title>
+    <meta name="description" content="An interactive 3D portfolio — sail a boat across a lake to explore projects, socials, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style/index.css">
+</head>
+<body>
+    <div class="game">
+        <!-- Loading Screen -->
+        <div class="loading js-loading">
+            <div class="loading-content">
+                <h1 class="loading-title">Lake Portfolio</h1>
+                <div class="loading-bar-container">
+                    <div class="loading-bar js-loading-bar"></div>
+                </div>
+                <p class="loading-text js-loading-text">Loading...</p>
+            </div>
+            <button class="loading-start js-loading-start" style="display: none;">Click to Explore</button>
+        </div>
+
+        <!-- Controls Overlay -->
+        <div class="controls js-controls" style="display: none;">
+            <div class="controls-keys">
+                <div class="controls-row">
+                    <div class="controls-key">W</div>
+                </div>
+                <div class="controls-row">
+                    <div class="controls-key">A</div>
+                    <div class="controls-key">S</div>
+                    <div class="controls-key">D</div>
+                </div>
+            </div>
+            <p class="controls-text">Use WASD or Arrow Keys to sail</p>
+            <p class="controls-text controls-text-secondary">Click on markers to interact</p>
+        </div>
+
+        <!-- Zone Title -->
+        <div class="zone-title js-zone-title" style="display: none;">
+            <span class="zone-title-text js-zone-title-text"></span>
+        </div>
+
+        <!-- Minimap -->
+        <div class="minimap js-minimap">
+            <canvas class="minimap-canvas js-minimap-canvas" width="160" height="160"></canvas>
+        </div>
+
+        <!-- Settings Menu -->
+        <div class="menu">
+            <button class="menu-toggle js-menu-toggle" aria-label="Settings">⚙</button>
+            <div class="menu-panel js-menu-panel" style="display: none;">
+                <button class="menu-btn js-audio-toggle">🔇 Sound</button>
+                <button class="menu-btn js-quality-toggle">✨ Quality: High</button>
+                <button class="menu-btn js-reset-btn">🔄 Reset Position</button>
+            </div>
+        </div>
+
+        <!-- Mobile Controls -->
+        <div class="mobile-controls js-mobile-controls" style="display: none;">
+            <div class="mobile-joystick js-mobile-joystick"></div>
+            <button class="mobile-interact js-mobile-interact" style="display: none;">Interact</button>
+        </div>
+
+        <!-- Modal Overlay -->
+        <div class="modal js-modal" style="display: none;">
+            <div class="modal-backdrop js-modal-backdrop"></div>
+            <div class="modal-content js-modal-content"></div>
+        </div>
+
+        <!-- Three.js Canvas -->
+        <canvas class="game-canvas js-canvas"></canvas>
+    </div>
+
+    <script type="module" src="./index.js"></script>
+</body>
+</html>
