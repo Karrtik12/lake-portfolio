@@ -297,6 +297,10 @@ export class InteractivePoints
             for(const item of this.items)
             {
                 item.group.visible = false
+                item.group.position.set(0, -999, 0)
+                item.diamond.scale.set(0, 0, 0)
+                item.label.scale.set(0, 0, 0)
+                if(item.beam) item.beam.material.opacity = 0
             }
             if(this.toastEl) this.toastEl.style.display = 'none'
             return
@@ -308,6 +312,7 @@ export class InteractivePoints
             for(const item of this.items)
             {
                 item.group.visible = true
+                item.group.position.set(item.position.x, item.heightY, item.position.y)
                 item.state = null
                 item.isFocused = null
             }

@@ -134,9 +134,6 @@ export class LabIsland
         // 5. Left-Side Chalkboard Instructions Easel (Mounted on stage)
         this.createInstructionsChalkboard()
 
-        // 6. Foreground Laboratory Workbench & Props (Mounted on stage)
-        this.createWorkbenchProps()
-
         this.game.scene.add(this.group)
 
         // Render initial screen canvas

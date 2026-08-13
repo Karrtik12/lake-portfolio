@@ -20,6 +20,19 @@ export class Keyboard
 
         window.addEventListener('keydown', (e) => this.onKey(e, true))
         window.addEventListener('keyup', (e) => this.onKey(e, false))
+        window.addEventListener('blur', () => this.resetKeys())
+        window.addEventListener('focus', () => this.resetKeys())
+    }
+
+    resetKeys()
+    {
+        this.keys.forward = false
+        this.keys.backward = false
+        this.keys.left = false
+        this.keys.right = false
+        this.keys.boost = false
+        this.keys.interact = false
+        this.keys.reset = false
     }
 
     onKey(event, pressed)
@@ -56,7 +69,11 @@ export class Keyboard
                 this.keys.reset = pressed
                 break
             case 'Escape':
-                if(pressed) this.events.trigger('escape')
+                if(pressed)
+                {
+                    this.resetKeys()
+                    this.events.trigger('escape')
+                }
                 break
         }
 

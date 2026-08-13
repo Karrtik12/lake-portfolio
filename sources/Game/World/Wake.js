@@ -2,9 +2,9 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Wake — unified, continuous V-shaped motorboat foam wash.
- * Spreads continuous overlapping frothy foam particles across the full expanding V-span
- * to form a single cohesive, natural wake wash (no separate 3-line artifacts).
+ * Wake — single unified, continuous expanding V-shaped motorboat wake ribbon.
+ * Formed as a connected dynamic quad strip with feathered white foam texture
+ * (guaranteed single cohesive wake, zero separate lines).
  */
 export class Wake
 {
@@ -12,178 +12,177 @@ export class Wake
     {
         this.game = Game.getInstance()
 
-        this.totalParticles = 180
-        this.particles = []
-        this.currentIndex = 0
-        this.emitInterval = 0.02
-        this.emitTimer = 0
+        this.maxPoints = 55
+        this.history = []
+        this.minDistance = 0.4
 
-        // Create soft, bubbly, organic foam sprite texture
+        // Connected Quad-Strip Ribbon Geometry: (maxPoints - 1) quads = 2 triangles per segment
+        const segments = this.maxPoints - 1
+        const vertexCount = this.maxPoints * 2
+        const indexCount = segments * 6
+
+        this.positions = new Float32Array(vertexCount * 3)
+        this.uvs = new Float32Array(vertexCount * 2)
+
+        const indices = new Uint16Array(indexCount)
+        let idx = 0
+        for(let i = 0; i < segments; i++)
+        {
+            const a = i * 2 + 0
+            const b = i * 2 + 1
+            const c = (i + 1) * 2 + 0
+            const d = (i + 1) * 2 + 1
+
+            indices[idx++] = a
+            indices[idx++] = c
+            indices[idx++] = b
+
+            indices[idx++] = b
+            indices[idx++] = c
+            indices[idx++] = d
+        }
+
+        this.geometry = new THREE.BufferGeometry()
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3))
+        this.geometry.setAttribute('uv', new THREE.BufferAttribute(this.uvs, 2))
+        this.geometry.setIndex(new THREE.BufferAttribute(indices, 1))
+
+        // Create high-resolution feathered foam wash texture
         const canvas = document.createElement('canvas')
-        canvas.width = 128
+        canvas.width = 512
         canvas.height = 128
         const ctx = canvas.getContext('2d')
 
-        // Multi-layered soft Gaussian foam puff
-        const grad = ctx.createRadialGradient(64, 64, 2, 64, 64, 58)
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)')
-        grad.addColorStop(0.35, 'rgba(240, 249, 255, 0.75)')
-        grad.addColorStop(0.7, 'rgba(224, 242, 254, 0.35)')
+        // Soft horizontal Gaussian wash (white center, soft feathered transparent edges)
+        const grad = ctx.createLinearGradient(0, 0, 0, 128)
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0.0)')
+        grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.75)')
+        grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)')
+        grad.addColorStop(0.8, 'rgba(255, 255, 255, 0.75)')
         grad.addColorStop(1, 'rgba(255, 255, 255, 0.0)')
 
         ctx.fillStyle = grad
-        ctx.fillRect(0, 0, 128, 128)
+        ctx.fillRect(0, 0, 512, 128)
 
-        // Add fine bubble clusters
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'
-        for(let i = 0; i < 30; i++)
+        // Add fine bubbly spray pattern
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+        for(let i = 0; i < 400; i++)
         {
-            const bx = 64 + (Math.random() - 0.5) * 60
-            const by = 64 + (Math.random() - 0.5) * 60
-            const br = Math.random() * 6 + 2
+            const bx = Math.random() * 512
+            const by = 20 + Math.random() * 88
+            const br = Math.random() * 4 + 1
             ctx.beginPath()
             ctx.arc(bx, by, br, 0, Math.PI * 2)
             ctx.fill()
         }
 
-        const foamTex = new THREE.CanvasTexture(canvas)
-
-        // Instanced mesh
-        this.geometry = new THREE.PlaneGeometry(1.0, 1.0)
-        this.geometry.rotateX(-Math.PI * 0.5)
+        const foamTexture = new THREE.CanvasTexture(canvas)
+        foamTexture.wrapS = THREE.RepeatWrapping
+        foamTexture.wrapT = THREE.ClampToEdgeWrapping
 
         this.material = new THREE.MeshBasicNodeMaterial({
-            map: foamTex,
+            map: foamTexture,
             transparent: true,
-            opacity: 0.85,
-            depthWrite: false
+            opacity: 0.88,
+            depthWrite: false,
+            side: THREE.DoubleSide
         })
 
-        this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, this.totalParticles)
-        this.instancedMesh.position.y = 0.10
-        this.instancedMesh.frustumCulled = false
-        this.game.scene.add(this.instancedMesh)
-
-        // Initialize particle pool
-        const dummy = new THREE.Object3D()
-        dummy.position.set(0, -999, 0)
-        dummy.scale.set(0, 0, 0)
-        dummy.updateMatrix()
-
-        for(let i = 0; i < this.totalParticles; i++)
-        {
-            this.instancedMesh.setMatrixAt(i, dummy.matrix)
-            this.particles.push({
-                active: false,
-                position: new THREE.Vector3(),
-                velocity: new THREE.Vector3(),
-                scale: 0.1,
-                maxScale: 2.0,
-                life: 0,
-                maxLife: 1.8
-            })
-        }
-        this.instancedMesh.instanceMatrix.needsUpdate = true
+        this.mesh = new THREE.Mesh(this.geometry, this.material)
+        this.mesh.position.y = 0.12 // Sits cleanly above water waves
+        this.mesh.frustumCulled = false
+        this.game.scene.add(this.mesh)
 
         // Update loop
-        this.game.ticker.events.on('tick', (delta) =>
+        this.game.ticker.events.on('tick', () =>
         {
-            this.update(delta)
+            this.update()
         })
     }
 
-    emit(boat, speed)
+    update()
     {
+        if(!this.game.boat) return
+
+        const boat = this.game.boat
+        const speed = Math.abs(boat.speed)
+
         const forwardDir = new THREE.Vector3(-Math.sin(boat.rotation), 0, -Math.cos(boat.rotation))
         const rightDir = new THREE.Vector3(forwardDir.z, 0, -forwardDir.x)
-        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-1.3))
+        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-1.4))
 
-        const speedRatio = Math.min(speed / 16.0, 1.0)
-        const isBoost = this.game.inputs?.getAxes()?.boost
-
-        // Emit a cluster of 3-4 connected foam puffs across the expanding V-wash
-        const emitCount = isBoost ? 4 : 3
-        for(let j = 0; j < emitCount; j++)
+        // Record boat movement history point
+        const last = this.history[0]
+        if(!last || sternPos.distanceTo(last.pos) > this.minDistance)
         {
-            const p = this.particles[this.currentIndex]
-            p.active = true
+            this.history.unshift({
+                pos: sternPos.clone(),
+                right: rightDir.clone(),
+                speed: speed,
+                isBoost: this.game.inputs?.getAxes()?.boost || false
+            })
 
-            // Continuous distribution across V-hull span: from left edge to right edge
-            // Distribute across span: -1 to +1
-            const spanFactor = (j / (emitCount - 1 || 1)) * 2.0 - 1.0 + (Math.random() - 0.5) * 0.3
-            const lateralOffset = spanFactor * (0.8 + speedRatio * 0.4)
-
-            p.position.copy(sternPos)
-                .add(rightDir.clone().multiplyScalar(lateralOffset))
-                .add(forwardDir.clone().multiplyScalar((Math.random() - 0.5) * 0.4))
-            p.position.y = 0.10
-
-            // Outward lateral expansion velocity creating the natural expanding V-wash
-            const expandSpeed = spanFactor * (1.8 + speedRatio * 1.5)
-            p.velocity.copy(rightDir).multiplyScalar(expandSpeed)
-                .add(forwardDir.clone().multiplyScalar(-0.4 - speedRatio * 0.6))
-
-            p.scale = 0.6 + speedRatio * 0.4
-            p.maxScale = (1.8 + Math.abs(spanFactor) * 1.2) * (isBoost ? 1.4 : 1.0)
-            p.life = 0
-            p.maxLife = 1.6 + speedRatio * 1.0 + (Math.random() - 0.5) * 0.4
-
-            this.currentIndex = (this.currentIndex + 1) % this.totalParticles
-        }
-    }
-
-    update(delta)
-    {
-        const boat = this.game.boat
-        if(boat && Math.abs(boat.speed) > 0.5)
-        {
-            this.emitTimer += delta
-            if(this.emitTimer >= this.emitInterval)
+            if(this.history.length > this.maxPoints)
             {
-                this.emitTimer = 0
-                this.emit(boat, Math.abs(boat.speed))
+                this.history.pop()
             }
         }
 
-        const dummy = new THREE.Object3D()
-        let needsUpdate = false
+        if(this.history.length < 2) return
 
-        for(let i = 0; i < this.totalParticles; i++)
+        const count = this.history.length
+        const posArr = this.geometry.attributes.position.array
+        const uvArr = this.geometry.attributes.uv.array
+
+        for(let i = 0; i < this.maxPoints; i++)
         {
-            const p = this.particles[i]
-            if(!p.active) continue
+            const vBase = i * 2 * 3
+            const uvBase = i * 2 * 2
 
-            p.life += delta
-            const progress = p.life / p.maxLife
-
-            if(progress >= 1.0)
+            if(i < count)
             {
-                p.active = false
-                dummy.position.set(0, -999, 0)
-                dummy.scale.set(0, 0, 0)
-                dummy.updateMatrix()
-                this.instancedMesh.setMatrixAt(i, dummy.matrix)
-                needsUpdate = true
-                continue
+                const h = this.history[i]
+                const t = i / (count - 1 || 1) // 0 at stern, 1 at tail
+
+                // Smooth natural V-expansion: starts at 0.9m at motor, expands to 7.5m (or 10.5m during boost)
+                const baseWidth = 0.8 + Math.min(h.speed / 16.0, 1.0) * 0.4
+                const vSpread = Math.pow(t, 0.8) * (h.isBoost ? 9.5 : 6.8)
+                const halfWidth = (baseWidth + vSpread) * 0.5
+
+                const p = h.pos
+                const r = h.right
+
+                // Left vertex of the single wake ribbon
+                posArr[vBase + 0] = p.x - r.x * halfWidth
+                posArr[vBase + 1] = 0.12
+                posArr[vBase + 2] = p.z - r.z * halfWidth
+
+                // Right vertex of the single wake ribbon
+                posArr[vBase + 3] = p.x + r.x * halfWidth
+                posArr[vBase + 4] = 0.12
+                posArr[vBase + 5] = p.z + r.z * halfWidth
+
+                // UVs: U spans 0 to 1 across the ribbon width, V scrolls along length
+                uvArr[uvBase + 0] = 0.0
+                uvArr[uvBase + 1] = t * 4.0
+                uvArr[uvBase + 2] = 1.0
+                uvArr[uvBase + 3] = t * 4.0
             }
+            else
+            {
+                // Collapse remaining unused vertices
+                const lastH = this.history[count - 1]
+                posArr[vBase + 0] = lastH.pos.x
+                posArr[vBase + 1] = -10
+                posArr[vBase + 2] = lastH.pos.z
 
-            p.position.addScaledVector(p.velocity, delta)
-
-            // Smooth bell curve growth: expands quickly then fades out
-            const growth = Math.sin(progress * Math.PI * 0.5)
-            const currentScale = p.scale + (p.maxScale - p.scale) * growth
-
-            dummy.position.copy(p.position)
-            dummy.scale.set(currentScale, 1.0, currentScale)
-            dummy.updateMatrix()
-
-            this.instancedMesh.setMatrixAt(i, dummy.matrix)
-            needsUpdate = true
+                posArr[vBase + 3] = lastH.pos.x
+                posArr[vBase + 4] = -10
+                posArr[vBase + 5] = lastH.pos.z
+            }
         }
 
-        if(needsUpdate)
-        {
-            this.instancedMesh.instanceMatrix.needsUpdate = true
-        }
+        this.geometry.attributes.position.needsUpdate = true
+        this.geometry.attributes.uv.needsUpdate = true
     }
 }
