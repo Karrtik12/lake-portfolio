@@ -153,7 +153,7 @@ export class LabIsland
         )
 
         // RayCursor click hit targets
-        this.game.rayCursor.addIntersect({
+        const focusOnClick = {
             mesh: this.screenMesh,
             active: true,
             onClick: () =>
@@ -162,7 +162,11 @@ export class LabIsland
             },
             onEnter: () => {},
             onLeave: () => {}
-        })
+        }
+        this.game.rayCursor.addIntersect(focusOnClick)
+        this.game.rayCursor.addIntersect({ mesh: frameTop, active: true, onClick: () => { if(!this.isFocused) this.focus() } })
+        this.game.rayCursor.addIntersect({ mesh: postL, active: true, onClick: () => { if(!this.isFocused) this.focus() } })
+        this.game.rayCursor.addIntersect({ mesh: postR, active: true, onClick: () => { if(!this.isFocused) this.focus() } })
 
         this.game.rayCursor.addIntersect({
             mesh: this.prevArrowMesh,

@@ -81,17 +81,18 @@ export class WakeTrail
         foamTex.wrapS = THREE.RepeatWrapping
         foamTex.wrapT = THREE.RepeatWrapping
 
-        // Material with alpha blending
+        // High-contrast foam material for sharp V-wake visibility
         this.material = new THREE.MeshBasicNodeMaterial({
-            color: '#f0fdf4',
+            color: '#ffffff',
+            map: foamTex,
             transparent: true,
-            opacity: 0.9,
+            opacity: 0.95,
             depthWrite: false,
             side: THREE.DoubleSide
         })
 
         this.mesh = new THREE.Mesh(this.geometry, this.material)
-        this.mesh.position.y = 0.08 // Hover just above water surface
+        this.mesh.position.y = 0.18 // Sits cleanly above water waves
         this.mesh.frustumCulled = false
         this.game.scene.add(this.mesh)
 
