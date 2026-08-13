@@ -577,6 +577,7 @@ export class LabIsland
     {
         if(this.isFocused) return
         this.isFocused = true
+        this.lastFocusTime = performance.now()
 
         // Perfectly framed cinematic view matching Bruno Simon:
         // Center of workstation is at (36, 3.4, -20)
@@ -652,8 +653,11 @@ export class LabIsland
             {
                 this.next()
             }
-            else if(e.code === 'Enter' || e.code === 'Space')
+            else if(e.code === 'Enter' || e.code === 'KeyO')
             {
+                // Prevent the initial focus Enter from triggering this
+                if(performance.now() - (this.lastFocusTime || 0) < 600) return
+
                 this.openCurrentProject()
             }
             else if(e.code === 'Escape' || e.code === 'KeyS' || e.code === 'ArrowDown')
