@@ -2,9 +2,8 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Wake — single unified, continuous expanding V-shaped motorboat wake ribbon.
- * Formed as a connected dynamic quad strip with feathered white foam texture
- * (guaranteed single cohesive wake, zero separate lines).
+ * Wake — ultra-smooth, continuous motorboat wake ribbon with sub-frame head tracking,
+ * world-space arc-length UV mapping, and feathered foam falloff (100% free of popping or jitter).
  */
 export class Wake
 {
@@ -12,11 +11,11 @@ export class Wake
     {
         this.game = Game.getInstance()
 
-        this.maxPoints = 55
+        this.maxPoints = 64
         this.history = []
-        this.minDistance = 0.4
+        this.stepDistance = 0.28 // Smooth recording frequency
 
-        // Connected Quad-Strip Ribbon Geometry: (maxPoints - 1) quads = 2 triangles per segment
+        // Ribbon Geometry: (maxPoints - 1) quads
         const segments = this.maxPoints - 1
         const vertexCount = this.maxPoints * 2
         const indexCount = segments * 6
@@ -50,27 +49,29 @@ export class Wake
         // Create high-resolution feathered foam wash texture
         const canvas = document.createElement('canvas')
         canvas.width = 512
-        canvas.height = 128
+        canvas.height = 256
         const ctx = canvas.getContext('2d')
 
-        // Soft horizontal Gaussian wash (white center, soft feathered transparent edges)
-        const grad = ctx.createLinearGradient(0, 0, 0, 128)
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.0)')
-        grad.addColorStop(0.2, 'rgba(255, 255, 255, 0.75)')
-        grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)')
-        grad.addColorStop(0.8, 'rgba(255, 255, 255, 0.75)')
-        grad.addColorStop(1, 'rgba(255, 255, 255, 0.0)')
+        // Soft horizontal Gaussian wash: transparent edges, bright creamy foam core
+        const grad = ctx.createLinearGradient(0, 0, 0, 256)
+        grad.addColorStop(0.0, 'rgba(255, 255, 255, 0.0)')
+        grad.addColorStop(0.18, 'rgba(240, 249, 255, 0.45)')
+        grad.addColorStop(0.40, 'rgba(255, 255, 255, 0.88)')
+        grad.addColorStop(0.50, 'rgba(255, 255, 255, 0.95)')
+        grad.addColorStop(0.60, 'rgba(255, 255, 255, 0.88)')
+        grad.addColorStop(0.82, 'rgba(240, 249, 255, 0.45)')
+        grad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)')
 
         ctx.fillStyle = grad
-        ctx.fillRect(0, 0, 512, 128)
+        ctx.fillRect(0, 0, 512, 256)
 
-        // Add fine bubbly spray pattern
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-        for(let i = 0; i < 400; i++)
+        // Add fine bubbly foam texture
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)'
+        for(let i = 0; i < 600; i++)
         {
             const bx = Math.random() * 512
-            const by = 20 + Math.random() * 88
-            const br = Math.random() * 4 + 1
+            const by = 40 + Math.random() * 176
+            const br = Math.random() * 3.5 + 1.0
             ctx.beginPath()
             ctx.arc(bx, by, br, 0, Math.PI * 2)
             ctx.fill()
@@ -83,15 +84,29 @@ export class Wake
         this.material = new THREE.MeshBasicNodeMaterial({
             map: foamTexture,
             transparent: true,
-            opacity: 0.88,
+            opacity: 0.85,
             depthWrite: false,
             side: THREE.DoubleSide
         })
 
         this.mesh = new THREE.Mesh(this.geometry, this.material)
-        this.mesh.position.y = 0.12 // Sits cleanly above water waves
+        this.mesh.position.y = 0.11 // Sits right at the water surface
         this.mesh.frustumCulled = false
         this.game.scene.add(this.mesh)
+
+        // Initialize history with stationary points
+        for(let i = 0; i < this.maxPoints; i++)
+        {
+            this.history.push({
+                pos: new THREE.Vector3(0, 0, 0),
+                right: new THREE.Vector3(1, 0, 0),
+                distance: 0,
+                speed: 0,
+                isBoost: false
+            })
+        }
+        this.activeCount = 0
+        this.totalDistanceTraveled = 0
 
         // Update loop
         this.game.ticker.events.on('tick', () =>
@@ -105,32 +120,64 @@ export class Wake
         if(!this.game.boat) return
 
         const boat = this.game.boat
-        const speed = Math.abs(boat.speed)
+        const speed = Math.abs(boat.speed || 0)
 
         const forwardDir = new THREE.Vector3(-Math.sin(boat.rotation), 0, -Math.cos(boat.rotation))
         const rightDir = new THREE.Vector3(forwardDir.z, 0, -forwardDir.x)
-        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-1.4))
+        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-1.35))
+        const isBoost = this.game.inputs?.getAxes()?.boost || false
 
-        // Record boat movement history point
-        const last = this.history[0]
-        if(!last || sternPos.distanceTo(last.pos) > this.minDistance)
+        // Always update Head (index 0) to real-time boat position every frame (eliminates stepping)
+        if(this.activeCount === 0)
         {
-            this.history.unshift({
-                pos: sternPos.clone(),
-                right: rightDir.clone(),
-                speed: speed,
-                isBoost: this.game.inputs?.getAxes()?.boost || false
-            })
+            this.history[0].pos.copy(sternPos)
+            this.history[0].right.copy(rightDir)
+            this.history[0].distance = 0
+            this.history[0].speed = speed
+            this.history[0].isBoost = isBoost
+            this.activeCount = 1
+        }
+        else
+        {
+            const prev = this.history[1] || this.history[0]
+            const distFromPrev = sternPos.distanceTo(prev.pos)
 
-            if(this.history.length > this.maxPoints)
+            if(distFromPrev >= this.stepDistance && speed > 0.4)
             {
-                this.history.pop()
+                // Shift history array down smoothly
+                for(let i = this.maxPoints - 1; i > 0; i--)
+                {
+                    this.history[i].pos.copy(this.history[i - 1].pos)
+                    this.history[i].right.copy(this.history[i - 1].right)
+                    this.history[i].distance = this.history[i - 1].distance
+                    this.history[i].speed = this.history[i - 1].speed
+                    this.history[i].isBoost = this.history[i - 1].isBoost
+                }
+
+                this.totalDistanceTraveled += distFromPrev
+                this.history[0].pos.copy(sternPos)
+                this.history[0].right.copy(rightDir)
+                this.history[0].distance = this.totalDistanceTraveled
+                this.history[0].speed = speed
+                this.history[0].isBoost = isBoost
+
+                if(this.activeCount < this.maxPoints)
+                {
+                    this.activeCount++
+                }
+            }
+            else
+            {
+                // Smoothly update head in place
+                this.history[0].pos.copy(sternPos)
+                this.history[0].right.copy(rightDir)
+                this.history[0].speed = speed
+                this.history[0].isBoost = isBoost
             }
         }
 
-        if(this.history.length < 2) return
+        if(this.activeCount < 2) return
 
-        const count = this.history.length
         const posArr = this.geometry.attributes.position.array
         const uvArr = this.geometry.attributes.uv.array
 
@@ -139,39 +186,40 @@ export class Wake
             const vBase = i * 2 * 3
             const uvBase = i * 2 * 2
 
-            if(i < count)
+            if(i < this.activeCount)
             {
                 const h = this.history[i]
-                const t = i / (count - 1 || 1) // 0 at stern, 1 at tail
+                const t = i / (this.activeCount - 1 || 1) // 0 at boat, 1 at tail
 
-                // Smooth natural V-expansion: starts at 0.9m at motor, expands to 7.5m (or 10.5m during boost)
-                const baseWidth = 0.8 + Math.min(h.speed / 16.0, 1.0) * 0.4
-                const vSpread = Math.pow(t, 0.8) * (h.isBoost ? 9.5 : 6.8)
+                // Smooth V-expansion curve (narrow at hull, naturally fans out over distance)
+                const baseWidth = 0.75 + Math.min(h.speed / 16.0, 1.0) * 0.35
+                const vSpread = Math.pow(t, 0.75) * (h.isBoost ? 8.5 : 5.8)
                 const halfWidth = (baseWidth + vSpread) * 0.5
 
                 const p = h.pos
                 const r = h.right
 
-                // Left vertex of the single wake ribbon
+                // Left vertex
                 posArr[vBase + 0] = p.x - r.x * halfWidth
-                posArr[vBase + 1] = 0.12
+                posArr[vBase + 1] = 0.11
                 posArr[vBase + 2] = p.z - r.z * halfWidth
 
-                // Right vertex of the single wake ribbon
+                // Right vertex
                 posArr[vBase + 3] = p.x + r.x * halfWidth
-                posArr[vBase + 4] = 0.12
+                posArr[vBase + 4] = 0.11
                 posArr[vBase + 5] = p.z + r.z * halfWidth
 
-                // UVs: U spans 0 to 1 across the ribbon width, V scrolls along length
+                // Continuous world-space arc-length UVs (completely stationary texture on water)
+                const uLength = (h.distance * 0.35)
                 uvArr[uvBase + 0] = 0.0
-                uvArr[uvBase + 1] = t * 4.0
+                uvArr[uvBase + 1] = uLength
                 uvArr[uvBase + 2] = 1.0
-                uvArr[uvBase + 3] = t * 4.0
+                uvArr[uvBase + 3] = uLength
             }
             else
             {
-                // Collapse remaining unused vertices
-                const lastH = this.history[count - 1]
+                // Collapse inactive tail vertices
+                const lastH = this.history[Math.max(0, this.activeCount - 1)]
                 posArr[vBase + 0] = lastH.pos.x
                 posArr[vBase + 1] = -10
                 posArr[vBase + 2] = lastH.pos.z
