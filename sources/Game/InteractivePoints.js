@@ -3,15 +3,11 @@ import gsap from 'gsap'
 import { Game } from './Game.js'
 
 /**
- * InteractivePoints — floating 3D diamond markers with dynamic glowing active focus beams,
- * animated halo rings, and crisp billboarded labels.
+ * InteractivePoints — manages in-world 3D diamond interactables, pulsing focus beams,
+ * floating billboard labels, and direct raycast click/tap handling.
  */
 export class InteractivePoints
 {
-    static STATE_HIDDEN = 1
-    static STATE_CONCEALED = 2
-    static STATE_OPEN = 3
-
     constructor()
     {
         this.game = Game.getInstance()
@@ -49,31 +45,7 @@ export class InteractivePoints
             opacity: 0.9
         })
 
-        // Toast prompt element
-        this.toastEl = document.querySelector('.js-interact-toast')
-        this.toastKeyEl = document.querySelector('.js-interact-toast-key')
-        this.toastTextEl = document.querySelector('.js-interact-toast-text')
-        this.isToastVisible = false
-
-        // Tap/click handler for the on-screen toast button
-        if(this.toastEl)
-        {
-            const handleToastClick = (e) =>
-            {
-                e.preventDefault()
-                e.stopPropagation()
-
-                if(this.activeItem && typeof this.activeItem.interact === 'function')
-                {
-                    this.activeItem.interact()
-                }
-            }
-
-            this.toastEl.addEventListener('click', handleToastClick)
-            this.toastEl.addEventListener('touchend', handleToastClick)
-        }
-
-        // Listen for keyboard/touch interact
+        // Listen for keyboard interact (Enter) on desktop
         this.game.inputs.events.on('interact', () =>
         {
             if(this.game.labIsland && this.game.labIsland.isFocused)
@@ -110,112 +82,90 @@ export class InteractivePoints
         })
 
         // Update loop
-        this.game.ticker.events.on('tick', () =>
+        this.game.ticker.events.on('tick', (delta) =>
         {
-            this.update()
+            this.update(delta)
         })
     }
 
-    create(position, labelText, interactCallback)
+    createPoint(options)
     {
-        const group = new THREE.Group()
-        group.position.copy(position)
-        group.position.y += 1.8 // Float above water/ground
+        const item = {}
+        item.position = new THREE.Vector2(options.position.x, options.position.z)
+        item.heightY = options.position.y || 1.0
+        item.labelText = options.label || 'Point of Interest'
+        item.interactCallback = options.onInteract
+        item.isPlayerNear = false
+        item.isFocused = false
 
-        // 1. Floating Diamond
-        const diamondGeo = new THREE.OctahedronGeometry(0.7, 0)
+        // Group container
+        item.group = new THREE.Group()
+        item.group.position.set(options.position.x, item.heightY, options.position.z)
+        this.game.scene.add(item.group)
+
+        // 1. Octahedron Diamond Mesh
+        const diamondGeo = new THREE.OctahedronGeometry(0.85, 0)
         const diamond = new THREE.Mesh(diamondGeo, this.diamondMaterial)
-        group.add(diamond)
+        item.diamond = diamond
+        item.group.add(diamond)
 
-        // 2. Pulsing Halo Ring
-        const haloGeo = new THREE.TorusGeometry(1.1, 0.04, 8, 24)
-        haloGeo.rotateX(Math.PI * 0.5)
+        // 2. Glowing Halo Wireframe Sphere
+        const haloGeo = new THREE.SphereGeometry(1.35, 12, 8)
         const halo = new THREE.Mesh(haloGeo, this.haloMaterial)
-        group.add(halo)
+        halo.visible = false
+        item.halo = halo
+        item.group.add(halo)
 
-        // 3. Vertical Focus Beam (shown when active)
-        const beamGeo = new THREE.CylinderGeometry(0.08, 0.08, 3.5, 8)
-        const beamMat = new THREE.MeshBasicNodeMaterial({
-            color: '#fbbf24',
-            transparent: true,
-            opacity: 0.0
-        })
-        const beam = new THREE.Mesh(beamGeo, beamMat)
-        beam.position.y = 1.6
-        group.add(beam)
-
-        // 4. Canvas Text Label (Billboard)
+        // 3. Dynamic High-Res Canvas Texture for 3D Floating Pill Label
         const canvas = document.createElement('canvas')
         canvas.width = 320
         canvas.height = 80
         const ctx = canvas.getContext('2d')
+        item.canvas = canvas
+        item.ctx = ctx
 
-        const labelTexture = new THREE.CanvasTexture(canvas)
-        labelTexture.minFilter = THREE.LinearFilter
-        labelTexture.magFilter = THREE.LinearFilter
+        const texture = new THREE.CanvasTexture(canvas)
+        texture.minFilter = THREE.LinearFilter
+        texture.magFilter = THREE.LinearFilter
+        item.labelTexture = texture
 
-        const labelGeo = new THREE.PlaneGeometry(3.0, 0.75)
-        const labelMat = new THREE.MeshBasicNodeMaterial({
-            map: labelTexture,
+        const labelMat = new THREE.SpriteMaterial({
+            map: texture,
             transparent: true,
-            depthWrite: false
+            depthTest: false
         })
 
-        const label = new THREE.Mesh(labelGeo, labelMat)
-        label.position.y = 1.35
-        label.scale.setScalar(0)
-        group.add(label)
+        const label = new THREE.Sprite(labelMat)
+        label.position.set(0, 1.75, 0)
+        label.scale.set(3.6, 0.9, 1.0)
+        item.label = label
+        item.group.add(label)
 
-        this.game.scene.add(group)
-
-        const item = {
-            group,
-            diamond,
-            halo,
-            beam,
-            label,
-            canvas,
-            ctx,
-            labelTexture,
-            labelText,
-            position: new THREE.Vector2(position.x, position.z),
-            heightY: group.position.y,
-            state: InteractivePoints.STATE_CONCEALED,
-            isFocused: false,
-            interactCallback,
-            mesh: diamond,
-            active: true
-        }
-
+        // Initial label render
         this.renderLabel(item, false)
 
-        // RayCursor click hit target
-        item.intersect = this.game.rayCursor.addIntersect({
-            mesh: diamond,
-            active: true,
-            onClick: () => item.interact(),
-            onEnter: () => item.reveal(),
-            onLeave: () =>
-            {
-                if(!item.isPlayerNear) item.conceal()
-            }
-        })
+        // 4. Point light for diamond glow
+        const light = new THREE.PointLight('#38bdf8', 2.0, 14.0)
+        light.position.set(0, 0, 0)
+        item.light = light
+        item.group.add(light)
 
+        // Reveal / Conceal animations
         item.reveal = () =>
         {
-            if(item.state === InteractivePoints.STATE_OPEN) return
-            item.state = InteractivePoints.STATE_OPEN
-
-            gsap.to(diamond.scale, { x: 1.2, y: 1.2, z: 1.2, duration: 0.4, ease: 'back.out(2)' })
-            gsap.to(label.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.4, ease: 'back.out(2)' })
+            if(item.revealed) return
+            item.revealed = true
+            item.label.visible = true
+            item.group.visible = true
+            gsap.to(diamond.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.4, ease: 'back.out(1.7)' })
+            gsap.to(label.scale, { x: 3.6, y: 0.9, z: 1.0, duration: 0.4, ease: 'back.out(1.5)' })
         }
 
         item.conceal = () =>
         {
-            if(item.state === InteractivePoints.STATE_CONCEALED) return
-            item.state = InteractivePoints.STATE_CONCEALED
-            this.setFocusState(item, false)
-
+            if(!item.revealed) return
+            item.revealed = false
+            item.label.visible = false
             gsap.to(diamond.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.3, ease: 'power2.in' })
             gsap.to(label.scale, { x: 0, y: 0, z: 0, duration: 0.3, ease: 'power2.in' })
         }
@@ -243,6 +193,16 @@ export class InteractivePoints
             }
         }
 
+        // Register with RayCursor so clicking/tapping the 3D diamond in the water triggers interaction
+        if(this.game.rayCursor)
+        {
+            this.game.rayCursor.addIntersect({
+                mesh: item.group,
+                active: true,
+                onClick: () => item.interact()
+            })
+        }
+
         this.items.push(item)
         return item
     }
@@ -253,7 +213,7 @@ export class InteractivePoints
         ctx.clearRect(0, 0, 320, 80)
 
         // Rounded pill background
-        ctx.fillStyle = isFocused ? 'rgba(15, 23, 42, 0.95)' : 'rgba(10, 14, 23, 0.85)'
+        ctx.fillStyle = isFocused ? 'rgba(15, 23, 42, 0.96)' : 'rgba(10, 14, 23, 0.85)'
         ctx.strokeStyle = isFocused ? '#fbbf24' : '#38bdf8'
         ctx.lineWidth = isFocused ? 5 : 3
 
@@ -262,16 +222,15 @@ export class InteractivePoints
         ctx.fill()
         ctx.stroke()
 
-        if(isFocused)
-        {
-            const isTouch = this.game.inputs?.touch?.isTouchDevice || this.game.isMobile
-            const promptText = isTouch ? 'TAP ✨' : 'PRESS [ENTER] ↵'
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 1024)
 
-            // Glowing enter/tap prompt tag
+        if(isFocused && !isTouch)
+        {
+            // Desktop Focused State: show keyboard enter prompt
             ctx.fillStyle = '#fbbf24'
             ctx.font = 'bold 13px "Space Grotesk", sans-serif'
             ctx.textAlign = 'center'
-            ctx.fillText(promptText, 160, 26)
+            ctx.fillText('PRESS [ENTER] ↵', 160, 26)
 
             ctx.fillStyle = '#ffffff'
             ctx.font = 'bold 22px "Space Grotesk", sans-serif'
@@ -279,7 +238,8 @@ export class InteractivePoints
         }
         else
         {
-            ctx.fillStyle = '#f8fafc'
+            // Clean centered title on mobile and unfocused desktop (NO enter sign)
+            ctx.fillStyle = isFocused ? '#ffffff' : '#f8fafc'
             ctx.font = 'bold 22px "Space Grotesk", sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
@@ -294,63 +254,36 @@ export class InteractivePoints
         if(item.isFocused === isFocused) return
         item.isFocused = isFocused
 
-        this.renderLabel(item, isFocused)
-
-        if(isFocused)
+        if(item.label)
         {
-            item.diamond.material = this.diamondActiveMaterial
-            item.halo.material = this.haloActiveMaterial
-            gsap.to(item.beam.material, { opacity: 0.65, duration: 0.3 })
-            gsap.to(item.halo.scale, { x: 1.4, y: 1.4, z: 1.4, duration: 0.4, ease: 'back.out(2)' })
+            this.renderLabel(item, isFocused)
         }
-        else
+
+        if(item.diamond)
         {
-            item.diamond.material = this.diamondMaterial
-            item.halo.material = this.haloMaterial
-            gsap.to(item.beam.material, { opacity: 0.0, duration: 0.3 })
-            gsap.to(item.halo.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.3 })
+            item.diamond.material = isFocused ? this.diamondActiveMaterial : this.diamondMaterial
+            if(isFocused)
+            {
+                gsap.killTweensOf(item.diamond.scale)
+                gsap.to(item.diamond.scale, { x: 1.45, y: 1.45, z: 1.45, duration: 0.35, ease: 'back.out(1.7)' })
+            }
+            else
+            {
+                gsap.killTweensOf(item.diamond.scale)
+                gsap.to(item.diamond.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.25, ease: 'power2.out' })
+            }
+        }
+
+        if(item.halo)
+        {
+            item.halo.material = isFocused ? this.haloActiveMaterial : this.haloMaterial
+            item.halo.visible = isFocused
         }
     }
 
-    update()
+    update(delta)
     {
         if(!this.game.boat) return
-
-        // If in cinematic mode (e.g. Lab focus), hide all floating diamond markers & toast prompts
-        const isCinematic = this.game.view && this.game.view.mode === 3
-        if(isCinematic)
-        {
-            this.wasCinematic = true
-            for(const item of this.items)
-            {
-                item.group.visible = false
-                item.group.position.set(0, -999, 0)
-                item.diamond.scale.set(0, 0, 0)
-                item.label.scale.set(0, 0, 0)
-                if(item.beam) item.beam.material.opacity = 0
-            }
-            if(this.toastEl) this.toastEl.style.display = 'none'
-            return
-        }
-        else if(this.wasCinematic)
-        {
-            this.wasCinematic = false
-            this.isToastVisible = false // Reset so toast re-animates immediately
-            for(const item of this.items)
-            {
-                item.group.visible = true
-                item.group.position.set(item.position.x, item.heightY, item.position.y)
-                item.state = null
-                item.isFocused = null
-            }
-        }
-        else
-        {
-            for(const item of this.items)
-            {
-                item.group.visible = true
-            }
-        }
 
         const boatPos = new THREE.Vector2(this.game.boat.position.x, this.game.boat.position.z)
         const time = performance.now() * 0.001
@@ -411,47 +344,6 @@ export class InteractivePoints
             else
             {
                 this.setFocusState(item, false)
-            }
-        }
-
-        const isTouch = this.game.inputs?.touch?.isTouchDevice || this.game.isMobile
-
-        // Manage on-screen interaction toast prompt
-        if(closestItem && !this.isToastVisible)
-        {
-            this.isToastVisible = true
-            if(this.toastKeyEl)
-            {
-                this.toastKeyEl.style.display = isTouch ? 'none' : 'inline-block'
-                this.toastKeyEl.textContent = 'ENTER ↵'
-            }
-            if(this.toastEl && this.toastTextEl)
-            {
-                this.toastTextEl.textContent = isTouch ? `✨ Open ${closestItem.labelText}` : `Open ${closestItem.labelText}`
-                this.toastEl.style.display = 'flex'
-                gsap.killTweensOf(this.toastEl)
-                gsap.fromTo(this.toastEl, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' })
-            }
-        }
-        else if(closestItem && this.isToastVisible && this.toastTextEl)
-        {
-            this.toastTextEl.textContent = isTouch ? `✨ Open ${closestItem.labelText}` : `Open ${closestItem.labelText}`
-        }
-        else if(!closestItem && this.isToastVisible)
-        {
-            this.isToastVisible = false
-            if(this.toastEl)
-            {
-                gsap.killTweensOf(this.toastEl)
-                gsap.to(this.toastEl, {
-                    opacity: 0,
-                    y: 10,
-                    duration: 0.25,
-                    onComplete: () =>
-                    {
-                        this.toastEl.style.display = 'none'
-                    }
-                })
             }
         }
 

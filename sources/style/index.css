@@ -130,38 +130,22 @@ html, body {
 .orientation-prompt {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.8rem 1.4rem;
+    justify-content: center;
+    padding: 0.5rem 1.2rem;
     margin-bottom: 1.2rem;
-    background: rgba(251, 191, 36, 0.12);
-    border: 1px solid rgba(251, 191, 36, 0.4);
-    border-radius: 50px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    animation: pulseOrientation 2s infinite ease-in-out;
-}
-
-.orientation-icon {
-    font-size: 1.3rem;
-    animation: rotatePhone 2.5s infinite ease-in-out;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .orientation-text {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #fbbf24;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
     letter-spacing: 0.02em;
-}
-
-@keyframes rotatePhone {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(-90deg); }
-}
-
-@keyframes pulseOrientation {
-    0%, 100% { box-shadow: 0 0 16px rgba(251, 191, 36, 0.2); }
-    50% { box-shadow: 0 0 28px rgba(251, 191, 36, 0.5); }
 }
 
 @keyframes fadeIn {
@@ -324,63 +308,6 @@ html, body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     backdrop-filter: blur(12px);
-}
-
-/* --- Interactive Prompt Toast --- */
-.interact-toast {
-    position: fixed;
-    bottom: 2.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 55;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.6rem;
-    background: rgba(15, 23, 42, 0.95);
-    border: 2px solid #fbbf24;
-    border-radius: 50px;
-    box-shadow: 0 0 30px rgba(251, 191, 36, 0.45), 0 8px 32px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    pointer-events: auto;
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    animation: toastBounce 2s ease-in-out infinite;
-    transition: transform 0.15s ease, background 0.15s ease;
-}
-
-.interact-toast:hover,
-.interact-toast:active {
-    background: rgba(26, 38, 66, 0.98);
-    transform: translateX(-50%) scale(1.04);
-}
-
-.interact-toast-key {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #0f172a;
-    background: #fbbf24;
-    padding: 0.3rem 0.7rem;
-    border-radius: 20px;
-    letter-spacing: 0.05em;
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
-}
-
-.interact-toast-text {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.98rem;
-    font-weight: 600;
-    color: #ffffff;
-    letter-spacing: 0.02em;
-}
-
-@keyframes toastBounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-6px); }
 }
 
 /* --- Lab Billboard Focus Navigation Bar --- */
@@ -1067,48 +994,37 @@ html, body {
     align-items: center;
     justify-content: center;
     padding: 1.5rem;
+    background: rgba(8, 12, 22, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     user-select: none;
     -webkit-user-select: none;
 }
 
-.orientation-blocker-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(8, 12, 22, 0.94);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-}
-
 .orientation-blocker-content {
     position: relative;
-    max-width: 360px;
-    padding: 2.2rem 1.8rem;
-    background: rgba(13, 20, 36, 0.95);
-    border: 2px solid rgba(251, 191, 36, 0.6);
-    border-radius: 24px;
+    max-width: 340px;
+    padding: 2rem 1.8rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
     text-align: center;
-    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(251, 191, 36, 0.25);
-    animation: fadeIn 0.4s ease-out;
-}
-
-.orientation-blocker-icon {
-    font-size: 3rem;
-    margin-bottom: 1.2rem;
-    animation: rotatePhone 2.5s infinite ease-in-out;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    animation: fadeIn 0.3s ease-out;
 }
 
 .orientation-blocker-title {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #ffffff;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.65rem;
 }
 
 .orientation-blocker-desc {
     font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
-    line-height: 1.55;
-    color: rgba(226, 232, 240, 0.85);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: rgba(226, 232, 240, 0.75);
 }
 

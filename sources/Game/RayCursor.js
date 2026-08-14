@@ -22,6 +22,18 @@ export class RayCursor
             this.pointer.y = -(e.clientY / this.game.viewport.height) * 2 + 1
         })
 
+        // Pointerdown / touch tap interaction for mobile & desktop
+        window.addEventListener('pointerdown', (e) =>
+        {
+            this.pointer.x = (e.clientX / this.game.viewport.width) * 2 - 1
+            this.pointer.y = -(e.clientY / this.game.viewport.height) * 2 + 1
+            this.update()
+            if(this.hoveredItem && typeof this.hoveredItem.onClick === 'function')
+            {
+                this.hoveredItem.onClick()
+            }
+        })
+
         // Click interaction
         window.addEventListener('click', () =>
         {
