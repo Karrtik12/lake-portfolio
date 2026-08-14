@@ -97,6 +97,37 @@ export class LabIsland
         this.screenMesh.position.set(0, 3.6, 0.22)
         this.group.add(this.screenMesh)
 
+        // Solid Wooden Backboard Panel (prevents billboard from looking hollow from the rear)
+        const backBoard = new THREE.Mesh(new THREE.BoxGeometry(7.4, 4.5, 0.18), this.woodMat)
+        backBoard.position.set(0, 3.6, 0.08)
+        this.group.add(backBoard)
+
+        // Rear Horizontal Reinforcement Battens
+        const backCross1 = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.28, 0.12), this.darkWoodMat)
+        backCross1.position.set(0, 4.8, -0.05)
+        this.group.add(backCross1)
+
+        const backCross2 = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.28, 0.12), this.darkWoodMat)
+        backCross2.position.set(0, 3.6, -0.05)
+        this.group.add(backCross2)
+
+        const backCross3 = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.28, 0.12), this.darkWoodMat)
+        backCross3.position.set(0, 2.4, -0.05)
+        this.group.add(backCross3)
+
+        // Rear Diagonal Wooden Scaffold Braces
+        const braceGeo = new THREE.BoxGeometry(0.28, 4.5, 0.28)
+        
+        const braceL = new THREE.Mesh(braceGeo, this.darkWoodMat)
+        braceL.position.set(-3.2, 2.8, -1.1)
+        braceL.rotation.x = 0.52
+        this.group.add(braceL)
+
+        const braceR = new THREE.Mesh(braceGeo, this.darkWoodMat)
+        braceR.position.set(3.2, 2.8, -1.1)
+        braceR.rotation.x = 0.52
+        this.group.add(braceR)
+
         // Screen Frame Structure
         const frameTop = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.35, 0.5), this.woodMat)
         frameTop.position.set(0, 5.95, 0.2)
