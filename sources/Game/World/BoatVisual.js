@@ -92,7 +92,8 @@ export class BoatVisual
             transparent: true,
             opacity: 0.65,
             roughness: 0.05,
-            metalness: 0.85
+            metalness: 0.85,
+            depthWrite: false
         })
 
         const navLightGreenMat = new THREE.MeshBasicNodeMaterial({ color: '#22c55e' })

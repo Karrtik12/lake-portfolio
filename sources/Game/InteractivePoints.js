@@ -4,7 +4,7 @@ import { Game } from './Game.js'
 
 /**
  * InteractivePoints — manages in-world 3D diamond interactables, pulsing focus beams,
- * floating billboard labels, and on-screen interactive prompt toast button.
+ * always-visible floating capsule labels, and the on-screen interactive toast button.
  */
 export class InteractivePoints
 {
@@ -51,10 +51,10 @@ export class InteractivePoints
         this.toastTextEl = document.querySelector('.js-interact-toast-text')
         this.isToastVisible = false
 
-        // Tap/click handler for the on-screen toast button
+        // Click / tap handler for the on-screen toast button
         if(this.toastEl)
         {
-            const handleToastClick = (e) =>
+            this.toastEl.addEventListener('click', (e) =>
             {
                 e.preventDefault()
                 e.stopPropagation()
@@ -63,10 +63,7 @@ export class InteractivePoints
                 {
                     this.activeItem.interact()
                 }
-            }
-
-            this.toastEl.addEventListener('click', handleToastClick)
-            this.toastEl.addEventListener('touchend', handleToastClick)
+            })
         }
 
         // Listen for keyboard interact (Enter) on desktop
@@ -153,13 +150,26 @@ export class InteractivePoints
         item.halo = halo
         item.group.add(halo)
 
-        // 3. Dynamic High-Res Canvas Texture for 3D Floating Pill Label
+        // 3. Dynamic Canvas & 3D Floating Capsule Label (Always Visible)
+        // Measure text to make canvas match the exact snug capsule size
+        const measureCanvas = document.createElement('canvas')
+        const measureCtx = measureCanvas.getContext('2d')
+        measureCtx.font = '700 24px "Space Grotesk", sans-serif'
+        const textWidth = measureCtx.measureText(item.labelText).width
+
+        const canvasWidth = Math.ceil(textWidth + 48)
+        const canvasHeight = 64
+        const pillRadius = 30
+
         const canvas = document.createElement('canvas')
-        canvas.width = 320
-        canvas.height = 80
+        canvas.width = canvasWidth
+        canvas.height = canvasHeight
         const ctx = canvas.getContext('2d')
         item.canvas = canvas
         item.ctx = ctx
+        item.canvasWidth = canvasWidth
+        item.canvasHeight = canvasHeight
+        item.pillRadius = pillRadius
 
         const texture = new THREE.CanvasTexture(canvas)
         texture.minFilter = THREE.LinearFilter
@@ -173,9 +183,13 @@ export class InteractivePoints
             depthTest: true
         })
 
+        // World sprite size accurately scaled to canvas aspect ratio
+        item.baseScaleY = 0.65
+        item.baseScaleX = (canvasWidth / canvasHeight) * item.baseScaleY
+
         const label = new THREE.Sprite(labelMat)
         label.position.set(0, 1.75, 0)
-        label.scale.set(2.8, 0.7, 1.0)
+        label.scale.set(item.baseScaleX, item.baseScaleY, 1.0)
         item.label = label
         item.group.add(label)
 
@@ -187,27 +201,6 @@ export class InteractivePoints
         light.position.set(0, 0, 0)
         item.light = light
         item.group.add(light)
-
-        // Reveal / Conceal animations
-        item.reveal = () =>
-        {
-            if(item.revealed) return
-            item.revealed = true
-            item.label.visible = true
-            item.group.visible = true
-            const targetW = item.pillWorldWidth || 2.4
-            gsap.to(diamond.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.4, ease: 'back.out(1.7)' })
-            gsap.to(label.scale, { x: targetW, y: 0.7, z: 1.0, duration: 0.4, ease: 'back.out(1.5)' })
-        }
-
-        item.conceal = () =>
-        {
-            if(!item.revealed) return
-            item.revealed = false
-            item.label.visible = false
-            gsap.to(diamond.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.3, ease: 'power2.in' })
-            gsap.to(label.scale, { x: 0, y: 0, z: 0, duration: 0.3, ease: 'power2.in' })
-        }
 
         let lastInteractTime = 0
         item.interact = () =>
@@ -254,44 +247,28 @@ export class InteractivePoints
     renderLabel(item, isFocused)
     {
         const ctx = item.ctx
-        ctx.clearRect(0, 0, 320, 80)
+        const w = item.canvasWidth
+        const h = item.canvasHeight
+        const r = item.pillRadius
 
-        // Dynamic measurement for snug, perfectly proportioned capsule pill
-        ctx.font = '700 23px "Space Grotesk", sans-serif'
-        const textMetrics = ctx.measureText(item.labelText)
-        const textWidth = textMetrics.width
+        ctx.clearRect(0, 0, w, h)
 
-        const padX = 26
-        const pillW = Math.min(304, textWidth + padX * 2)
-        const pillH = 50
-        const pillX = (320 - pillW) * 0.5
-        const pillY = (80 - pillH) * 0.5
-        const pillRadius = pillH * 0.5 // Perfect capsule half-height radius
-
-        // Update 3D world sprite width dynamically to match snug text width
-        const worldWidth = (pillW / 320) * 3.2
-        item.pillWorldWidth = worldWidth
-        if(item.label && item.revealed)
-        {
-            item.label.scale.x = worldWidth
-        }
-
-        // Capsule background with glow border
+        // Capsule background with border
         ctx.fillStyle = isFocused ? 'rgba(10, 16, 32, 0.96)' : 'rgba(10, 16, 30, 0.88)'
         ctx.strokeStyle = isFocused ? '#fbbf24' : '#38bdf8'
         ctx.lineWidth = isFocused ? 4.5 : 2.5
 
         ctx.beginPath()
-        ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius)
+        ctx.roundRect(3, 3, w - 6, h - 6, r)
         ctx.fill()
         ctx.stroke()
 
-        // Centered text
+        // Crisp centered text
         ctx.fillStyle = isFocused ? '#ffffff' : '#f8fafc'
-        ctx.font = '700 23px "Space Grotesk", sans-serif'
+        ctx.font = '700 24px "Space Grotesk", sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText(item.labelText, 160, pillY + pillH * 0.5)
+        ctx.fillText(item.labelText, w * 0.5, h * 0.5)
 
         item.labelTexture.needsUpdate = true
     }
@@ -304,6 +281,27 @@ export class InteractivePoints
         if(item.label)
         {
             this.renderLabel(item, isFocused)
+
+            // Smooth subtle scale pulse when in focus
+            gsap.killTweensOf(item.label.scale)
+            if(isFocused)
+            {
+                gsap.to(item.label.scale, {
+                    x: item.baseScaleX * 1.12,
+                    y: item.baseScaleY * 1.12,
+                    duration: 0.3,
+                    ease: 'power2.out'
+                })
+            }
+            else
+            {
+                gsap.to(item.label.scale, {
+                    x: item.baseScaleX,
+                    y: item.baseScaleY,
+                    duration: 0.25,
+                    ease: 'power2.out'
+                })
+            }
         }
 
         if(item.diamond)
@@ -354,8 +352,8 @@ export class InteractivePoints
 
             item.group.position.y = item.heightY + Math.sin(time * 2.5 + item.position.x) * 0.18
 
-            // Billboard label towards active camera
-            if(this.game.view?.camera)
+            // Billboard label towards active camera (always visible)
+            if(this.game.view?.camera && item.label)
             {
                 item.label.quaternion.copy(this.game.view.camera.quaternion)
             }
@@ -366,18 +364,10 @@ export class InteractivePoints
 
             item.isPlayerNear = isNear
 
-            if(isNear)
+            if(isNear && dist < minDistance)
             {
-                item.reveal()
-                if(dist < minDistance)
-                {
-                    minDistance = dist
-                    closestItem = item
-                }
-            }
-            else
-            {
-                item.conceal()
+                minDistance = dist
+                closestItem = item
             }
         }
 
