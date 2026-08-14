@@ -10,7 +10,6 @@ import { Trees } from './Trees.js'
 import { Props } from './Props.js'
 import { BoatVisual } from './BoatVisual.js'
 import { Wake } from './Wake.js'
-import { ShorelineWaves } from './ShorelineWaves.js'
 import { BoostEffect } from './BoostEffect.js'
 
 /**
@@ -30,7 +29,6 @@ export class World
         this.lighting = new Lighting()
         this.lake = new Lake()
         this.shoreline = new Shoreline()
-        this.shorelineWaves = new ShorelineWaves()
         this.islands = new Islands()
         this.trees = new Trees()
         this.props = new Props()
