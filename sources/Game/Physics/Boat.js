@@ -166,22 +166,50 @@ export class Boat
         this.speed = forwardSpeed
     }
 
-    reset()
+    teleportTo(targetPosition, targetRotation = 0)
     {
         if(!this.body) return
 
-        this.position.copy(this.spawnPosition)
-        this.rotation = this.spawnRotation
+        this.position.set(targetPosition.x, 0.2, targetPosition.z)
+        this.rotation = targetRotation
         this.angularVelocity = 0
         this.speed = 0
+        this.velocity.set(0, 0, 0)
 
         this.body.setTranslation({
-            x: this.spawnPosition.x,
-            y: this.spawnPosition.y,
-            z: this.spawnPosition.z
+            x: targetPosition.x,
+            y: 0.2,
+            z: targetPosition.z
+        }, true)
+
+        this.body.setRotation({
+            x: 0,
+            y: Math.sin(targetRotation * 0.5),
+            z: 0,
+            w: Math.cos(targetRotation * 0.5)
         }, true)
 
         this.body.setLinvel({ x: 0, y: 0, z: 0 }, true)
         this.body.setAngvel({ x: 0, y: 0, z: 0 }, true)
+
+        // Reset follow camera so transition is clean
+        if(this.game.view)
+        {
+            this.game.view.currentPosition.set(
+                targetPosition.x,
+                7.5,
+                targetPosition.z + 14
+            )
+            this.game.view.currentLookAt.set(
+                targetPosition.x,
+                0,
+                targetPosition.z
+            )
+        }
+    }
+
+    reset()
+    {
+        this.teleportTo(this.spawnPosition, this.spawnRotation)
     }
 }

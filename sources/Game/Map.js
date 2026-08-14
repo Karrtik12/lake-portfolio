@@ -1,9 +1,10 @@
 import gsap from 'gsap'
+import * as THREE from 'three/webgpu'
 import { Game } from './Game.js'
 
 /**
  * Map — manages the real-time HUD minimap and the expanded interactive Big Map modal,
- * including interactive diamond markers with hover tooltip cards and cross-browser aligned badges.
+ * with diamond markers that teleport the boat directly to that destination when clicked.
  */
 export class Map
 {
@@ -34,10 +35,10 @@ export class Map
 
         // Island definitions with icons and descriptions
         this.destinations = [
-            { id: 'socials', name: 'Socials Island', icon: '🏝️', x: -58, z: -38, r: 18, color: '#2d6a4f', desc: 'Social channels, contact info, GitHub & LinkedIn links' },
-            { id: 'lab',     name: 'Lab Island',     icon: '🔬', x:  58, z: -35, r: 20, color: '#1b4332', desc: 'Interactive 3D project showcase (Systems, DevOps, AI/ML)' },
-            { id: 'about',   name: 'About Island',   icon: '👤', x: -52, z:  44, r: 17, color: '#356e2c', desc: 'Personal biography, engineer background & experience' },
-            { id: 'dock',    name: 'Beach Pier',     icon: '🏠', x:   0, z: 108, r:  8, color: '#704828', desc: 'Starting beach pier & harbor moorage' }
+            { id: 'socials', name: 'Socials Island', icon: '🏝️', x: -58, z: -38, r: 18, color: '#2d6a4f', desc: 'Social channels, contact info, GitHub & LinkedIn links', teleportPos: { x: -44, z: -20 }, rot: -0.6 },
+            { id: 'lab',     name: 'Lab Island',     icon: '🔬', x:  58, z: -35, r: 20, color: '#1b4332', desc: 'Interactive 3D project showcase (Systems, DevOps, AI/ML)', teleportPos: { x: 58, z: -2.0 }, rot: 0 },
+            { id: 'about',   name: 'About Island',   icon: '👤', x: -52, z:  44, r: 17, color: '#356e2c', desc: 'Personal biography, engineer background & experience', teleportPos: { x: -30, z: 24 }, rot: -0.6 },
+            { id: 'dock',    name: 'Beach Pier',     icon: '🏠', x:   0, z: 108, r:  8, color: '#704828', desc: 'Starting beach pier & harbor moorage', teleportPos: { x: 0, z: 94 }, rot: 0 }
         ]
 
         this.setupEventListeners()
@@ -103,14 +104,65 @@ export class Map
                 this.canvasBig.style.cursor = 'default'
             })
 
+            // Click diamond on canvas to teleport the boat there!
             this.canvasBig.addEventListener('click', () =>
             {
-                if(this.hoveredDiamond && this.hoveredDiamond.interact)
+                if(this.hoveredDiamond)
                 {
-                    this.hoveredDiamond.interact()
+                    this.teleportToDiamond(this.hoveredDiamond)
                 }
             })
         }
+    }
+
+    teleportToDiamond(diamond)
+    {
+        if(!this.game.boat) return
+
+        // Compute mooring offset ~4.5m in open water in front of diamond
+        // Vector from nearest island to diamond indicates outward direction
+        const island = this.getNearestIsland(diamond.x, diamond.z)
+        const dx = diamond.x - (island ? island.x : 0)
+        const dz = diamond.z - (island ? island.z : 0)
+        const len = Math.hypot(dx, dz) || 1
+        const dirX = dx / len
+        const dirZ = dz / len
+
+        // Position boat 4.5m out in water
+        const boatTarget = new THREE.Vector3(
+            diamond.x + dirX * 4.5,
+            0.2,
+            diamond.z + dirZ * 4.5
+        )
+
+        // Rotation facing back towards the diamond / pier head
+        const boatRot = Math.atan2(dirX, dirZ)
+
+        this.closeBigMap()
+
+        // Teleport boat
+        this.game.boat.teleportTo(boatTarget, boatRot)
+
+        if(this.game.audio)
+        {
+            this.game.audio.playChime()
+        }
+    }
+
+    getNearestIsland(x, z)
+    {
+        let nearest = null
+        let minDist = Infinity
+        for(const dest of this.destinations)
+        {
+            const d = Math.hypot(dest.x - x, dest.z - z)
+            if(d < minDist)
+            {
+                minDist = d
+                nearest = dest
+            }
+        }
+        return nearest
     }
 
     openBigMap()
@@ -161,13 +213,41 @@ export class Map
         {
             const dist = Math.round(Math.hypot(d.x - boatPos.x, d.z - boatPos.z))
             return `
-                <div class="big-map-card">
+                <div class="big-map-card js-sidebar-destination" data-id="${d.id}" style="cursor: pointer;">
                     <div class="big-map-card-name">${d.icon} ${d.name}</div>
                     <div class="big-map-card-desc">${d.desc}</div>
-                    <div class="big-map-card-dist">📍 Distance: ~${dist}m</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="big-map-card-dist">📍 Distance: ~${dist}m</div>
+                        <span style="font-size: 0.75rem; color: #38bdf8; font-weight: 600; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); padding: 0.2rem 0.6rem; border-radius: 6px;">
+                            Sail Here ⛵
+                        </span>
+                    </div>
                 </div>
             `
         }).join('')
+
+        // Click sidebar card to teleport to island
+        const cards = this.sidebarEl.querySelectorAll('.js-sidebar-destination')
+        cards.forEach(card =>
+        {
+            card.addEventListener('click', () =>
+            {
+                const id = card.getAttribute('data-id')
+                const dest = this.destinations.find(d => d.id === id)
+                if(dest && dest.teleportPos && this.game.boat)
+                {
+                    this.closeBigMap()
+                    this.game.boat.teleportTo(
+                        new THREE.Vector3(dest.teleportPos.x, 0.2, dest.teleportPos.z),
+                        dest.rot || 0
+                    )
+                    if(this.game.audio)
+                    {
+                        this.game.audio.playChime()
+                    }
+                }
+            })
+        })
     }
 
     worldToCanvas(wx, wz, canvasWidth, canvasHeight)
@@ -187,8 +267,7 @@ export class Map
             return this.game.interactivePoints.items.map(item => ({
                 name: item.labelText || 'Interactive Point',
                 x: item.group ? item.group.position.x : item.position.x,
-                z: item.group ? item.group.position.z : item.position.z,
-                interact: () => item.interact()
+                z: item.group ? item.group.position.z : item.position.z
             }))
         }
 
@@ -496,12 +575,12 @@ export class Map
             ctx.font = '700 13px "Space Grotesk", sans-serif'
             const titleMetrics = ctx.measureText(title)
 
-            ctx.font = '500 11px "Inter", sans-serif'
-            const sub = 'Click to open / inspect'
+            ctx.font = '600 11px "Inter", sans-serif'
+            const sub = 'Click to Teleport & Sail here ⛵'
             const subMetrics = ctx.measureText(sub)
 
-            const tooltipW = Math.max(titleMetrics.width, subMetrics.width) + 32
-            const tooltipH = 48
+            const tooltipW = Math.max(titleMetrics.width, subMetrics.width) + 36
+            const tooltipH = 50
 
             // Position above or below diamond with boundary clamp
             let tooltipX = hoveredCanvasPos.x - tooltipW * 0.5
@@ -514,13 +593,13 @@ export class Map
             }
 
             // Glass tooltip card
-            ctx.fillStyle = 'rgba(13, 20, 36, 0.96)'
+            ctx.fillStyle = 'rgba(10, 16, 30, 0.96)'
             ctx.strokeStyle = '#fbbf24'
             ctx.lineWidth = 1.5
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.65)'
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)'
             ctx.shadowBlur = 18
             ctx.beginPath()
-            ctx.roundRect(tooltipX, tooltipY, tooltipW, tooltipH, 8)
+            ctx.roundRect(tooltipX, tooltipY, tooltipW, tooltipH, 9)
             ctx.fill()
             ctx.stroke()
 
@@ -534,8 +613,8 @@ export class Map
             ctx.fillText(`💎 ${title}`, tooltipX + tooltipW * 0.5, tooltipY + 17)
 
             // Subtitle action hint
-            ctx.font = '500 11px "Inter", sans-serif'
-            ctx.fillStyle = 'rgba(226, 232, 240, 0.85)'
+            ctx.font = '600 11px "Inter", sans-serif'
+            ctx.fillStyle = '#38bdf8'
             ctx.fillText(sub, tooltipX + tooltipW * 0.5, tooltipY + 34)
 
             ctx.restore()
