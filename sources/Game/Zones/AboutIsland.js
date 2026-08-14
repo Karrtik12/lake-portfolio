@@ -4,7 +4,7 @@ import aboutData from '../../data/about.js'
 
 /**
  * AboutIsland — displays personal biography and story in natural, conversational prose,
- * situated on the expanded About Island with a wooden landing pier extending into deep water.
+ * situated on the expanded About Island with a wooden landing pier extending from dry beach into deep water.
  */
 export class AboutIsland
 {
@@ -18,29 +18,36 @@ export class AboutIsland
 
     setupInteractiveMarker()
     {
-        // Direction from island center towards lake center
-        const dirX = 0.78
-        const dirZ = -0.62
-        const pierAngle = Math.atan2(dirX, dirZ)
+        // Direction from island center towards lake center (0, 0)
+        // dx = +52, dz = -44 -> normalized vector ~ (0.763, -0.646)
+        const dirX = 0.763
+        const dirZ = -0.646
 
-        // Pier center position (spanning from dry beach into deep water)
-        const pierPos = new THREE.Vector3(
-            this.center.x + dirX * 17.5,
-            0,
-            this.center.z + dirZ * 17.5
+        // Start on dry beach sand
+        const startPos = new THREE.Vector3(
+            this.center.x + dirX * 14.0,
+            0.68,
+            this.center.z + dirZ * 14.0
         )
 
-        // Create 13-plank landing pier with colliders
-        if(this.game.world?.props?.createShortPier)
+        // End in deep water
+        const endPos = new THREE.Vector3(
+            this.center.x + dirX * 24.5,
+            0.68,
+            this.center.z + dirZ * 24.5
+        )
+
+        // Create landing pier with colliders
+        if(this.game.world?.props?.createPierBetween)
         {
-            this.game.world.props.createShortPier(pierPos, pierAngle, 13, 3.0)
+            this.game.world.props.createPierBetween(startPos, endPos, 3.0)
         }
 
-        // Diamond marker at the pier head in deep water
+        // Diamond marker hovering right over the pier head in deep water
         const markerPos = new THREE.Vector3(
-            this.center.x + dirX * 23.0,
-            0.8,
-            this.center.z + dirZ * 23.0
+            endPos.x,
+            1.0,
+            endPos.z
         )
 
         this.game.interactivePoints.create(

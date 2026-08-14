@@ -98,9 +98,9 @@ export class Islands
             const baseDist = Math.sqrt(nx * nx + nz * nz)
             const angle = Math.atan2(z, x)
 
-            // Organic multi-octave boundary noise (natural bays, inlets, points)
-            const noise1 = Math.sin(angle * 3.0 + def.seed) * 0.18 + Math.cos(angle * 5.0 - def.seed) * 0.12
-            const noise2 = Math.sin(angle * 8.0 + def.seed * 2.0) * 0.05
+            // Subtle organic boundary noise for natural island shorelines
+            const noise1 = Math.sin(angle * 3.0 + def.seed) * 0.05 + Math.cos(angle * 5.0 - def.seed) * 0.03
+            const noise2 = Math.sin(angle * 7.0 + def.seed * 2.0) * 0.02
             const organicDist = baseDist + noise1 + noise2
 
             // Elevation profile

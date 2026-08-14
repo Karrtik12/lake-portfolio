@@ -4,8 +4,8 @@ import socialLinks from '../../data/social.js'
 
 /**
  * SocialsIsland — places interactive markers for all channels around Socials Island,
- * with individual wooden landing piers extending into deep water so the pier heads
- * always remain immersed in water across all wave cycles.
+ * each with a dedicated wooden landing pier spanning from dry beach into deep water
+ * with the diamond marker placed right at the pier head.
  */
 export class SocialsIsland
 {
@@ -20,39 +20,45 @@ export class SocialsIsland
     setupSocialLinks()
     {
         const count = socialLinks.length
-        const pierRadius = 17.5
-        const markerRadius = 23.0
+
+        // Fan out symmetrically across the southeastern shore (facing lake center)
+        // Vector from island (-58, -38) to lake center (0, 0) is ~33 degrees (0.58 rad)
+        const baseAngle = 0.58
+        const spread = 0.95 // Total angular spread
 
         for(let i = 0; i < count; i++)
         {
             const item = socialLinks[i]
-            // Wide fan-out arc across southeastern shore facing lake center
-            const angle = (i / (count - 1 || 1)) * Math.PI * 0.78 - Math.PI * 0.1
+            const angle = baseAngle + ((i - (count - 1) * 0.5) / ((count - 1) * 0.5 || 1)) * (spread * 0.5)
 
             const dirX = Math.cos(angle)
             const dirZ = Math.sin(angle)
 
-            // Pier center position (spanning from dry beach into deep water)
-            const pierPos = new THREE.Vector3(
-                this.center.x + dirX * pierRadius,
-                0,
-                this.center.z + dirZ * pierRadius
+            // Start of pier on dry beach sand
+            const startPos = new THREE.Vector3(
+                this.center.x + dirX * 14.5,
+                0.68,
+                this.center.z + dirZ * 14.5
             )
 
-            // Pier orientation: local +Z points outwards towards deep water
-            const pierAngle = Math.atan2(dirX, dirZ)
+            // End of pier extending straight into deep water
+            const endPos = new THREE.Vector3(
+                this.center.x + dirX * 24.5,
+                0.68,
+                this.center.z + dirZ * 24.5
+            )
 
-            // Create 13-plank landing pier with colliders
-            if(this.game.world?.props?.createShortPier)
+            // Create pier spanning from beach to deep water
+            if(this.game.world?.props?.createPierBetween)
             {
-                this.game.world.props.createShortPier(pierPos, pierAngle, 13, 2.8)
+                this.game.world.props.createPierBetween(startPos, endPos, 2.8)
             }
 
-            // Place diamond marker hovering right over the deep water pier head
+            // Place diamond marker hovering right over the deep-water pier head
             const markerPos = new THREE.Vector3(
-                this.center.x + dirX * markerRadius,
-                0.8,
-                this.center.z + dirZ * markerRadius
+                endPos.x,
+                1.0,
+                endPos.z
             )
 
             this.game.interactivePoints.create(
