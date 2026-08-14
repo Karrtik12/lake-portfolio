@@ -88,6 +88,19 @@ export class InteractivePoints
         })
     }
 
+    create(posOrOptions, label, onInteract)
+    {
+        if(posOrOptions && posOrOptions.position)
+        {
+            return this.createPoint(posOrOptions)
+        }
+        return this.createPoint({
+            position: posOrOptions,
+            label: label,
+            onInteract: onInteract
+        })
+    }
+
     createPoint(options)
     {
         const item = {}
