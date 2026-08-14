@@ -110,9 +110,9 @@ export class Game
     detectMobile()
     {
         const userAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-        const smallScreen = Math.min(window.innerWidth, window.innerHeight) <= 768
-        const touchOnly = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
-        return userAgent || (smallScreen && touchOnly)
+        const isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+        const isTouchSmall = (('ontouchstart' in window) || navigator.maxTouchPoints > 0) && Math.min(window.innerWidth, window.innerHeight) <= 768
+        return userAgent || (isCoarse && isTouchSmall)
     }
 
     setupOrientationChecks()
@@ -138,8 +138,9 @@ export class Game
                 if(this.orientationPrompt) this.orientationPrompt.style.display = 'flex'
                 if(this.loadingStart)
                 {
+                    this.loadingStart.style.display = 'block'
                     this.loadingStart.disabled = true
-                    this.loadingStart.textContent = 'Rotate to Landscape 🔄'
+                    this.loadingStart.textContent = 'Rotate to Landscape'
                     this.loadingStart.classList.add('is-disabled')
                 }
             }
@@ -148,6 +149,7 @@ export class Game
                 if(this.orientationPrompt) this.orientationPrompt.style.display = 'none'
                 if(this.loadingStart)
                 {
+                    this.loadingStart.style.display = 'block'
                     this.loadingStart.disabled = false
                     this.loadingStart.textContent = 'Click to Explore'
                     this.loadingStart.classList.remove('is-disabled')

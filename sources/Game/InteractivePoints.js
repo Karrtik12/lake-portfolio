@@ -193,11 +193,11 @@ export class InteractivePoints
             }
         }
 
-        // Register with RayCursor so clicking/tapping the 3D diamond in the water triggers interaction
-        if(this.game.rayCursor)
+        // Register diamond mesh with RayCursor so clicking/tapping the 3D diamond in the water triggers interaction
+        if(this.game.rayCursor && item.diamond)
         {
             this.game.rayCursor.addIntersect({
-                mesh: item.group,
+                mesh: item.diamond,
                 active: true,
                 onClick: () => item.interact()
             })
