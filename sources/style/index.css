@@ -127,6 +127,36 @@ html, body {
     50% { box-shadow: 0 0 30px rgba(167, 139, 250, 0.4); }
 }
 
+.loading-start.is-disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.35);
+    cursor: not-allowed;
+    animation: none;
+    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.loading-start.is-disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.mobile-message {
+    margin-top: 1.25rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    max-width: 320px;
+    text-align: center;
+    animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* --- Persistent Bottom-Left Controls HUD Box --- */
 .controls {
     position: fixed;

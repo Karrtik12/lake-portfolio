@@ -93,13 +93,40 @@ export class Game
         this.loadingStart = document.querySelector('.js-loading-start')
         this.controlsElement = document.querySelector('.js-controls')
 
+        // Detect mobile devices
+        this.isMobile = this.detectMobile()
+
         // Ready state
         this.loadingBar.style.width = '100%'
-        this.loadingText.textContent = 'Ready to sail'
+        this.loadingText.textContent = this.isMobile ? '' : 'Ready to sail'
+    }
+
+    detectMobile()
+    {
+        const userAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        const smallScreen = window.innerWidth <= 768
+        const touchOnly = 'ontouchstart' in window && navigator.maxTouchPoints > 0 && !window.matchMedia('(pointer: fine)').matches
+        return userAgent || (smallScreen && touchOnly)
     }
 
     showStartButton()
     {
+        if(this.isMobile)
+        {
+            // Disable the button and show mobile-not-supported message
+            this.loadingStart.style.display = 'block'
+            this.loadingStart.disabled = true
+            this.loadingStart.textContent = 'Desktop Only'
+            this.loadingStart.classList.add('is-disabled')
+
+            // Show mobile message below the button
+            const mobileMsg = document.createElement('p')
+            mobileMsg.className = 'mobile-message'
+            mobileMsg.textContent = 'Mobile devices are not supported yet. Please visit on a desktop browser.'
+            this.loadingStart.insertAdjacentElement('afterend', mobileMsg)
+            return
+        }
+
         this.loadingStart.style.display = 'block'
         this.loadingStart.addEventListener('click', () =>
         {
