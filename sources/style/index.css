@@ -310,6 +310,59 @@ html, body {
     backdrop-filter: blur(12px);
 }
 
+/* --- Interactive Prompt Toast Button --- */
+.interact-toast {
+    position: fixed;
+    bottom: 2rem;
+    bottom: max(2rem, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 55;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1.45rem;
+    background: rgba(10, 16, 30, 0.95);
+    border: 2px solid #fbbf24;
+    border-radius: 50px;
+    box-shadow: 0 0 28px rgba(251, 191, 36, 0.4), 0 8px 32px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    pointer-events: auto;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.interact-toast:hover,
+.interact-toast:active {
+    background: rgba(18, 28, 52, 0.98);
+    transform: translateX(-50%) scale(1.04);
+    box-shadow: 0 0 36px rgba(251, 191, 36, 0.6), 0 8px 32px rgba(0, 0, 0, 0.7);
+}
+
+.interact-toast-key {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    background: #fbbf24;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+}
+
+.interact-toast-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+}
+
 /* --- Lab Billboard Focus Navigation Bar --- */
 .lab-focus-bar {
     position: fixed;
@@ -982,6 +1035,10 @@ html, body {
     .big-map-legend {
         font-size: 0.75rem;
         padding: 0.45rem 0.8rem;
+    }
+
+    .interact-toast-key {
+        display: none !important;
     }
 }
 

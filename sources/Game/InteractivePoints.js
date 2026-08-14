@@ -4,7 +4,7 @@ import { Game } from './Game.js'
 
 /**
  * InteractivePoints — manages in-world 3D diamond interactables, pulsing focus beams,
- * floating billboard labels, and direct raycast click/tap handling.
+ * floating billboard labels, and on-screen interactive prompt toast button.
  */
 export class InteractivePoints
 {
@@ -44,6 +44,30 @@ export class InteractivePoints
             transparent: true,
             opacity: 0.9
         })
+
+        // On-screen Interaction Toast Button Elements
+        this.toastEl = document.querySelector('.js-interact-toast')
+        this.toastKeyEl = document.querySelector('.js-interact-toast-key')
+        this.toastTextEl = document.querySelector('.js-interact-toast-text')
+        this.isToastVisible = false
+
+        // Tap/click handler for the on-screen toast button
+        if(this.toastEl)
+        {
+            const handleToastClick = (e) =>
+            {
+                e.preventDefault()
+                e.stopPropagation()
+
+                if(this.activeItem && typeof this.activeItem.interact === 'function')
+                {
+                    this.activeItem.interact()
+                }
+            }
+
+            this.toastEl.addEventListener('click', handleToastClick)
+            this.toastEl.addEventListener('touchend', handleToastClick)
+        }
 
         // Listen for keyboard interact (Enter) on desktop
         this.game.inputs.events.on('interact', () =>
@@ -235,29 +259,12 @@ export class InteractivePoints
         ctx.fill()
         ctx.stroke()
 
-        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 1024)
-
-        if(isFocused && !isTouch)
-        {
-            // Desktop Focused State: show keyboard enter prompt
-            ctx.fillStyle = '#fbbf24'
-            ctx.font = 'bold 13px "Space Grotesk", sans-serif'
-            ctx.textAlign = 'center'
-            ctx.fillText('PRESS [ENTER] ↵', 160, 26)
-
-            ctx.fillStyle = '#ffffff'
-            ctx.font = 'bold 22px "Space Grotesk", sans-serif'
-            ctx.fillText(item.labelText, 160, 54)
-        }
-        else
-        {
-            // Clean centered title on mobile and unfocused desktop (NO enter sign)
-            ctx.fillStyle = isFocused ? '#ffffff' : '#f8fafc'
-            ctx.font = 'bold 22px "Space Grotesk", sans-serif'
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-            ctx.fillText(item.labelText, 160, 40)
-        }
+        // Clean centered destination title on the 3D diamond (NO enter sign on diamond on any device)
+        ctx.fillStyle = isFocused ? '#ffffff' : '#f8fafc'
+        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(item.labelText, 160, 40)
 
         item.labelTexture.needsUpdate = true
     }
@@ -357,6 +364,50 @@ export class InteractivePoints
             else
             {
                 this.setFocusState(item, false)
+            }
+        }
+
+        // Manage on-screen interaction toast button
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 1024)
+
+        if(closestItem && !this.isToastVisible)
+        {
+            this.isToastVisible = true
+            if(this.toastKeyEl)
+            {
+                this.toastKeyEl.style.display = isTouch ? 'none' : 'inline-block'
+            }
+            if(this.toastEl && this.toastTextEl)
+            {
+                this.toastTextEl.textContent = `Open ${closestItem.labelText}`
+                this.toastEl.style.display = 'flex'
+                gsap.killTweensOf(this.toastEl)
+                gsap.fromTo(this.toastEl, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' })
+            }
+        }
+        else if(closestItem && this.isToastVisible && this.toastTextEl)
+        {
+            this.toastTextEl.textContent = `Open ${closestItem.labelText}`
+            if(this.toastKeyEl)
+            {
+                this.toastKeyEl.style.display = isTouch ? 'none' : 'inline-block'
+            }
+        }
+        else if(!closestItem && this.isToastVisible)
+        {
+            this.isToastVisible = false
+            if(this.toastEl)
+            {
+                gsap.killTweensOf(this.toastEl)
+                gsap.to(this.toastEl, {
+                    opacity: 0,
+                    y: 10,
+                    duration: 0.25,
+                    onComplete: () =>
+                    {
+                        this.toastEl.style.display = 'none'
+                    }
+                })
             }
         }
 
