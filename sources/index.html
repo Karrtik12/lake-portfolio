@@ -24,20 +24,30 @@
             <button class="loading-start js-loading-start" style="display: none;">Click to Explore</button>
         </div>
 
-        <!-- Controls Overlay -->
+        <!-- Persistent Bottom-Left Controls HUD Box -->
         <div class="controls js-controls" style="display: none;">
-            <div class="controls-keys">
-                <div class="controls-row">
-                    <div class="controls-key">W</div>
+            <div class="controls-header">
+                <span class="controls-dot"></span>
+                <span class="controls-title">BOAT CONTROLS</span>
+            </div>
+            <div class="controls-body">
+                <div class="controls-keys">
+                    <div class="controls-row">
+                        <div class="controls-key">W</div>
+                    </div>
+                    <div class="controls-row">
+                        <div class="controls-key">A</div>
+                        <div class="controls-key">S</div>
+                        <div class="controls-key">D</div>
+                    </div>
                 </div>
-                <div class="controls-row">
-                    <div class="controls-key">A</div>
-                    <div class="controls-key">S</div>
-                    <div class="controls-key">D</div>
+                <div class="controls-guide">
+                    <div class="controls-item"><span class="controls-badge">WASD / ↑←↓→</span> <span class="controls-desc">Sail & Steer</span></div>
+                    <div class="controls-item"><span class="controls-badge">SHIFT</span> <span class="controls-desc">Nitro Boost</span></div>
+                    <div class="controls-item"><span class="controls-badge">ENTER</span> <span class="controls-desc">Interact / Inspect</span></div>
+                    <div class="controls-item"><span class="controls-badge">R</span> <span class="controls-desc">Reset Pier</span></div>
                 </div>
             </div>
-            <p class="controls-text">WASD / Arrow Keys to sail • <strong>[Shift]</strong> Boost Speed</p>
-            <p class="controls-text controls-text-secondary">Click or press [Enter] on markers to interact</p>
         </div>
 
         <!-- Zone Title -->

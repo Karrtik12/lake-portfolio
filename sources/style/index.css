@@ -127,65 +127,132 @@ html, body {
     50% { box-shadow: 0 0 30px rgba(167, 139, 250, 0.4); }
 }
 
-/* --- Controls Overlay --- */
+/* --- Persistent Bottom-Left Controls HUD Box --- */
 .controls {
     position: fixed;
-    bottom: 3rem;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 1.75rem;
+    left: 1.75rem;
     z-index: 50;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.85rem 1.15rem;
+    background: rgba(10, 15, 26, 0.68);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38);
     pointer-events: none;
-    animation: fadeInUp 0.6s ease forwards;
+    user-select: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    animation: fadeInLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .controls.is-hidden {
-    animation: fadeOutDown 0.6s ease forwards;
+    opacity: 0;
+    transform: translateY(12px);
+    pointer-events: none;
+}
+
+.controls-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.controls-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 8px #38bdf8;
+    animation: pulseDot 2s infinite ease-in-out;
+}
+
+.controls-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.controls-body {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .controls-keys {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    margin-bottom: 0.75rem;
+    gap: 3px;
 }
 
 .controls-row {
     display: flex;
-    gap: 4px;
+    gap: 3px;
 }
 
 .controls-key {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 2px 4px rgba(0, 0, 0, 0.25);
 }
 
-.controls-text {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin-bottom: 0.25rem;
+.controls-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
-.controls-text-secondary {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.3);
+.controls-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+.controls-badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #c084fc;
+    background: rgba(147, 51, 234, 0.18);
+    border: 1px solid rgba(192, 132, 252, 0.3);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    min-width: 48px;
+    text-align: center;
+}
+
+.controls-desc {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+    white-space: nowrap;
+}
+
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
 }
 
 @keyframes fadeOutDown {

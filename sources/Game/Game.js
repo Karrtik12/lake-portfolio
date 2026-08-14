@@ -115,14 +115,8 @@ export class Game
         // Switch camera to follow boat
         this.view.setMode(View.MODE_FOLLOW)
 
-        // Show controls overlay
-        this.controlsElement.style.display = 'block'
-
-        // Hide controls after first movement
-        this.inputs.events.on('firstMove', () =>
-        {
-            this.controlsElement.classList.add('is-hidden')
-        })
+        // Show persistent bottom-left controls HUD
+        this.controlsElement.style.display = 'flex'
 
         // Setup menu toggle
         this.setupMenu()

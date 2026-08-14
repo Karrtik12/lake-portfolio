@@ -726,6 +726,8 @@ export class LabIsland
         if(this.menuToggleEl) this.menuToggleEl.style.display = 'none'
         if(this.toastEl) this.toastEl.style.display = 'none'
         if(this.zoneTitleEl) this.zoneTitleEl.style.display = 'none'
+        const controlsEl = document.querySelector('.js-controls')
+        if(controlsEl) controlsEl.style.display = 'none'
 
         if(this.game.audio)
         {
@@ -741,10 +743,12 @@ export class LabIsland
         // Smoothly exit cinematic mode back to boat follow
         this.game.view.exitCinematic()
 
-        // Restore HUD overlays
+        // Restore HUD overlays when boat is back in focus
         if(this.minimapEl) this.minimapEl.style.display = 'block'
         if(this.menuToggleEl) this.menuToggleEl.style.display = 'flex'
         if(this.zoneTitleEl) this.zoneTitleEl.style.display = 'block'
+        const controlsEl = document.querySelector('.js-controls')
+        if(controlsEl) controlsEl.style.display = 'flex'
     }
 
     setupKeyboardAndMouseControls()
