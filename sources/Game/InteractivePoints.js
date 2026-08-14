@@ -179,6 +179,7 @@ export class InteractivePoints
         label.position.set(0, 1.75, 0)
         label.scale.set(item.baseScaleX, item.baseScaleY, 1.0)
         label.renderOrder = 999
+        label.visible = false // Visible only within 55m of the boat
         item.label = label
         item.group.add(label)
 
@@ -352,6 +353,12 @@ export class InteractivePoints
             // Proximity check to player boat
             const dist = item.position.distanceTo(boatPos)
             const isNear = dist < 22.0
+
+            // Diamond label is visible only when within 55m of the boat
+            if(item.label)
+            {
+                item.label.visible = dist <= 55.0
+            }
 
             item.isPlayerNear = isNear
 
