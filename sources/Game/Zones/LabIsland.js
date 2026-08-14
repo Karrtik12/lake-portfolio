@@ -187,36 +187,36 @@ export class LabIsland
     createFloatingRepoBadge()
     {
         const badgeCanvas = document.createElement('canvas')
-        badgeCanvas.width = 600
-        badgeCanvas.height = 140
+        badgeCanvas.width = 540
+        badgeCanvas.height = 90
         const ctx = badgeCanvas.getContext('2d')
 
         // Gradient background
-        const grad = ctx.createLinearGradient(0, 0, 600, 140)
-        grad.addColorStop(0, '#0284c7')
-        grad.addColorStop(0.5, '#2563eb')
-        grad.addColorStop(1, '#7c3aed')
+        const grad = ctx.createLinearGradient(0, 0, 540, 90)
+        grad.addColorStop(0, 'rgba(2, 132, 199, 0.95)')
+        grad.addColorStop(0.5, 'rgba(37, 99, 235, 0.95)')
+        grad.addColorStop(1, 'rgba(124, 58, 237, 0.95)')
         ctx.fillStyle = grad
         ctx.beginPath()
-        ctx.roundRect(8, 8, 584, 124, 62)
+        ctx.roundRect(4, 4, 532, 82, 41)
         ctx.fill()
 
         // Glowing border
         ctx.strokeStyle = '#38bdf8'
-        ctx.lineWidth = 6
+        ctx.lineWidth = 4
         ctx.stroke()
 
-        // Text
+        // Sleek refined text
         ctx.fillStyle = '#ffffff'
-        ctx.font = 'bold 36px "Space Grotesk", sans-serif'
+        ctx.font = 'bold 23px "Space Grotesk", sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText('ENTER ↵  •  OPEN GITHUB REPO ↗', 300, 70)
+        ctx.fillText('ENTER ↵  •  OPEN GITHUB REPOSITORY ↗', 270, 45)
 
         const badgeTex = new THREE.CanvasTexture(badgeCanvas)
         const badgeMat = new THREE.MeshBasicNodeMaterial({ map: badgeTex, transparent: true })
-        this.repoBadgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.84), badgeMat)
-        this.repoBadgeMesh.position.set(0, 6.8, 0.35)
+        this.repoBadgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 0.5), badgeMat)
+        this.repoBadgeMesh.position.set(0, 6.55, 0.35)
         this.group.add(this.repoBadgeMesh)
 
         // Click on hovering badge to open repo
