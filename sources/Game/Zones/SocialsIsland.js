@@ -4,7 +4,8 @@ import socialLinks from '../../data/social.js'
 
 /**
  * SocialsIsland — places interactive markers for all channels around Socials Island,
- * with wide spacing and individual wooden landing piers extending into the water.
+ * with individual wooden landing piers extending into deep water so the pier heads
+ * always remain immersed in water across all wave cycles.
  */
 export class SocialsIsland
 {
@@ -19,8 +20,8 @@ export class SocialsIsland
     setupSocialLinks()
     {
         const count = socialLinks.length
-        const pierRadius = 14.5
-        const markerRadius = 19.5
+        const pierRadius = 17.5
+        const markerRadius = 23.0
 
         for(let i = 0; i < count; i++)
         {
@@ -31,23 +32,23 @@ export class SocialsIsland
             const dirX = Math.cos(angle)
             const dirZ = Math.sin(angle)
 
-            // Pier center position (spanning from island shore to deep water)
+            // Pier center position (spanning from dry beach into deep water)
             const pierPos = new THREE.Vector3(
                 this.center.x + dirX * pierRadius,
                 0,
                 this.center.z + dirZ * pierRadius
             )
 
-            // Pier orientation: local +Z points outwards towards water
+            // Pier orientation: local +Z points outwards towards deep water
             const pierAngle = Math.atan2(dirX, dirZ)
 
-            // Create individual landing pier with colliders
+            // Create 13-plank landing pier with colliders
             if(this.game.world?.props?.createShortPier)
             {
-                this.game.world.props.createShortPier(pierPos, pierAngle, 10, 2.8)
+                this.game.world.props.createShortPier(pierPos, pierAngle, 13, 2.8)
             }
 
-            // Place diamond marker hovering right over the pier head in water
+            // Place diamond marker hovering right over the deep water pier head
             const markerPos = new THREE.Vector3(
                 this.center.x + dirX * markerRadius,
                 0.8,

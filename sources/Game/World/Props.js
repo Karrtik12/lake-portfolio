@@ -38,7 +38,7 @@ export class Props
 
         // Main boardwalk planks extending from boundary beach into lake water
         const dockWidth = 5.2
-        const plankCount = 28
+        const plankCount = 32
 
         for(let i = 0; i < plankCount; i++)
         {
@@ -51,19 +51,19 @@ export class Props
             pierGroup.add(plank)
         }
 
-        // Support pilings
-        const pylonZOffsets = [-10, -6, -2, 2, 6, 10]
-        const pylonGeo = new THREE.CylinderGeometry(0.3, 0.34, 6, 8)
+        // Support pilings along pier
+        const pylonZOffsets = [-11, -7, -3, 1, 5, 9, 13]
+        const pylonGeo = new THREE.CylinderGeometry(0.3, 0.34, 6.5, 8)
 
         for(const z of pylonZOffsets)
         {
             const pylonL = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
-            pylonL.position.set(-dockWidth * 0.45, 0.5, z)
+            pylonL.position.set(-dockWidth * 0.45, 0.3, z)
             pylonL.castShadow = true
             pierGroup.add(pylonL)
 
             const pylonR = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
-            pylonR.position.set(dockWidth * 0.45, 0.5, z)
+            pylonR.position.set(dockWidth * 0.45, 0.3, z)
             pylonR.castShadow = true
             pierGroup.add(pylonR)
         }
@@ -71,13 +71,13 @@ export class Props
         // Wooden Welcome Signpost at beach entrance of dock
         const postGeo = new THREE.CylinderGeometry(0.18, 0.2, 3.4, 8)
         const post = new THREE.Mesh(postGeo, this.darkWoodMaterial)
-        post.position.set(-dockWidth * 0.5 - 0.7, 2.0, 10.5)
+        post.position.set(-dockWidth * 0.5 - 0.7, 2.0, 12.5)
         post.castShadow = true
         pierGroup.add(post)
 
         const signGeo = new THREE.BoxGeometry(2.8, 1.0, 0.16)
         const sign = new THREE.Mesh(signGeo, this.woodMaterial)
-        sign.position.set(-dockWidth * 0.5 - 0.7, 3.2, 10.5)
+        sign.position.set(-dockWidth * 0.5 - 0.7, 3.2, 12.5)
         sign.rotation.y = -0.2
         sign.castShadow = true
         pierGroup.add(sign)
@@ -103,13 +103,13 @@ export class Props
 
     /**
      * Helper to create a wooden landing pier for a diamond marker,
-     * equipped with solid Rapier physics colliders.
+     * slightly extended so the outer end always extends securely into deep water.
      */
-    createShortPier(centerPos, angle, plankCount = 10, width = 2.8)
+    createShortPier(centerPos, angle, plankCount = 13, width = 2.8)
     {
         const pier = new THREE.Group()
         const plankGeo = new THREE.BoxGeometry(width, 0.22, 0.68)
-        const pylonGeo = new THREE.CylinderGeometry(0.2, 0.24, 4.8, 6)
+        const pylonGeo = new THREE.CylinderGeometry(0.2, 0.24, 5.5, 6)
         const crossBeamGeo = new THREE.BoxGeometry(width + 0.2, 0.2, 0.25)
 
         for(let i = 0; i < plankCount; i++)
@@ -123,27 +123,28 @@ export class Props
             pier.add(plank)
         }
 
-        // Support pilings along pier length
+        // Support pilings along pier length (Water end, Mid-outer, Mid-inner, Beach end)
         const pylonOffsets = [
-            (plankCount * 0.5 - 1.2) * 0.76, // Water end
-            0.0,                              // Mid pier
-            (-plankCount * 0.5 + 1.2) * 0.76  // Beach end
+            (plankCount * 0.5 - 1.0) * 0.76, // Deep water end
+            (plankCount * 0.5 - 4.5) * 0.76, // Mid-outer
+            (-plankCount * 0.5 + 4.5) * 0.76, // Mid-inner
+            (-plankCount * 0.5 + 1.0) * 0.76  // Beach end
         ]
 
         for(const pZ of pylonOffsets)
         {
             const pylonL = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
-            pylonL.position.set(-width * 0.44, 0.2, pZ)
+            pylonL.position.set(-width * 0.44, 0.0, pZ)
             pylonL.castShadow = true
             pier.add(pylonL)
 
             const pylonR = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
-            pylonR.position.set(width * 0.44, 0.2, pZ)
+            pylonR.position.set(width * 0.44, 0.0, pZ)
             pylonR.castShadow = true
             pier.add(pylonR)
 
             const cross = new THREE.Mesh(crossBeamGeo, this.darkWoodMaterial)
-            cross.position.set(0, 0.1, pZ)
+            cross.position.set(0, 0.0, pZ)
             cross.castShadow = true
             pier.add(cross)
         }

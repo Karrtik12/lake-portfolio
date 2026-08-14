@@ -144,11 +144,11 @@ export class LabIsland
         // 7. Landing Pier & Interactive Ground Diamond Marker for approaching Lab Island
         if(this.game.world?.props?.createShortPier)
         {
-            this.game.world.props.createShortPier(new THREE.Vector3(58, 0, -17.0), Math.PI, 10, 3.2)
+            this.game.world.props.createShortPier(new THREE.Vector3(58, 0, -13.0), Math.PI, 14, 3.2)
         }
 
         this.marker = this.game.interactivePoints.create(
-            new THREE.Vector3(58, 0.8, -12.5),
+            new THREE.Vector3(58, 0.8, -6.5),
             '🔬 View Lab Showcase (Enter)',
             () =>
             {
