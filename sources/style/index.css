@@ -481,29 +481,33 @@ html, body {
 
 .big-map-container {
     position: relative;
-    width: min(92vw, 920px);
-    max-height: 90vh;
-    padding: 1.8rem;
-    background: rgba(15, 23, 42, 0.95);
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: 20px;
-    backdrop-filter: blur(24px);
-    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+    width: min(94vw, 1140px);
+    height: min(90vh, 740px);
+    max-height: 92vh;
+    padding: 1.5rem 1.8rem;
+    background: rgba(10, 16, 30, 0.96);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 22px;
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow: 0 24px 90px rgba(0, 0, 0, 0.75), 0 0 40px rgba(56, 189, 248, 0.12);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .big-map-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.2rem;
+    margin-bottom: 1rem;
     padding-bottom: 0.8rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .big-map-title {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: #ffffff;
 }
@@ -531,36 +535,58 @@ html, body {
 
 .big-map-body {
     display: flex;
-    gap: 1.5rem;
+    gap: 1.8rem;
     align-items: center;
+    flex: 1;
+    min-height: 0;
 }
 
 .big-map-canvas-wrap {
     flex-shrink: 0;
-    width: min(500px, 50vw);
-    height: min(500px, 50vw);
-    border-radius: 16px;
+    width: min(580px, 48vw);
+    height: min(580px, 48vw);
+    aspect-ratio: 1 / 1;
+    border-radius: 18px;
     overflow: hidden;
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+    position: relative;
+    background: #0a101f;
 }
 
 .big-map-canvas {
     width: 100%;
     height: 100%;
+    display: block;
+    cursor: default;
 }
 
 .big-map-sidebar {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    max-height: 480px;
+    gap: 0.85rem;
+    max-height: 100%;
     overflow-y: auto;
+    padding-right: 0.4rem;
+}
+
+.big-map-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.big-map-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 3px;
+}
+
+.big-map-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
 }
 
 .big-map-card {
-    padding: 1rem;
+    padding: 0.95rem 1.1rem;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
@@ -574,7 +600,7 @@ html, body {
 
 .big-map-card-name {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     font-weight: 700;
     color: #ffffff;
     margin-bottom: 0.25rem;
@@ -583,7 +609,8 @@ html, body {
 .big-map-card-desc {
     font-family: 'Inter', sans-serif;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.4;
+    color: rgba(226, 232, 240, 0.7);
     margin-bottom: 0.4rem;
 }
 

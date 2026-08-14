@@ -2,7 +2,8 @@ import gsap from 'gsap'
 import { Game } from './Game.js'
 
 /**
- * Map — manages the real-time HUD minimap and the full-screen Big Map destination overlay.
+ * Map — manages the real-time HUD minimap and the expanded interactive Big Map modal,
+ * including interactive diamond markers with hover tooltip cards.
  */
 export class Map
 {
@@ -26,6 +27,10 @@ export class Map
 
         this.isBigMapOpen = false
         this.worldRadius = 140 // World units mapped to radar radius
+
+        // Mouse hover state on Big Map canvas
+        this.mousePos = { x: -999, y: -999 }
+        this.hoveredDiamond = null
 
         // Island definitions with icons and descriptions
         this.destinations = [
@@ -77,6 +82,35 @@ export class Map
                 this.closeBigMap()
             }
         })
+
+        // Big Map Canvas mouse move and hover detection
+        if(this.canvasBig)
+        {
+            this.canvasBig.addEventListener('mousemove', (e) =>
+            {
+                const rect = this.canvasBig.getBoundingClientRect()
+                const scaleX = this.canvasBig.width / rect.width
+                const scaleY = this.canvasBig.height / rect.height
+                this.mousePos.x = (e.clientX - rect.left) * scaleX
+                this.mousePos.y = (e.clientY - rect.top) * scaleY
+            })
+
+            this.canvasBig.addEventListener('mouseleave', () =>
+            {
+                this.mousePos.x = -999
+                this.mousePos.y = -999
+                this.hoveredDiamond = null
+                this.canvasBig.style.cursor = 'default'
+            })
+
+            this.canvasBig.addEventListener('click', () =>
+            {
+                if(this.hoveredDiamond && this.hoveredDiamond.interact)
+                {
+                    this.hoveredDiamond.interact()
+                }
+            })
+        }
     }
 
     openBigMap()
@@ -121,7 +155,7 @@ export class Map
     {
         if(!this.sidebarEl) return
 
-        const boatPos = this.game.boat ? this.game.boat.position : { x: 0, z: 36 }
+        const boatPos = this.game.boat ? this.game.boat.position : { x: 0, z: 94 }
 
         this.sidebarEl.innerHTML = this.destinations.map(d =>
         {
@@ -143,6 +177,31 @@ export class Map
             x: canvasWidth * 0.5 + wx * scale,
             y: canvasHeight * 0.5 + wz * scale
         }
+    }
+
+    getDiamondList()
+    {
+        // Query live interactive points from the game
+        if(this.game.interactivePoints?.items?.length)
+        {
+            return this.game.interactivePoints.items.map(item => ({
+                name: item.labelText || 'Interactive Point',
+                x: item.group ? item.group.position.x : item.position.x,
+                z: item.group ? item.group.position.z : item.position.z,
+                interact: () => item.interact()
+            }))
+        }
+
+        // Fallback predefined diamonds if not yet initialized
+        return [
+            { name: 'LinkedIn', x: -58 + Math.cos(0.60 - 1.07) * 24.5, z: -38 + Math.sin(0.60 - 1.07) * 24.5 },
+            { name: 'GitHub', x: -58 + Math.cos(0.60 - 0.53) * 24.5, z: -38 + Math.sin(0.60 - 0.53) * 24.5 },
+            { name: '✉️ Mail Me', x: -58 + Math.cos(0.60) * 24.5, z: -38 + Math.sin(0.60) * 24.5 },
+            { name: 'LeetCode', x: -58 + Math.cos(0.60 + 0.53) * 24.5, z: -38 + Math.sin(0.60 + 0.53) * 24.5 },
+            { name: 'GeeksForGeeks', x: -58 + Math.cos(0.60 + 1.07) * 24.5, z: -38 + Math.sin(0.60 + 1.07) * 24.5 },
+            { name: '👤 About Me', x: -52 + 0.763 * 24.5, z: 44 - 0.646 * 24.5 },
+            { name: '🔬 Lab Showcase', x: 58, z: -6.5 }
+        ]
     }
 
     renderMinimap()
@@ -180,6 +239,17 @@ export class Map
             ctx.strokeStyle = '#deb887'
             ctx.lineWidth = 1.5
             ctx.stroke()
+        }
+
+        // Diamond markers on minimap
+        const diamonds = this.getDiamondList()
+        for(const d of diamonds)
+        {
+            const dp = this.worldToCanvas(d.x, d.z, w, h)
+            ctx.fillStyle = '#38bdf8'
+            ctx.beginPath()
+            ctx.arc(dp.x, dp.y, 2.5, 0, Math.PI * 2)
+            ctx.fill()
         }
 
         // Boat pointer
@@ -222,6 +292,7 @@ export class Map
         const w = this.canvasBig.width
         const h = this.canvasBig.height
         const center = { x: w * 0.5, y: h * 0.5 }
+        const time = performance.now() * 0.001
 
         ctx.clearRect(0, 0, w, h)
 
@@ -232,7 +303,7 @@ export class Map
         // Concentric distance radar rings
         ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)'
         ctx.lineWidth = 1
-        for(let r = 50; r <= w * 0.44; r += 50)
+        for(let r = 60; r <= w * 0.44; r += 60)
         {
             ctx.beginPath()
             ctx.arc(center.x, center.y, r, 0, Math.PI * 2)
@@ -249,7 +320,7 @@ export class Map
         ctx.lineWidth = 6
         ctx.stroke()
 
-        // Draw Islands with detailed labels
+        // 1. Draw Islands with clean, centered badges
         for(const island of this.destinations)
         {
             const p = this.worldToCanvas(island.x, island.z, w, h)
@@ -268,34 +339,94 @@ export class Map
             ctx.fill()
 
             // Text Label Badge
-            ctx.font = 'bold 15px "Space Grotesk", sans-serif'
+            ctx.font = '700 13px "Space Grotesk", sans-serif'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+
             const label = `${island.icon} ${island.name}`
             const textMetrics = ctx.measureText(label)
-            const badgeW = textMetrics.width + 16
+            const badgeW = textMetrics.width + 24
             const badgeH = 26
+            const badgeX = p.x - badgeW * 0.5
+            const badgeY = p.y - mapR - 30
 
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.88)'
-            ctx.strokeStyle = '#38bdf8'
+            // Glass badge background
+            ctx.fillStyle = 'rgba(10, 16, 30, 0.92)'
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)'
             ctx.lineWidth = 1.5
             ctx.beginPath()
-            ctx.roundRect(p.x - badgeW * 0.5, p.y - mapR - 32, badgeW, badgeH, 6)
+            ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 6)
             ctx.fill()
             ctx.stroke()
 
+            // Centered text
             ctx.fillStyle = '#ffffff'
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-            ctx.fillText(label, p.x, p.y - mapR - 19)
+            ctx.fillText(label, p.x, badgeY + badgeH * 0.5)
         }
 
-        // Draw Player Boat on Big Map
+        // 2. Draw Interactive Diamond Markers with hover detection
+        const diamonds = this.getDiamondList()
+        let hoveredItem = null
+        let hoveredCanvasPos = null
+
+        for(const diamond of diamonds)
+        {
+            const dp = this.worldToCanvas(diamond.x, diamond.z, w, h)
+            const distToMouse = Math.hypot(this.mousePos.x - dp.x, this.mousePos.y - dp.y)
+            const isHovered = distToMouse < 14
+
+            if(isHovered)
+            {
+                hoveredItem = diamond
+                hoveredCanvasPos = dp
+            }
+
+            // Pulsing halo for each diamond
+            const pulse = (Math.sin(time * 3.5 + diamond.x) + 1) * 0.5
+            const haloR = isHovered ? 13 : 8 + pulse * 2.5
+
+            ctx.fillStyle = isHovered ? 'rgba(251, 191, 36, 0.35)' : 'rgba(56, 189, 248, 0.22)'
+            ctx.beginPath()
+            ctx.arc(dp.x, dp.y, haloR, 0, Math.PI * 2)
+            ctx.fill()
+
+            // Draw rotating diamond polygon
+            ctx.save()
+            ctx.translate(dp.x, dp.y)
+            ctx.rotate(time * 1.5)
+
+            const size = isHovered ? 8 : 6
+            ctx.fillStyle = isHovered ? '#fbbf24' : '#38bdf8'
+            ctx.strokeStyle = '#ffffff'
+            ctx.lineWidth = 1.2
+
+            ctx.beginPath()
+            ctx.moveTo(0, -size)
+            ctx.lineTo(size, 0)
+            ctx.lineTo(0, size)
+            ctx.lineTo(-size, 0)
+            ctx.closePath()
+            ctx.fill()
+            ctx.stroke()
+
+            ctx.restore()
+        }
+
+        // Set cursor style
+        this.hoveredDiamond = hoveredItem
+        if(this.canvasBig)
+        {
+            this.canvasBig.style.cursor = hoveredItem ? 'pointer' : 'default'
+        }
+
+        // 3. Draw Player Boat on Big Map
         if(this.game.boat)
         {
             const b = this.game.boat
             const bp = this.worldToCanvas(b.position.x, b.position.z, w, h)
 
             // Pulsing location ripple
-            const pulse = 10 + Math.sin(performance.now() * 0.005) * 4
+            const pulse = 10 + Math.sin(time * 4.0) * 4
             ctx.fillStyle = 'rgba(56, 189, 248, 0.25)'
             ctx.beginPath()
             ctx.arc(bp.x, bp.y, pulse, 0, Math.PI * 2)
@@ -320,11 +451,82 @@ export class Map
 
             ctx.restore()
 
-            // Boat label
-            ctx.font = 'bold 13px "Space Grotesk", sans-serif'
-            ctx.fillStyle = '#38bdf8'
+            // Boat label badge
+            ctx.font = '700 12px "Space Grotesk", sans-serif'
             ctx.textAlign = 'center'
-            ctx.fillText('⛵ YOU ARE HERE', bp.x, bp.y + 22)
+            ctx.textBaseline = 'middle'
+
+            const boatLabel = '⛵ YOU ARE HERE'
+            const textMetrics = ctx.measureText(boatLabel)
+            const bBadgeW = textMetrics.width + 16
+            const bBadgeH = 22
+            const bBadgeX = bp.x - bBadgeW * 0.5
+            const bBadgeY = bp.y + 16
+
+            ctx.fillStyle = 'rgba(10, 16, 30, 0.9)'
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)'
+            ctx.lineWidth = 1.2
+            ctx.beginPath()
+            ctx.roundRect(bBadgeX, bBadgeY, bBadgeW, bBadgeH, 5)
+            ctx.fill()
+            ctx.stroke()
+
+            ctx.fillStyle = '#38bdf8'
+            ctx.fillText(boatLabel, bp.x, bBadgeY + bBadgeH * 0.5)
+        }
+
+        // 4. Draw Rich Floating Tooltip for Hovered Diamond
+        if(hoveredItem && hoveredCanvasPos)
+        {
+            ctx.save()
+
+            const title = hoveredItem.name
+            ctx.font = '700 13px "Space Grotesk", sans-serif'
+            const titleMetrics = ctx.measureText(title)
+
+            ctx.font = '500 11px "Inter", sans-serif'
+            const sub = 'Click to open / inspect'
+            const subMetrics = ctx.measureText(sub)
+
+            const tooltipW = Math.max(titleMetrics.width, subMetrics.width) + 28
+            const tooltipH = 46
+
+            // Position above or below diamond with boundary clamp
+            let tooltipX = hoveredCanvasPos.x - tooltipW * 0.5
+            tooltipX = Math.max(10, Math.min(w - tooltipW - 10, tooltipX))
+
+            let tooltipY = hoveredCanvasPos.y - tooltipH - 16
+            if(tooltipY < 10)
+            {
+                tooltipY = hoveredCanvasPos.y + 16
+            }
+
+            // Glass tooltip card
+            ctx.fillStyle = 'rgba(13, 20, 36, 0.96)'
+            ctx.strokeStyle = '#fbbf24'
+            ctx.lineWidth = 1.5
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)'
+            ctx.shadowBlur = 16
+            ctx.beginPath()
+            ctx.roundRect(tooltipX, tooltipY, tooltipW, tooltipH, 8)
+            ctx.fill()
+            ctx.stroke()
+
+            ctx.shadowBlur = 0 // Reset shadow
+
+            // Diamond icon + Title
+            ctx.font = '700 13px "Space Grotesk", sans-serif'
+            ctx.fillStyle = '#fbbf24'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(`💎 ${title}`, tooltipX + tooltipW * 0.5, tooltipY + 16)
+
+            // Subtitle action hint
+            ctx.font = '500 11px "Inter", sans-serif'
+            ctx.fillStyle = 'rgba(226, 232, 240, 0.8)'
+            ctx.fillText(sub, tooltipX + tooltipW * 0.5, tooltipY + 32)
+
+            ctx.restore()
         }
     }
 }
