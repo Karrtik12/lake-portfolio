@@ -27,8 +27,8 @@ export class Title
         gsap.killTweensOf(this.element)
         gsap.fromTo(
             this.element,
-            { opacity: 0, scale: 0.85 },
-            { opacity: 1, scale: 1.0, duration: 0.6, ease: 'back.out(1.2)' }
+            { opacity: 0, y: -16, xPercent: -50 },
+            { opacity: 1, y: 0, xPercent: -50, duration: 0.45, ease: 'power2.out' }
         )
     }
 
@@ -40,8 +40,9 @@ export class Title
         gsap.killTweensOf(this.element)
         gsap.to(this.element, {
             opacity: 0,
-            scale: 0.9,
-            duration: 0.4,
+            y: -16,
+            xPercent: -50,
+            duration: 0.35,
             ease: 'power2.in',
             onComplete: () =>
             {
