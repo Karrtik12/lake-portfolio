@@ -566,7 +566,7 @@ export class Map
             ctx.fillText(boatText, bBadgeX + bPad + bIconW + 4, bBadgeY + bBadgeH * 0.5)
         }
 
-        // 4. Draw Rich Floating Tooltip for Hovered Diamond
+        // 4. Draw Clean Floating Tooltip for Hovered Diamond (Name only, no repeated instructions)
         if(hoveredItem && hoveredCanvasPos)
         {
             ctx.save()
@@ -575,31 +575,27 @@ export class Map
             ctx.font = '700 13px "Space Grotesk", sans-serif'
             const titleMetrics = ctx.measureText(title)
 
-            ctx.font = '600 11px "Inter", sans-serif'
-            const sub = 'Click to Teleport & Sail here ⛵'
-            const subMetrics = ctx.measureText(sub)
-
-            const tooltipW = Math.max(titleMetrics.width, subMetrics.width) + 36
-            const tooltipH = 50
+            const tooltipW = titleMetrics.width + 36
+            const tooltipH = 32
 
             // Position above or below diamond with boundary clamp
             let tooltipX = hoveredCanvasPos.x - tooltipW * 0.5
             tooltipX = Math.max(12, Math.min(w - tooltipW - 12, tooltipX))
 
-            let tooltipY = hoveredCanvasPos.y - tooltipH - 18
+            let tooltipY = hoveredCanvasPos.y - tooltipH - 14
             if(tooltipY < 12)
             {
-                tooltipY = hoveredCanvasPos.y + 18
+                tooltipY = hoveredCanvasPos.y + 14
             }
 
             // Glass tooltip card
-            ctx.fillStyle = 'rgba(10, 16, 30, 0.96)'
+            ctx.fillStyle = 'rgba(10, 16, 30, 0.95)'
             ctx.strokeStyle = '#fbbf24'
-            ctx.lineWidth = 1.5
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)'
-            ctx.shadowBlur = 18
+            ctx.lineWidth = 1.4
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.65)'
+            ctx.shadowBlur = 14
             ctx.beginPath()
-            ctx.roundRect(tooltipX, tooltipY, tooltipW, tooltipH, 9)
+            ctx.roundRect(tooltipX, tooltipY, tooltipW, tooltipH, 7)
             ctx.fill()
             ctx.stroke()
 
@@ -610,12 +606,7 @@ export class Map
             ctx.fillStyle = '#fbbf24'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
-            ctx.fillText(`💎 ${title}`, tooltipX + tooltipW * 0.5, tooltipY + 17)
-
-            // Subtitle action hint
-            ctx.font = '600 11px "Inter", sans-serif'
-            ctx.fillStyle = '#38bdf8'
-            ctx.fillText(sub, tooltipX + tooltipW * 0.5, tooltipY + 34)
+            ctx.fillText(`💎 ${title}`, tooltipX + tooltipW * 0.5, tooltipY + tooltipH * 0.5)
 
             ctx.restore()
         }
