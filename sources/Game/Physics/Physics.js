@@ -18,7 +18,6 @@ export class Physics
 
         this.setShorelineColliders()
         this.setIslandColliders()
-        this.setBuoyColliders()
 
         // Step physics in game loop
         this.game.ticker.events.on('tick', () =>
@@ -95,30 +94,6 @@ export class Physics
             .setRestitution(0.2)
             .setFriction(0.2)
         this.world.createCollider(pierColliderDesc, pierBody)
-    }
-
-    setBuoyColliders()
-    {
-        // Solid physical collision barriers for navigational buoys
-        const buoyPositions = [
-            { x: -14, z:  16 },
-            { x:  14, z:  16 },
-            { x: -16, z: -12 },
-            { x:  16, z: -12 }
-        ]
-
-        for(const buoy of buoyPositions)
-        {
-            const bodyDesc = RAPIER.RigidBodyDesc.fixed()
-                .setTranslation(buoy.x, 1.0, buoy.z)
-
-            const body = this.world.createRigidBody(bodyDesc)
-            const colliderDesc = RAPIER.ColliderDesc.cylinder(2.0, 1.1)
-                .setRestitution(0.4)
-                .setFriction(0.2)
-
-            this.world.createCollider(colliderDesc, body)
-        }
     }
 
     update()
