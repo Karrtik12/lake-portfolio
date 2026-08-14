@@ -141,7 +141,12 @@ export class LabIsland
         // Render initial screen canvas
         this.renderScreenCanvas()
 
-        // 7. Interactive Ground Diamond Marker for approaching Lab Island
+        // 7. Short Landing Pier & Interactive Ground Diamond Marker for approaching Lab Island
+        if(this.game.world?.props?.createShortPier)
+        {
+            this.game.world.props.createShortPier(new THREE.Vector3(36, 0, -11.0), Math.PI, 6, 3.0)
+        }
+
         this.marker = this.game.interactivePoints.create(
             new THREE.Vector3(36, 0.8, -12.5),
             '🔬 View Lab Showcase (Enter)',

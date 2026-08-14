@@ -12,7 +12,7 @@ export class Boat
     {
         this.game = Game.getInstance()
 
-        // Spawn position docked at the southern beach pier, facing north (-Z) towards the lake islands
+        // Spawn position at southern beach pier, facing north (-Z) towards the lake islands
         this.spawnPosition = new THREE.Vector3(0, 0.2, 54.0)
         this.spawnRotation = 0 // Facing -Z (north)
 
@@ -25,13 +25,13 @@ export class Boat
         // Base Physics parameters (relaxed cruising with realistic wide rudder turning radius)
         this.baseEngineForce = 9.5
         this.baseReverseForce = 5.5
-        this.baseTurnSpeed = 1.05  // Wider turning radius
-        this.baseTopSpeed = 9.0
+        this.baseTurnSpeed = 1.15
+        this.baseTopSpeed = 9.5
 
         // Boost parameters (holding Shift)
         this.boostEngineForce = 18.5
         this.boostTopSpeed = 17.0
-        this.boostTurnSpeed = 1.35
+        this.boostTurnSpeed = 1.4
 
         this.linearDamping = 1.6   // Water resistance
         this.angularDamping = 4.5  // Steering resistance
@@ -59,13 +59,13 @@ export class Boat
             .setTranslation(this.position.x, this.position.y, this.position.z)
             .setLinearDamping(this.linearDamping)
             .setAngularDamping(this.angularDamping)
-            .lockRotations() // We handle yaw & pitch/roll visuals smoothly
+            .lockRotations()
 
         this.body = this.game.physics.world.createRigidBody(bodyDesc)
 
-        // Boat hull collider (capsule or cuboid)
-        const colliderDesc = RAPIER.ColliderDesc.cuboid(1.2, 0.8, 2.2)
-            .setRestitution(0.4)
+        // Solid boat hull collider
+        const colliderDesc = RAPIER.ColliderDesc.cuboid(1.1, 0.6, 2.3)
+            .setRestitution(0.3)
             .setFriction(0.3)
             .setDensity(1.0)
 
@@ -78,7 +78,7 @@ export class Boat
 
         let axes = this.game.inputs.getAxes()
 
-        // If camera is in cinematic mode (e.g. Lab billboard focused), ignore movement & steering inputs
+        // If camera is in cinematic mode (e.g. Lab billboard focused), ignore movement
         const isCinematic = this.game.view && this.game.view.mode === 3
         const isLabFocused = this.game.areaManager?.lab?.isFocused
         if(isCinematic || isLabFocused)
@@ -93,11 +93,9 @@ export class Boat
         const currentTurnSpeed = axes.boost ? this.boostTurnSpeed : this.baseTurnSpeed
 
         // 1. Rudder Steering (Rotate boat around Y axis)
-        // Realistic rudder physics: turning requires water flow/momentum past the rudder
-        const speedFactor = clamp(Math.abs(this.speed) / 3.5, 0.08, 1.0)
+        const speedFactor = clamp(Math.abs(this.speed) / 3.2, 0.12, 1.0)
         if(axes.right !== 0 && !isCinematic && !isLabFocused)
         {
-            // Invert steering when reversing
             const reverseSign = this.speed < -0.5 ? -1 : 1
             this.angularVelocity = -axes.right * currentTurnSpeed * speedFactor * reverseSign
         }

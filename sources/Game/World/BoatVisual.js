@@ -3,7 +3,9 @@ import { Game } from '../Game.js'
 import { lerp } from '../utilities/maths.js'
 
 /**
- * BoatVisual — renders the stylized low-poly motorboat with dynamic wave bobbing, turn-lean, and acceleration pitch.
+ * BoatVisual — renders a stylized, fully solid 3D speed boat with deep sculpted hull,
+ * teak-trimmed cockpit, dual bucket seats, steering console, tinted sport windshield,
+ * and high-performance outboard engine.
  */
 export class BoatVisual
 {
@@ -12,6 +14,7 @@ export class BoatVisual
         this.game = Game.getInstance()
 
         this.group = new THREE.Group()
+        this.meshGroup = this.group
         this.currentRoll = 0
         this.currentPitch = 0
 
@@ -27,118 +30,467 @@ export class BoatVisual
 
     createBoatModel()
     {
+        // ----------------------------------------------------
         // Materials
-        const hullMat = new THREE.MeshStandardNodeMaterial({
-            color: '#f0f4f8', // Clean white deck/hull
-            roughness: 0.3,
+        // ----------------------------------------------------
+        const hullBlueMat = new THREE.MeshStandardNodeMaterial({
+            color: '#1d4ed8', // Deep royal navy blue
+            roughness: 0.35,
+            metalness: 0.15,
+            flatShading: true
+        })
+
+        const deckWhiteMat = new THREE.MeshStandardNodeMaterial({
+            color: '#f8fafc', // Glossy crisp nautical white
+            roughness: 0.25,
             metalness: 0.1,
             flatShading: true
         })
 
-        const trimMat = new THREE.MeshStandardNodeMaterial({
-            color: '#2563eb', // Royal blue racing stripe
-            roughness: 0.4,
-            metalness: 0.2,
+        const teakWoodMat = new THREE.MeshStandardNodeMaterial({
+            color: '#854d0e', // Warm golden teak wood
+            roughness: 0.85,
             flatShading: true
         })
 
-        const woodMat = new THREE.MeshStandardNodeMaterial({
-            color: '#92400e', // Warm teak wood floor & benches
-            roughness: 0.8,
+        const darkWoodMat = new THREE.MeshStandardNodeMaterial({
+            color: '#451a03', // Dark mahogany trim
+            roughness: 0.9,
+            flatShading: true
+        })
+
+        const seatLeatherMat = new THREE.MeshStandardNodeMaterial({
+            color: '#e2e8f0', // Crisp marine leather
+            roughness: 0.6,
+            metalness: 0.05,
+            flatShading: true
+        })
+
+        const seatAccentMat = new THREE.MeshStandardNodeMaterial({
+            color: '#2563eb', // Royal blue seat cushions
+            roughness: 0.55,
+            metalness: 0.1,
             flatShading: true
         })
 
         const darkMetalMat = new THREE.MeshStandardNodeMaterial({
-            color: '#1e293b', // Outboard motor dark metal
-            roughness: 0.5,
-            metalness: 0.6,
+            color: '#0f172a', // Slate graphite dark metal
+            roughness: 0.45,
+            metalness: 0.65,
             flatShading: true
         })
 
-        const glassMat = new THREE.MeshStandardNodeMaterial({
-            color: '#93c5fd',
-            transparent: true,
-            opacity: 0.75,
+        const chromeMat = new THREE.MeshStandardNodeMaterial({
+            color: '#f1f5f9', // Polished stainless chrome
             roughness: 0.1,
-            metalness: 0.8
+            metalness: 0.95,
+            flatShading: true
         })
 
-        // 1. Hull Base (pointed prow, flat transom)
-        const hullGeo = new THREE.BoxGeometry(2.0, 0.9, 4.4)
-        // Shape prow by tapering front vertices
+        const windshieldGlassMat = new THREE.MeshStandardNodeMaterial({
+            color: '#93c5fd', // Crystal ice tinted glass
+            transparent: true,
+            opacity: 0.65,
+            roughness: 0.05,
+            metalness: 0.85
+        })
+
+        const navLightGreenMat = new THREE.MeshBasicNodeMaterial({ color: '#22c55e' })
+        const navLightRedMat = new THREE.MeshBasicNodeMaterial({ color: '#ef4444' })
+
+        // ----------------------------------------------------
+        // 1. Solid Outer Hull (Deep V-Hull with tapered prow)
+        // ----------------------------------------------------
+        const hullLength = 4.8
+        const hullWidth = 2.2
+        const hullDepth = 0.95
+
+        const hullGeo = new THREE.BoxGeometry(hullWidth, hullDepth, hullLength, 6, 2, 8)
         const pos = hullGeo.attributes.position
         for(let i = 0; i < pos.count; i++)
         {
+            const x = pos.getX(i)
+            const y = pos.getY(i)
             const z = pos.getZ(i)
-            if(z < -0.5) // Front half
+
+            // V-shaped bottom keel: push bottom center down, bottom sides up
+            if(y < 0)
             {
-                const taper = (z - (-0.5)) / (-2.2 - (-0.5)) // 0 to 1
-                pos.setX(i, pos.getX(i) * (1.0 - taper * 0.75))
-                pos.setY(i, pos.getY(i) + taper * 0.35) // Bow rises slightly
+                const keelFactor = 1.0 - Math.abs(x) / (hullWidth * 0.5)
+                pos.setY(i, y - keelFactor * 0.25)
+            }
+
+            // Taper bow (z < 0) to a sleek hydrodynamic point
+            if(z < 0.2)
+            {
+                const t = (0.2 - z) / (hullLength * 0.5 + 0.2) // 0 at midship to 1 at prow
+                const taperX = 1.0 - Math.pow(t, 1.4) * 0.78
+                pos.setX(i, x * taperX)
+
+                // Bow flare and sheer line rise
+                if(y >= 0)
+                {
+                    pos.setY(i, y + Math.pow(t, 1.6) * 0.38)
+                }
+            }
+            else
+            {
+                // Slight taper at transom stern
+                const tStern = (z - 0.2) / (hullLength * 0.5 - 0.2)
+                const taperX = 1.0 - tStern * 0.1
+                pos.setX(i, x * taperX)
             }
         }
         hullGeo.computeVertexNormals()
 
-        const hull = new THREE.Mesh(hullGeo, hullMat)
+        const hull = new THREE.Mesh(hullGeo, hullBlueMat)
         hull.position.y = 0.45
         hull.castShadow = true
         hull.receiveShadow = true
         this.group.add(hull)
 
-        // 2. Blue Trim Band around upper hull
-        const trimGeo = new THREE.BoxGeometry(2.08, 0.22, 4.48)
-        const trim = new THREE.Mesh(trimGeo, trimMat)
-        trim.position.y = 0.72
-        this.group.add(trim)
+        // ----------------------------------------------------
+        // 2. Solid Upper Gunwales & White Deck Perimeter
+        // ----------------------------------------------------
+        const gunwaleGeo = new THREE.BoxGeometry(hullWidth + 0.08, 0.22, hullLength + 0.08, 6, 1, 8)
+        const gPos = gunwaleGeo.attributes.position
+        for(let i = 0; i < gPos.count; i++)
+        {
+            const x = gPos.getX(i)
+            const y = gPos.getY(i)
+            const z = gPos.getZ(i)
 
-        // 3. Wooden Deck / Cockpit Interior
-        const deckGeo = new THREE.BoxGeometry(1.6, 0.15, 2.8)
-        const deck = new THREE.Mesh(deckGeo, woodMat)
-        deck.position.set(0, 0.65, 0.3)
-        deck.receiveShadow = true
-        this.group.add(deck)
+            if(z < 0.2)
+            {
+                const t = (0.2 - z) / (hullLength * 0.5 + 0.2)
+                gPos.setX(i, x * (1.0 - Math.pow(t, 1.4) * 0.78))
+                gPos.setY(i, y + Math.pow(t, 1.6) * 0.38)
+            }
+            else
+            {
+                const tStern = (z - 0.2) / (hullLength * 0.5 - 0.2)
+                gPos.setX(i, x * (1.0 - tStern * 0.1))
+            }
+        }
+        gunwaleGeo.computeVertexNormals()
 
-        // 4. Wooden Benches
-        const benchGeo = new THREE.BoxGeometry(1.5, 0.3, 0.6)
-        const frontBench = new THREE.Mesh(benchGeo, woodMat)
-        frontBench.position.set(0, 0.8, -0.4)
-        frontBench.castShadow = true
-        this.group.add(frontBench)
+        const gunwale = new THREE.Mesh(gunwaleGeo, deckWhiteMat)
+        gunwale.position.y = 0.88
+        gunwale.castShadow = true
+        this.group.add(gunwale)
 
-        const backBench = new THREE.Mesh(benchGeo, woodMat)
-        backBench.position.set(0, 0.8, 1.1)
-        backBench.castShadow = true
-        this.group.add(backBench)
+        // ----------------------------------------------------
+        // 3. Solid Closed Foredeck (Bow Top Cover)
+        // ----------------------------------------------------
+        const foredeckLength = 2.0
+        const foredeckGeo = new THREE.BoxGeometry(hullWidth * 0.95, 0.16, foredeckLength, 4, 1, 6)
+        const fPos = foredeckGeo.attributes.position
+        for(let i = 0; i < fPos.count; i++)
+        {
+            const x = fPos.getX(i)
+            const y = fPos.getY(i)
+            const z = fPos.getZ(i)
 
-        // 5. Windshield
-        const windshieldGeo = new THREE.BoxGeometry(1.6, 0.45, 0.1)
-        windshieldGeo.rotateX(-0.4)
-        const windshield = new THREE.Mesh(windshieldGeo, glassMat)
-        windshield.position.set(0, 1.15, -0.85)
-        windshield.castShadow = true
-        this.group.add(windshield)
+            // Local z goes from -1.0 to 1.0; in boat space z goes from -2.3 to -0.3
+            const worldZ = z - 1.3
+            const t = (-worldZ) / (hullLength * 0.5)
+            const taperX = 1.0 - Math.pow(Math.max(0, t), 1.4) * 0.78
+            fPos.setX(i, x * taperX)
+            fPos.setY(i, y + Math.pow(Math.max(0, t), 1.6) * 0.36)
+        }
+        foredeckGeo.computeVertexNormals()
 
-        // 6. Outboard Motor at Stern
+        const foredeck = new THREE.Mesh(foredeckGeo, deckWhiteMat)
+        foredeck.position.set(0, 0.96, -1.3)
+        foredeck.castShadow = true
+        this.group.add(foredeck)
+
+        // Teak Center Stripe on Foredeck
+        const foredeckStripeGeo = new THREE.BoxGeometry(0.35, 0.18, foredeckLength * 0.9)
+        const foredeckStripe = new THREE.Mesh(foredeckStripeGeo, teakWoodMat)
+        foredeckStripe.position.set(0, 1.05, -1.35)
+        foredeckStripe.rotation.x = -0.14
+        this.group.add(foredeckStripe)
+
+        // Bow Cleat in Chrome
+        const cleatBase = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.4), chromeMat)
+        cleatBase.position.set(0, 1.38, -2.15)
+        this.group.add(cleatBase)
+
+        const cleatBar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.42, 8), chromeMat)
+        cleatBar.rotation.z = Math.PI * 0.5
+        cleatBar.position.set(0, 1.44, -2.15)
+        this.group.add(cleatBar)
+
+        // Bow Safety Railing (Stainless Steel)
+        const bowRailGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.6, 6)
+        const bowRailL = new THREE.Mesh(bowRailGeo, chromeMat)
+        bowRailL.position.set(-0.55, 1.25, -1.3)
+        bowRailL.rotation.set(-0.16, 0.28, 0)
+        this.group.add(bowRailL)
+
+        const bowRailR = new THREE.Mesh(bowRailGeo, chromeMat)
+        bowRailR.position.set(0.55, 1.25, -1.3)
+        bowRailR.rotation.set(-0.16, -0.28, 0)
+        this.group.add(bowRailR)
+
+        // Dual Navigation Lights (Starboard Green / Port Red)
+        const navLightGeo = new THREE.SphereGeometry(0.07, 8, 8)
+
+        const navGreen = new THREE.Mesh(navLightGeo, navLightGreenMat)
+        navGreen.position.set(0.35, 1.32, -2.0)
+        this.group.add(navGreen)
+
+        const navRed = new THREE.Mesh(navLightGeo, navLightRedMat)
+        navRed.position.set(-0.35, 1.32, -2.0)
+        this.group.add(navRed)
+
+        // ----------------------------------------------------
+        // 4. Solid Cockpit Interior Floor (Teak Wood Planks)
+        // ----------------------------------------------------
+        const cockpitLength = 2.4
+        const cockpitWidth = 1.7
+        const floorGeo = new THREE.BoxGeometry(cockpitWidth, 0.16, cockpitLength)
+        const floor = new THREE.Mesh(floorGeo, teakWoodMat)
+        floor.position.set(0, 0.58, 0.8)
+        floor.receiveShadow = true
+        this.group.add(floor)
+
+        // Cockpit Inner Sidewall Liners (Solid, no see-through)
+        const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.45, cockpitLength), deckWhiteMat)
+        wallLeft.position.set(-cockpitWidth * 0.5 - 0.05, 0.76, 0.8)
+        this.group.add(wallLeft)
+
+        const wallRight = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.45, cockpitLength), deckWhiteMat)
+        wallRight.position.set(cockpitWidth * 0.5 + 0.05, 0.76, 0.8)
+        this.group.add(wallRight)
+
+        // ----------------------------------------------------
+        // 5. Driver Helm Console & Steering Wheel
+        // ----------------------------------------------------
+        const consoleGeo = new THREE.BoxGeometry(0.75, 0.48, 0.45)
+        const consoleMesh = new THREE.Mesh(consoleGeo, darkMetalMat)
+        consoleMesh.position.set(0.42, 0.96, -0.15)
+        consoleMesh.rotation.x = -0.2
+        this.group.add(consoleMesh)
+
+        // Steering wheel
+        const wheelRingGeo = new THREE.TorusGeometry(0.18, 0.03, 6, 16)
+        const wheelRing = new THREE.Mesh(wheelRingGeo, darkMetalMat)
+        wheelRing.position.set(0.42, 1.12, 0.06)
+        wheelRing.rotation.x = 0.4
+        this.group.add(wheelRing)
+
+        const wheelCap = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.04, 8), chromeMat)
+        wheelCap.position.set(0.42, 1.12, 0.06)
+        wheelCap.rotation.x = 0.4
+        this.group.add(wheelCap)
+
+        // Dashboard instrument dials (Speedometer & RPM)
+        const dialGeo = new THREE.CircleGeometry(0.045, 12)
+        const dialMat = new THREE.MeshBasicNodeMaterial({ color: '#38bdf8' })
+        const dial1 = new THREE.Mesh(dialGeo, dialMat)
+        dial1.position.set(0.32, 1.18, 0.02)
+        dial1.rotation.x = -0.2
+        this.group.add(dial1)
+
+        const dial2 = new THREE.Mesh(dialGeo, dialMat)
+        dial2.position.set(0.52, 1.18, 0.02)
+        dial2.rotation.x = -0.2
+        this.group.add(dial2)
+
+        // Throttle lever
+        const throttleBase = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.12), chromeMat)
+        throttleBase.position.set(0.76, 0.98, 0.15)
+        this.group.add(throttleBase)
+
+        const throttleHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.15, 6), darkMetalMat)
+        throttleHandle.position.set(0.76, 1.08, 0.12)
+        throttleHandle.rotation.x = -0.4
+        this.group.add(throttleHandle)
+
+        // ----------------------------------------------------
+        // 6. Captain Bucket Seats & Rear Bench Seat
+        // ----------------------------------------------------
+        const createSeat = (x, z) =>
+        {
+            const seatGroup = new THREE.Group()
+
+            // Seat base pedestal
+            const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.22, 8), chromeMat)
+            pedestal.position.set(0, 0.11, 0)
+            seatGroup.add(pedestal)
+
+            // Cushion
+            const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.12, 0.52), seatAccentMat)
+            cushion.position.set(0, 0.26, 0)
+            cushion.castShadow = true
+            seatGroup.add(cushion)
+
+            // Curved backrest
+            const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.44, 0.12), seatLeatherMat)
+            backrest.position.set(0, 0.48, 0.22)
+            backrest.rotation.x = -0.12
+            backrest.castShadow = true
+            seatGroup.add(backrest)
+
+            // Side bolsters
+            const bolsterL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, 0.35), seatAccentMat)
+            bolsterL.position.set(-0.24, 0.36, 0.06)
+            seatGroup.add(bolsterL)
+
+            const bolsterR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.24, 0.35), seatAccentMat)
+            bolsterR.position.set(0.24, 0.36, 0.06)
+            seatGroup.add(bolsterR)
+
+            seatGroup.position.set(x, 0.62, z)
+            return seatGroup
+        }
+
+        // Driver seat (Right) & Passenger seat (Left)
+        this.group.add(createSeat( 0.42, 0.5))
+        this.group.add(createSeat(-0.42, 0.5))
+
+        // Rear Aft Bench Seat across full beam
+        const rearBenchBase = new THREE.Mesh(new THREE.BoxGeometry(cockpitWidth * 0.94, 0.24, 0.55), teakWoodMat)
+        rearBenchBase.position.set(0, 0.74, 1.65)
+        rearBenchBase.castShadow = true
+        this.group.add(rearBenchBase)
+
+        const rearCushion = new THREE.Mesh(new THREE.BoxGeometry(cockpitWidth * 0.92, 0.1, 0.52), seatAccentMat)
+        rearCushion.position.set(0, 0.88, 1.65)
+        this.group.add(rearCushion)
+
+        const rearBackrest = new THREE.Mesh(new THREE.BoxGeometry(cockpitWidth * 0.92, 0.35, 0.12), seatLeatherMat)
+        rearBackrest.position.set(0, 1.08, 1.9)
+        rearBackrest.rotation.x = -0.1
+        this.group.add(rearBackrest)
+
+        // ----------------------------------------------------
+        // 7. Aerodynamic Sport Windshield
+        // ----------------------------------------------------
+        const windshieldGroup = new THREE.Group()
+
+        // Center glass pane
+        const centerGlassGeo = new THREE.PlaneGeometry(1.4, 0.52)
+        const centerGlass = new THREE.Mesh(centerGlassGeo, windshieldGlassMat)
+        centerGlass.position.set(0, 1.25, -0.32)
+        centerGlass.rotation.x = -0.45
+        windshieldGroup.add(centerGlass)
+
+        // Left wing glass
+        const wingGlassGeo = new THREE.PlaneGeometry(0.72, 0.5)
+        const leftWingGlass = new THREE.Mesh(wingGlassGeo, windshieldGlassMat)
+        leftWingGlass.position.set(-0.82, 1.2, -0.05)
+        leftWingGlass.rotation.set(-0.4, 0.75, -0.28)
+        windshieldGroup.add(leftWingGlass)
+
+        // Right wing glass
+        const rightWingGlass = new THREE.Mesh(wingGlassGeo, windshieldGlassMat)
+        rightWingGlass.position.set(0.82, 1.2, -0.05)
+        rightWingGlass.rotation.set(-0.4, -0.75, 0.28)
+        windshieldGroup.add(rightWingGlass)
+
+        // Frame Top Rim (Dark Metal)
+        const frameTopGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.45, 6)
+        const frameTop = new THREE.Mesh(frameTopGeo, darkMetalMat)
+        frameTop.rotation.z = Math.PI * 0.5
+        frameTop.position.set(0, 1.46, -0.22)
+        windshieldGroup.add(frameTop)
+
+        this.group.add(windshieldGroup)
+
+        // ----------------------------------------------------
+        // 8. Solid Transom & Outboard Engine at Stern
+        // ----------------------------------------------------
+        // Transom solid rear wall
+        const transomWall = new THREE.Mesh(new THREE.BoxGeometry(hullWidth * 0.88, 0.5, 0.2), deckWhiteMat)
+        transomWall.position.set(0, 0.85, 2.1)
+        this.group.add(transomWall)
+
+        // Dual Stern Cleats
+        const cleatSternL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.3), chromeMat)
+        cleatSternL.position.set(-0.85, 1.02, 2.15)
+        this.group.add(cleatSternL)
+
+        const cleatSternR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.3), chromeMat)
+        cleatSternR.position.set(0.85, 1.02, 2.15)
+        this.group.add(cleatSternR)
+
+        // Ski-tow pylon
+        const pylon = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.45, 8), chromeMat)
+        pylon.position.set(0, 1.22, 2.1)
+        this.group.add(pylon)
+
+        // Outboard Motor Assembly
         const motorGroup = new THREE.Group()
-        const motorBodyGeo = new THREE.BoxGeometry(0.5, 0.85, 0.5)
-        const motorBody = new THREE.Mesh(motorBodyGeo, darkMetalMat)
-        motorBody.position.set(0, 0.65, 2.3)
-        motorBody.castShadow = true
-        motorGroup.add(motorBody)
+        motorGroup.position.set(0, 0.55, 2.5)
 
-        const shaftGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.9, 6)
-        const shaft = new THREE.Mesh(shaftGeo, darkMetalMat)
-        shaft.position.set(0, 0.0, 2.3)
-        motorGroup.add(shaft)
+        // Engine Top Cowling (Aerodynamic sculpted cover)
+        const cowlingGeo = new THREE.BoxGeometry(0.55, 0.65, 0.72)
+        const cPos = cowlingGeo.attributes.position
+        for(let i = 0; i < cPos.count; i++)
+        {
+            const y = cPos.getY(i)
+            const z = cPos.getZ(i)
+            if(y > 0)
+            {
+                cPos.setZ(i, z * 0.85)
+            }
+        }
+        cowlingGeo.computeVertexNormals()
+
+        const motorCowling = new THREE.Mesh(cowlingGeo, darkMetalMat)
+        motorCowling.position.set(0, 0.45, 0)
+        motorCowling.castShadow = true
+        motorGroup.add(motorCowling)
+
+        // Cowling Racing Stripe
+        const motorStripe = new THREE.Mesh(new THREE.BoxGeometry(0.57, 0.12, 0.74), hullBlueMat)
+        motorStripe.position.set(0, 0.45, 0)
+        motorGroup.add(motorStripe)
+
+        // Driveshaft Leg / Midsection
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.75, 0.35), darkMetalMat)
+        leg.position.set(0, -0.15, 0)
+        motorGroup.add(leg)
+
+        // Lower Torpedo Gearcase & Propeller Bullet
+        const torpedo = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.55, 8), darkMetalMat)
+        torpedo.rotation.x = Math.PI * 0.5
+        torpedo.position.set(0, -0.55, 0.05)
+        motorGroup.add(torpedo)
+
+        // Skeg (bottom fin)
+        const skegGeo = new THREE.BoxGeometry(0.04, 0.28, 0.35)
+        const skeg = new THREE.Mesh(skegGeo, darkMetalMat)
+        skeg.position.set(0, -0.72, -0.05)
+        motorGroup.add(skeg)
+
+        // Propeller Blades (Chrome)
+        const propHub = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.16, 6), chromeMat)
+        propHub.rotation.x = -Math.PI * 0.5
+        propHub.position.set(0, -0.55, 0.38)
+        motorGroup.add(propHub)
+
+        const bladeGeo = new THREE.BoxGeometry(0.35, 0.08, 0.02)
+        const blade1 = new THREE.Mesh(bladeGeo, chromeMat)
+        blade1.position.set(0, -0.55, 0.32)
+        blade1.rotation.z = 0.5
+        motorGroup.add(blade1)
+
+        const blade2 = new THREE.Mesh(bladeGeo, chromeMat)
+        blade2.position.set(0, -0.55, 0.32)
+        blade2.rotation.z = 0.5 + Math.PI * 0.66
+        motorGroup.add(blade2)
+
+        const blade3 = new THREE.Mesh(bladeGeo, chromeMat)
+        blade3.position.set(0, -0.55, 0.32)
+        blade3.rotation.z = 0.5 + Math.PI * 1.33
+        motorGroup.add(blade3)
 
         this.group.add(motorGroup)
-
-        // 7. Bow Navigation Light
-        const bowLightGeo = new THREE.SphereGeometry(0.12, 8, 8)
-        const bowLightMat = new THREE.MeshBasicNodeMaterial({ color: '#22c55e' }) // Emerald green nav light
-        const bowLight = new THREE.Mesh(bowLightGeo, bowLightMat)
-        bowLight.position.set(0, 0.95, -2.1)
-        this.group.add(bowLight)
+        this.motorGroup = motorGroup
     }
 
     update(delta)
@@ -152,18 +504,17 @@ export class BoatVisual
 
         // 2. Wave Bobbing Animation on Water
         const time = this.game.wind ? this.game.wind.time : performance.now() * 0.001
-        const waveBobY = Math.sin(time * 2.2 + boat.position.x * 0.1) * 0.08
-        const waveRock = Math.cos(time * 1.8 + boat.position.z * 0.1) * 0.03
+        const waveBobY = Math.sin(time * 2.2 + boat.position.x * 0.1) * 0.07
+        const waveRock = Math.cos(time * 1.8 + boat.position.z * 0.1) * 0.025
         this.group.position.y = boat.position.y + waveBobY
 
         // 3. Dynamic Roll (Leaning into turns)
-        // Turning left (angularVelocity > 0) rolls boat left, and vice versa
-        const targetRoll = -boat.angularVelocity * 0.12 + waveRock
+        const targetRoll = -boat.angularVelocity * 0.14 + waveRock
         this.currentRoll = lerp(this.currentRoll, targetRoll, 6.0 * delta)
 
         // 4. Dynamic Pitch (Bow lifts up on acceleration)
-        const speedNorm = boat.speed / 16.0 // Normalized speed
-        const targetPitch = speedNorm * 0.08 + Math.sin(time * 1.5) * 0.02
+        const speedNorm = (boat.speed || 0) / 16.0
+        const targetPitch = speedNorm * 0.09 + Math.sin(time * 1.5) * 0.018
         this.currentPitch = lerp(this.currentPitch, targetPitch, 4.0 * delta)
 
         // 5. Apply Combined Rotations
@@ -171,5 +522,12 @@ export class BoatVisual
         this.group.rotateY(boat.rotation)
         this.group.rotateZ(this.currentRoll)
         this.group.rotateX(-this.currentPitch)
+
+        // 6. Outboard Motor Steering Angle
+        if(this.motorGroup)
+        {
+            const steerAngle = THREE.MathUtils.clamp(-boat.angularVelocity * 0.35, -0.6, 0.6)
+            this.motorGroup.rotation.y = THREE.MathUtils.lerp(this.motorGroup.rotation.y, steerAngle, 8.0 * delta)
+        }
     }
 }

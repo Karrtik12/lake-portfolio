@@ -3,7 +3,8 @@ import { Game } from '../Game.js'
 import aboutData from '../../data/about.js'
 
 /**
- * AboutIsland — displays personal biography, role, and background information.
+ * AboutIsland — displays personal biography, role, and background information,
+ * with its own dedicated short wooden landing pier.
  */
 export class AboutIsland
 {
@@ -17,7 +18,30 @@ export class AboutIsland
 
     setupInteractiveMarker()
     {
-        const markerPos = new THREE.Vector3(-24, 0.8, 20)
+        // Direction from island center towards lake
+        const dirX = 0.8
+        const dirZ = -0.6
+        const pierAngle = Math.atan2(dirX, dirZ)
+
+        // Pier center position
+        const pierPos = new THREE.Vector3(
+            this.center.x + dirX * 7.5,
+            0,
+            this.center.z + dirZ * 7.5
+        )
+
+        // Create short pier for About diamond
+        if(this.game.world?.props?.createShortPier)
+        {
+            this.game.world.props.createShortPier(pierPos, pierAngle, 6, 2.6)
+        }
+
+        // Diamond marker at the pier head
+        const markerPos = new THREE.Vector3(
+            this.center.x + dirX * 8.8,
+            0.8,
+            this.center.z + dirZ * 8.8
+        )
 
         this.game.interactivePoints.create(
             markerPos,

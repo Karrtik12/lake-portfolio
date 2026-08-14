@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Props — decorative elements: wooden beach pier and landing docks on islands.
+ * Props — decorative elements: main spawn boardwalk pier and short wooden landing piers for each diamond marker.
  */
 export class Props
 {
@@ -18,13 +18,16 @@ export class Props
         })
 
         this.darkWoodMaterial = new THREE.MeshStandardNodeMaterial({
-            color: '#422814',
+            color: '#3d2412',
             roughness: 0.9,
             flatShading: true
         })
 
+        this.lanternGlowMaterial = new THREE.MeshBasicNodeMaterial({
+            color: '#fef08a'
+        })
+
         this.createSpawnPier()
-        this.createIslandDocks()
     }
 
     createSpawnPier()
@@ -41,13 +44,13 @@ export class Props
             const plankGeo = new THREE.BoxGeometry(dockWidth, 0.25, 0.72)
             const plank = new THREE.Mesh(plankGeo, this.woodMaterial)
             plank.position.set(0, 0.75, (i - plankCount * 0.5) * 0.82)
-            plank.rotation.y = (Math.random() - 0.5) * 0.04
+            plank.rotation.y = (Math.sin(i * 1.7) * 0.02)
             plank.castShadow = true
             plank.receiveShadow = true
             pierGroup.add(plank)
         }
 
-        // Support pilings (wooden logs into water)
+        // Support pilings
         const pylonPositions = [
             [-dockWidth * 0.45, -2, -8],
             [ dockWidth * 0.45, -2, -8],
@@ -82,34 +85,47 @@ export class Props
         sign.castShadow = true
         pierGroup.add(sign)
 
-        // Dock firmly anchored on southern boundary beach (z = 66.5, reaches from beach z=74 to water z=58)
+        // Dock firmly anchored on southern boundary beach
         pierGroup.position.set(0, 0, 66.5)
         this.game.scene.add(pierGroup)
     }
 
-    createIslandDocks()
+    /**
+     * Helper to create a short wooden pier for a diamond marker.
+     * Starts from shore and extends outwards to the marker.
+     */
+    createShortPier(centerPos, angle, plankCount = 6, width = 2.6)
     {
-        // Small landing docks on each island facing the center
-        const dockConfigs = [
-            { pos: new THREE.Vector3(-25, 0, -16), rot: 0.7 },  // Socials dock
-            { pos: new THREE.Vector3(25, 0, -14),  rot: -0.7 }, // Lab dock
-            { pos: new THREE.Vector3(-22, 0, 18),  rot: 2.3 }   // About dock
-        ]
+        const pier = new THREE.Group()
+        const plankGeo = new THREE.BoxGeometry(width, 0.2, 0.65)
+        const pylonGeo = new THREE.CylinderGeometry(0.18, 0.22, 4.5, 6)
 
-        for(const config of dockConfigs)
+        for(let i = 0; i < plankCount; i++)
         {
-            const miniDock = new THREE.Group()
-            for(let i = 0; i < 8; i++)
-            {
-                const plankGeo = new THREE.BoxGeometry(3.2, 0.2, 0.65)
-                const plank = new THREE.Mesh(plankGeo, this.woodMaterial)
-                plank.position.set(0, 0.6, (i - 4) * 0.75)
-                plank.castShadow = true
-                miniDock.add(plank)
-            }
-            miniDock.position.copy(config.pos)
-            miniDock.rotation.y = config.rot
-            this.game.scene.add(miniDock)
+            const plank = new THREE.Mesh(plankGeo, this.woodMaterial)
+            const zOffset = (i - plankCount * 0.5 + 0.5) * 0.75
+            plank.position.set(0, 0.62, zOffset)
+            plank.rotation.y = (Math.sin(i * 2.3) * 0.02)
+            plank.castShadow = true
+            plank.receiveShadow = true
+            pier.add(plank)
         }
+
+        // Support pilings at the water end (positive local Z)
+        const endZ = (plankCount * 0.5 - 0.8) * 0.75
+        const pylonL = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
+        pylonL.position.set(-width * 0.42, 0.2, endZ)
+        pylonL.castShadow = true
+        pier.add(pylonL)
+
+        const pylonR = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
+        pylonR.position.set(width * 0.42, 0.2, endZ)
+        pylonR.castShadow = true
+        pier.add(pylonR)
+
+        pier.position.copy(centerPos)
+        pier.rotation.y = angle
+        this.game.scene.add(pier)
+        return pier
     }
 }
