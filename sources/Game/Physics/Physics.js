@@ -71,8 +71,7 @@ export class Physics
         const islandColliders = [
             { x: -36, z: -22, radius:  9.8 }, // Socials Island
             { x:  36, z: -20, radius: 11.2 }, // Lab Island
-            { x: -30, z:  24, radius:  9.0 }, // About Island
-            { x:   0, z:  48, radius:  4.5 }  // Spawn Dock
+            { x: -30, z:  24, radius:  9.0 }  // About Island
         ]
 
         for(const island of islandColliders)
@@ -87,6 +86,15 @@ export class Physics
 
             this.world.createCollider(colliderDesc, body)
         }
+
+        // Spawn beach pier collider (box enclosing the beach boardwalk at z=68)
+        const pierBodyDesc = RAPIER.RigidBodyDesc.fixed()
+            .setTranslation(0, 1.0, 68.0)
+        const pierBody = this.world.createRigidBody(pierBodyDesc)
+        const pierColliderDesc = RAPIER.ColliderDesc.cuboid(2.4, 2.0, 6.0)
+            .setRestitution(0.2)
+            .setFriction(0.2)
+        this.world.createCollider(pierColliderDesc, pierBody)
     }
 
     setBuoyColliders()
