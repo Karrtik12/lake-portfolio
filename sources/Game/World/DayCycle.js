@@ -19,8 +19,8 @@ export class DayCycle
     {
         this.game = Game.getInstance()
 
-        // Full cycle duration in seconds (e.g. 180s for a smooth 3-minute full day-night loop)
-        this.cycleDuration = 180.0
+        // Full cycle duration in seconds (480s = 8 minutes per full natural 24h cycle)
+        this.cycleDuration = 480.0
         this.timeOfDay = 0.32 // Starts at bright vibrant morning/noon
         this.isPaused = false
 
