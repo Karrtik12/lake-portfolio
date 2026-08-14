@@ -4,7 +4,7 @@ import socialLinks from '../../data/social.js'
 
 /**
  * SocialsIsland — places interactive markers for social channels around Socials Island,
- * each with its own individual short wooden landing pier jutting into the water.
+ * each with its own wooden landing pier extending into the water with solid physics.
  */
 export class SocialsIsland
 {
@@ -20,7 +20,7 @@ export class SocialsIsland
     {
         const count = socialLinks.length
         const pierRadius = 8.5
-        const markerRadius = 9.8
+        const markerRadius = 12.5
 
         for(let i = 0; i < count; i++)
         {
@@ -31,20 +31,20 @@ export class SocialsIsland
             const dirX = Math.cos(angle)
             const dirZ = Math.sin(angle)
 
-            // Pier center position (midway between shore and diamond)
+            // Pier center position (spanning from island shore to deep water)
             const pierPos = new THREE.Vector3(
                 this.center.x + dirX * pierRadius,
                 0,
                 this.center.z + dirZ * pierRadius
             )
 
-            // Pier orientation: local +Z points outwards from island center towards water
+            // Pier orientation: local +Z points outwards towards water
             const pierAngle = Math.atan2(dirX, dirZ)
 
-            // Create individual short pier for this diamond
+            // Create individual landing pier with colliders
             if(this.game.world?.props?.createShortPier)
             {
-                this.game.world.props.createShortPier(pierPos, pierAngle, 6, 2.4)
+                this.game.world.props.createShortPier(pierPos, pierAngle, 10, 2.8)
             }
 
             // Place diamond marker hovering right over the pier head

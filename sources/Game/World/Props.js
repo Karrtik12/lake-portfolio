@@ -1,8 +1,10 @@
 import * as THREE from 'three/webgpu'
+import RAPIER from '@dimforge/rapier3d'
 import { Game } from '../Game.js'
 
 /**
- * Props — decorative elements: main spawn boardwalk pier and short wooden landing piers for each diamond marker.
+ * Props — decorative elements: main spawn boardwalk pier and wooden landing piers
+ * for each diamond marker, equipped with solid Rapier physics colliders.
  */
 export class Props
 {
@@ -35,8 +37,7 @@ export class Props
         const pierGroup = new THREE.Group()
 
         // Main boardwalk planks extending from boundary beach into lake water
-        const dockLength = 18
-        const dockWidth = 4.6
+        const dockWidth = 4.8
         const plankCount = 22
 
         for(let i = 0; i < plankCount; i++)
@@ -88,44 +89,97 @@ export class Props
         // Dock firmly anchored on southern boundary beach
         pierGroup.position.set(0, 0, 66.5)
         this.game.scene.add(pierGroup)
+
+        // Rapier physics collider for Spawn Pier
+        if(this.game.physics?.world)
+        {
+            const bodyDesc = RAPIER.RigidBodyDesc.fixed()
+                .setTranslation(0, 0.75, 66.5)
+
+            const body = this.game.physics.world.createRigidBody(bodyDesc)
+            const colliderDesc = RAPIER.ColliderDesc.cuboid(dockWidth * 0.5, 1.5, (plankCount * 0.82) * 0.5)
+                .setRestitution(0.2)
+                .setFriction(0.3)
+
+            this.game.physics.world.createCollider(colliderDesc, body)
+        }
     }
 
     /**
-     * Helper to create a short wooden pier for a diamond marker.
-     * Starts from shore and extends outwards to the marker.
+     * Helper to create a wooden landing pier for a diamond marker,
+     * equipped with solid Rapier physics colliders.
      */
-    createShortPier(centerPos, angle, plankCount = 6, width = 2.6)
+    createShortPier(centerPos, angle, plankCount = 10, width = 2.8)
     {
         const pier = new THREE.Group()
-        const plankGeo = new THREE.BoxGeometry(width, 0.2, 0.65)
-        const pylonGeo = new THREE.CylinderGeometry(0.18, 0.22, 4.5, 6)
+        const plankGeo = new THREE.BoxGeometry(width, 0.22, 0.68)
+        const pylonGeo = new THREE.CylinderGeometry(0.2, 0.24, 4.8, 6)
+        const crossBeamGeo = new THREE.BoxGeometry(width + 0.2, 0.2, 0.25)
 
         for(let i = 0; i < plankCount; i++)
         {
             const plank = new THREE.Mesh(plankGeo, this.woodMaterial)
-            const zOffset = (i - plankCount * 0.5 + 0.5) * 0.75
-            plank.position.set(0, 0.62, zOffset)
+            const zOffset = (i - plankCount * 0.5 + 0.5) * 0.76
+            plank.position.set(0, 0.68, zOffset)
             plank.rotation.y = (Math.sin(i * 2.3) * 0.02)
             plank.castShadow = true
             plank.receiveShadow = true
             pier.add(plank)
         }
 
-        // Support pilings at the water end (positive local Z)
-        const endZ = (plankCount * 0.5 - 0.8) * 0.75
-        const pylonL = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
-        pylonL.position.set(-width * 0.42, 0.2, endZ)
-        pylonL.castShadow = true
-        pier.add(pylonL)
+        // Support pilings along pier length
+        const pylonOffsets = [
+            (plankCount * 0.5 - 1.2) * 0.76, // Water end
+            0.0,                              // Mid pier
+            (-plankCount * 0.5 + 1.2) * 0.76  // Beach end
+        ]
 
-        const pylonR = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
-        pylonR.position.set(width * 0.42, 0.2, endZ)
-        pylonR.castShadow = true
-        pier.add(pylonR)
+        for(const pZ of pylonOffsets)
+        {
+            const pylonL = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
+            pylonL.position.set(-width * 0.44, 0.2, pZ)
+            pylonL.castShadow = true
+            pier.add(pylonL)
+
+            const pylonR = new THREE.Mesh(pylonGeo, this.darkWoodMaterial)
+            pylonR.position.set(width * 0.44, 0.2, pZ)
+            pylonR.castShadow = true
+            pier.add(pylonR)
+
+            const cross = new THREE.Mesh(crossBeamGeo, this.darkWoodMaterial)
+            cross.position.set(0, 0.1, pZ)
+            cross.castShadow = true
+            pier.add(cross)
+        }
 
         pier.position.copy(centerPos)
         pier.rotation.y = angle
         this.game.scene.add(pier)
+
+        // Solid Rapier physics collider for this pier
+        if(this.game.physics?.world)
+        {
+            const halfW = width * 0.5
+            const halfL = (plankCount * 0.76) * 0.5
+            const halfH = 1.2
+
+            const bodyDesc = RAPIER.RigidBodyDesc.fixed()
+                .setTranslation(centerPos.x, 0.68, centerPos.z)
+                .setRotation({
+                    x: 0,
+                    y: Math.sin(angle * 0.5),
+                    z: 0,
+                    w: Math.cos(angle * 0.5)
+                })
+
+            const body = this.game.physics.world.createRigidBody(bodyDesc)
+            const colliderDesc = RAPIER.ColliderDesc.cuboid(halfW, halfH, halfL)
+                .setRestitution(0.25)
+                .setFriction(0.3)
+
+            this.game.physics.world.createCollider(colliderDesc, body)
+        }
+
         return pier
     }
 }

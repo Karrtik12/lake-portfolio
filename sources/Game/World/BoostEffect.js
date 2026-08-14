@@ -5,19 +5,20 @@ import { Game } from '../Game.js'
 /**
  * BoostEffect — high-energy nitro flame exhaust plumes, glowing wake light,
  * and high-speed trailing sparks when Shift boost is activated.
+ * Attached directly to the boat visual so flames stay locked to the motor exhaust.
  */
 export class BoostEffect
 {
     constructor()
     {
         this.game = Game.getInstance()
-        this.isBoosting = false
+        this.isAttached = false
 
         this.group = new THREE.Group()
 
         // 1. Dual Nitro Jet Exhaust Flames
-        const flameGeo = new THREE.ConeGeometry(0.18, 1.2, 8)
-        flameGeo.rotateX(Math.PI * 0.5) // Point straight backwards
+        const flameGeo = new THREE.ConeGeometry(0.16, 1.2, 8)
+        flameGeo.rotateX(Math.PI * 0.5) // Point straight backwards (+Z in boat local space)
 
         this.flameCoreMat = new THREE.MeshBasicNodeMaterial({
             color: '#ffffff',
@@ -31,33 +32,33 @@ export class BoostEffect
             opacity: 0.0
         })
 
-        // Port & Starboard flame cones
+        // Port & Starboard flame cones attached to outboard motor exhaust (z = 2.85, y = 0.5)
         this.flameLeftCore = new THREE.Mesh(flameGeo, this.flameCoreMat)
-        this.flameLeftCore.position.set(-0.25, 0.4, 1.6)
+        this.flameLeftCore.position.set(-0.22, 0.5, 2.85)
         this.flameLeftCore.scale.set(0.6, 0.6, 0.8)
         this.group.add(this.flameLeftCore)
 
         this.flameLeftOuter = new THREE.Mesh(flameGeo, this.flameOuterMat)
-        this.flameLeftOuter.position.set(-0.25, 0.4, 1.8)
+        this.flameLeftOuter.position.set(-0.22, 0.5, 3.0)
         this.flameLeftOuter.scale.set(1.1, 1.1, 1.4)
         this.group.add(this.flameLeftOuter)
 
         this.flameRightCore = new THREE.Mesh(flameGeo, this.flameCoreMat)
-        this.flameRightCore.position.set(0.25, 0.4, 1.6)
+        this.flameRightCore.position.set(0.22, 0.5, 2.85)
         this.flameRightCore.scale.set(0.6, 0.6, 0.8)
         this.group.add(this.flameRightCore)
 
         this.flameRightOuter = new THREE.Mesh(flameGeo, this.flameOuterMat)
-        this.flameRightOuter.position.set(0.25, 0.4, 1.8)
+        this.flameRightOuter.position.set(0.22, 0.5, 3.0)
         this.flameRightOuter.scale.set(1.1, 1.1, 1.4)
         this.group.add(this.flameRightOuter)
 
         // 2. Glowing Stern Point Light illuminating water
         this.boostLight = new THREE.PointLight('#38bdf8', 0, 8.0, 1.8)
-        this.boostLight.position.set(0, 0.6, 2.0)
+        this.boostLight.position.set(0, 0.6, 2.8)
         this.group.add(this.boostLight)
 
-        // 3. Trailing Spark Particles
+        // 3. Trailing Spark Particles in world space
         this.sparkCount = 30
         this.sparks = []
         const sparkGeo = new THREE.BufferGeometry()
@@ -86,16 +87,6 @@ export class BoostEffect
             })
         }
 
-        // Add flame group to boat visual
-        if(this.game.world?.boatVisual?.meshGroup)
-        {
-            this.game.world.boatVisual.meshGroup.add(this.group)
-        }
-        else
-        {
-            this.game.scene.add(this.group)
-        }
-
         // Update loop
         this.game.ticker.events.on('tick', (delta) =>
         {
@@ -103,10 +94,27 @@ export class BoostEffect
         })
     }
 
+    attachToBoat()
+    {
+        if(this.isAttached) return
+
+        const boatVisualGroup = this.game.world?.boatVisual?.group
+        if(boatVisualGroup)
+        {
+            boatVisualGroup.add(this.group)
+            this.isAttached = true
+        }
+    }
+
     update(delta)
     {
+        if(!this.isAttached)
+        {
+            this.attachToBoat()
+        }
+
         const axes = this.game.inputs.getAxes()
-        const isBoostActive = axes.boost && axes.forward > 0 && Math.abs(this.game.boat?.speed || 0) > 2.0
+        const isBoostActive = axes.boost && axes.forward > 0 && Math.abs(this.game.boat?.speed || 0) > 1.5
         const time = performance.now() * 0.001
 
         if(isBoostActive)
@@ -136,13 +144,6 @@ export class BoostEffect
             this.boostLight.intensity = THREE.MathUtils.lerp(this.boostLight.intensity, 0.0, 0.25)
         }
 
-        // If not attached to boat meshGroup, track boat position/rotation
-        if(!this.game.world?.boatVisual?.meshGroup && this.game.boat)
-        {
-            this.group.position.copy(this.game.boat.position)
-            this.group.rotation.y = this.game.boat.rotation
-        }
-
         // Animate spark particles
         this.updateSparks(delta)
     }
@@ -153,7 +154,7 @@ export class BoostEffect
         const boat = this.game.boat
         const forwardDir = new THREE.Vector3(-Math.sin(boat.rotation), 0, -Math.cos(boat.rotation))
         const rightDir = new THREE.Vector3(forwardDir.z, 0, -forwardDir.x)
-        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-1.6))
+        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-2.4))
 
         for(let i = 0; i < 2; i++)
         {
