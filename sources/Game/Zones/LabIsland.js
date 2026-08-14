@@ -153,7 +153,7 @@ export class LabIsland
 
         this.marker = this.game.interactivePoints.create(
             new THREE.Vector3(58, 1.0, -6.5),
-            '🔬 View Lab Showcase (Enter)',
+            '🔬 Lab Showcase',
             () =>
             {
                 this.focus()
@@ -520,6 +520,13 @@ export class LabIsland
         backLeg.rotation.x = -0.3
         easelGroup.add(backLeg)
 
+        this.easelGroup = easelGroup
+        const isTouchOrMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 1024)
+        if(isTouchOrMobile)
+        {
+            this.easelGroup.visible = false
+        }
+
         this.group.add(easelGroup)
     }
 
@@ -739,8 +746,14 @@ export class LabIsland
         if(controlsEl) controlsEl.style.display = 'none'
 
         // Show mobile carousel navigation overlay on touch devices
+        const isTouchOrMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 1024)
+        if(this.easelGroup)
+        {
+            this.easelGroup.visible = !isTouchOrMobile
+        }
+
         this.labMobileNav = document.querySelector('.js-lab-mobile-nav')
-        if(this.labMobileNav)
+        if(this.labMobileNav && isTouchOrMobile)
         {
             this.labMobileNav.style.display = 'flex'
         }
