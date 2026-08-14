@@ -41,7 +41,6 @@ export class Props
 
         this.createSpawnPier()
         this.createIslandDocks()
-        this.createShoreEmbeddedRocks()
         this.createInteractiveBuoys()
 
         // Update loop for buoy physics & wave bobbing
@@ -55,17 +54,17 @@ export class Props
     {
         const pierGroup = new THREE.Group()
 
-        // Main boardwalk planks
-        const dockLength = 16
-        const dockWidth = 4.5
-        const plankCount = 18
+        // Main boardwalk planks extending from boundary beach into lake water
+        const dockLength = 18
+        const dockWidth = 4.6
+        const plankCount = 22
 
         for(let i = 0; i < plankCount; i++)
         {
-            const plankGeo = new THREE.BoxGeometry(dockWidth, 0.25, 0.7)
+            const plankGeo = new THREE.BoxGeometry(dockWidth, 0.25, 0.72)
             const plank = new THREE.Mesh(plankGeo, this.woodMaterial)
-            plank.position.set(0, 0.8, (i - plankCount * 0.5) * 0.85)
-            plank.rotation.y = (Math.random() - 0.5) * 0.05
+            plank.position.set(0, 0.75, (i - plankCount * 0.5) * 0.82)
+            plank.rotation.y = (Math.random() - 0.5) * 0.04
             plank.castShadow = true
             plank.receiveShadow = true
             pierGroup.add(plank)
@@ -73,12 +72,14 @@ export class Props
 
         // Support pilings (wooden logs into water)
         const pylonPositions = [
-            [-dockWidth * 0.45, -2, -6],
-            [ dockWidth * 0.45, -2, -6],
-            [-dockWidth * 0.45, -2,  0],
-            [ dockWidth * 0.45, -2,  0],
-            [-dockWidth * 0.45, -2,  6],
-            [ dockWidth * 0.45, -2,  6]
+            [-dockWidth * 0.45, -2, -8],
+            [ dockWidth * 0.45, -2, -8],
+            [-dockWidth * 0.45, -2, -3],
+            [ dockWidth * 0.45, -2, -3],
+            [-dockWidth * 0.45, -2,  2],
+            [ dockWidth * 0.45, -2,  2],
+            [-dockWidth * 0.45, -2,  7],
+            [ dockWidth * 0.45, -2,  7]
         ]
 
         const pylonGeo = new THREE.CylinderGeometry(0.28, 0.32, 5, 8)
@@ -90,21 +91,22 @@ export class Props
             pierGroup.add(pylon)
         }
 
-        // Wooden Welcome Signpost at start of dock
+        // Wooden Welcome Signpost at beach entrance of dock
         const postGeo = new THREE.CylinderGeometry(0.18, 0.2, 3.2, 8)
         const post = new THREE.Mesh(postGeo, this.darkWoodMaterial)
-        post.position.set(-dockWidth * 0.5 - 0.5, 1.8, 6.5)
+        post.position.set(-dockWidth * 0.5 - 0.6, 1.8, 8.0)
         post.castShadow = true
         pierGroup.add(post)
 
-        const signGeo = new THREE.BoxGeometry(2.4, 0.9, 0.15)
+        const signGeo = new THREE.BoxGeometry(2.6, 0.9, 0.15)
         const sign = new THREE.Mesh(signGeo, this.woodMaterial)
-        sign.position.set(-dockWidth * 0.5 - 0.5, 3.0, 6.5)
+        sign.position.set(-dockWidth * 0.5 - 0.6, 3.0, 8.0)
         sign.rotation.y = -0.2
         sign.castShadow = true
         pierGroup.add(sign)
 
-        pierGroup.position.set(0, 0, 48)
+        // Dock firmly anchored on southern boundary beach (z = 66.5, reaches from beach z=74 to water z=58)
+        pierGroup.position.set(0, 0, 66.5)
         this.game.scene.add(pierGroup)
     }
 
@@ -131,30 +133,6 @@ export class Props
             miniDock.position.copy(config.pos)
             miniDock.rotation.y = config.rot
             this.game.scene.add(miniDock)
-        }
-    }
-
-    createShoreEmbeddedRocks()
-    {
-        // Only place rocks firmly on the shoreline terrain edge (NO floating rocks in open water!)
-        const rockGeo = new THREE.DodecahedronGeometry(1.6, 1)
-
-        const shoreRockPositions = [
-            [-68, 0.6, -30], [68, 0.8, -25], [0, 0.5, -72],
-            [-65, 0.7, 20],  [66, 0.6, 25],  [-28, 0.8, 66], [28, 0.8, 66],
-            [-44, 0.5, -28], [42, 0.5, -27], [-38, 0.5, 30]
-        ]
-
-        for(const pos of shoreRockPositions)
-        {
-            const scale = 1.0 + Math.random() * 1.2
-            const rock = new THREE.Mesh(rockGeo, this.rockMaterial)
-            rock.position.set(pos[0], pos[1], pos[2])
-            rock.scale.set(scale, scale * (0.6 + Math.random() * 0.6), scale)
-            rock.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0)
-            rock.castShadow = true
-            rock.receiveShadow = true
-            this.game.scene.add(rock)
         }
     }
 

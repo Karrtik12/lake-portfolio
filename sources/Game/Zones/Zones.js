@@ -25,7 +25,7 @@ export class Zones
 
     registerDefaultZones()
     {
-        this.create('Spawn Dock', new THREE.Vector3(0, 0, 36), 16)
+        this.create('Spawn Dock', new THREE.Vector3(0, 0, 58), 20)
         this.create('Socials Island', new THREE.Vector3(-36, 0, -22), 22)
         this.create('Lab Island', new THREE.Vector3(36, 0, -20), 24)
         this.create('About Island', new THREE.Vector3(-30, 0, 24), 20)

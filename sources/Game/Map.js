@@ -32,7 +32,7 @@ export class Map
             { id: 'socials', name: 'Socials Island', icon: '🏝️', x: -36, z: -22, r: 12, color: '#2d6a4f', desc: 'Social channels, contact info, GitHub & LinkedIn links' },
             { id: 'lab',     name: 'Lab Island',     icon: '🔬', x:  36, z: -20, r: 14, color: '#1b4332', desc: 'Interactive 3D project showcase (Systems, DevOps, AI/ML)' },
             { id: 'about',   name: 'About Island',   icon: '👤', x: -30, z:  24, r: 11, color: '#356e2c', desc: 'Personal biography, engineer background & experience' },
-            { id: 'dock',    name: 'Spawn Pier',     icon: '🏠', x:   0, z:  44, r:  6, color: '#704828', desc: 'Starting dock & harbor moorage' }
+            { id: 'dock',    name: 'Beach Pier',     icon: '🏠', x:   0, z:  66, r:  6, color: '#704828', desc: 'Starting beach pier & harbor moorage' }
         ]
 
         this.setupEventListeners()

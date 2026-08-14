@@ -12,8 +12,8 @@ export class Boat
     {
         this.game = Game.getInstance()
 
-        // Spawn position near the southern dock, facing lake center (-Z)
-        this.spawnPosition = new THREE.Vector3(0, 0.2, 36)
+        // Spawn position docked at the southern beach pier, facing north (-Z) towards the lake islands
+        this.spawnPosition = new THREE.Vector3(0, 0.2, 54.0)
         this.spawnRotation = 0 // Facing -Z (north)
 
         this.position = new THREE.Vector3().copy(this.spawnPosition)
