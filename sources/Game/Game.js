@@ -92,7 +92,6 @@ export class Game
         this.loadingText = document.querySelector('.js-loading-text')
         this.loadingStart = document.querySelector('.js-loading-start')
         this.controlsElement = document.querySelector('.js-controls')
-        this.orientationPrompt = document.querySelector('.js-orientation-prompt')
         this.orientationBlocker = document.querySelector('.js-orientation-blocker')
 
         // Detect mobile devices
@@ -135,7 +134,11 @@ export class Game
             // On loading screen: require landscape before enabling "Click to Explore"
             if(isPortrait)
             {
-                if(this.orientationPrompt) this.orientationPrompt.style.display = 'flex'
+                if(this.loadingText)
+                {
+                    this.loadingText.textContent = 'Please rotate device to landscape'
+                    this.loadingText.classList.add('is-portrait-hint')
+                }
                 if(this.loadingStart)
                 {
                     this.loadingStart.style.display = 'block'
@@ -146,7 +149,11 @@ export class Game
             }
             else
             {
-                if(this.orientationPrompt) this.orientationPrompt.style.display = 'none'
+                if(this.loadingText)
+                {
+                    this.loadingText.textContent = 'Ready to sail'
+                    this.loadingText.classList.remove('is-portrait-hint')
+                }
                 if(this.loadingStart)
                 {
                     this.loadingStart.style.display = 'block'

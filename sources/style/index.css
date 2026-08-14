@@ -70,7 +70,7 @@ html, body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: shimmer 3s ease-in-out infinite;
-    margin-bottom: 2rem;
+    margin-bottom: 2.2rem;
 }
 
 @keyframes shimmer {
@@ -79,12 +79,12 @@ html, body {
 }
 
 .loading-bar-container {
-    width: clamp(200px, 40vw, 360px);
+    width: clamp(220px, 45vw, 360px);
     height: 4px;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 2px;
     overflow: hidden;
-    margin: 0 auto 1rem;
+    margin: 0 auto 1.2rem;
 }
 
 .loading-bar {
@@ -96,14 +96,22 @@ html, body {
 }
 
 .loading-text {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.4);
-    letter-spacing: 0.05em;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: rgba(226, 232, 240, 0.6);
+    letter-spacing: 0.03em;
+    min-height: 1.4rem;
+    transition: color 0.3s ease;
+}
+
+.loading-text.is-portrait-hint {
+    color: #c4b5fd;
 }
 
 .loading-start {
-    margin-top: 2.5rem;
-    padding: 0.8rem 2.5rem;
+    margin-top: 2rem;
+    padding: 0.85rem 2.5rem;
     font-family: 'Space Grotesk', sans-serif;
     font-size: 1rem;
     font-weight: 600;
@@ -113,39 +121,28 @@ html, body {
     border-radius: 50px;
     cursor: pointer;
     letter-spacing: 0.02em;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
     animation: pulse 2s ease-in-out infinite;
 }
 
-.loading-start:hover {
+.loading-start:hover:not(.is-disabled) {
     transform: scale(1.05);
     box-shadow: 0 0 30px rgba(96, 165, 250, 0.4);
+}
+
+.loading-start.is-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    animation: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(226, 232, 240, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: none !important;
 }
 
 @keyframes pulse {
     0%, 100% { box-shadow: 0 0 20px rgba(96, 165, 250, 0.2); }
     50% { box-shadow: 0 0 30px rgba(167, 139, 250, 0.4); }
-}
-
-.orientation-prompt {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1.2rem;
-    margin-bottom: 1.2rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 30px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.orientation-text {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.75);
-    letter-spacing: 0.02em;
 }
 
 @keyframes fadeIn {
