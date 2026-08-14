@@ -216,12 +216,7 @@ export class Map
                 <div class="big-map-card js-sidebar-destination" data-id="${d.id}" style="cursor: pointer;">
                     <div class="big-map-card-name">${d.icon} ${d.name}</div>
                     <div class="big-map-card-desc">${d.desc}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div class="big-map-card-dist">📍 Distance: ~${dist}m</div>
-                        <span style="font-size: 0.75rem; color: #38bdf8; font-weight: 600; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); padding: 0.2rem 0.6rem; border-radius: 6px;">
-                            Sail Here ⛵
-                        </span>
-                    </div>
+                    <div class="big-map-card-dist">📍 Distance: ~${dist}m</div>
                 </div>
             `
         }).join('')
