@@ -186,12 +186,6 @@ export class InteractivePoints
         // Initial label render
         this.renderLabel(item, false)
 
-        // 4. Point light for diamond glow
-        const light = new THREE.PointLight('#38bdf8', 2.0, 14.0)
-        light.position.set(0, 0, 0)
-        item.light = light
-        item.group.add(light)
-
         let lastInteractTime = 0
         item.interact = () =>
         {

@@ -24,51 +24,41 @@ export class Lake
 
         // 3. Uniforms
         this.time = uniform(float(0))
-        this.deepColor = uniform(color('#061c2d'))      // Deep ocean navy
-        this.surfaceColor = uniform(color('#0e4b6e'))   // Vibrant sea azure
-        this.shallowColor = uniform(color('#157299'))   // Turquoise coastal water
-        this.sunGlintColor = uniform(color('#fef3c7'))  // Soft golden sunlight shimmer
-        this.foamColor = uniform(color('#f8fafc'))      // Crisp seafoam white
+        this.deepColor = uniform(color('#041829'))      // Rich deep navy blue
+        this.surfaceColor = uniform(color('#0b3a5d'))   // Stylized lake azure
+        this.shallowColor = uniform(color('#135b8c'))   // Soft cyan-blue coastal water
+        this.foamColor = uniform(color('#e0f2fe'))      // Subtle soft water crest
 
-        this.waveElevation = uniform(float(0.24))       // Smooth physical wave displacement
-        this.waveFrequency = uniform(float(0.09))       // Gentle wavelength
-        this.waveSpeed = uniform(float(1.1))
+        this.waveElevation = uniform(float(0.06))       // Gentle, serene physical wave displacement (Bruno Simon style calm lake)
+        this.waveFrequency = uniform(float(0.065))      // Wide calm wavelength
+        this.waveSpeed = uniform(float(0.85))
 
-        // Position Node: Multi-directional smooth Gerstner wave displacement
+        // Position Node: Multi-directional smooth gentle swell displacement
         const positionNode = Fn(() =>
         {
             const pos = positionGeometry.toVar()
             const x = pos.x
             const z = pos.z
 
-            // Primary ocean swell (Direction: 45 degrees)
+            // Primary calm swell (Direction: 45 degrees)
             const dir1 = x.mul(0.707).add(z.mul(0.707))
             const phase1 = dir1.mul(this.waveFrequency).add(this.time.mul(this.waveSpeed))
-            const w1 = sin(phase1).mul(0.60)
+            const w1 = sin(phase1).mul(0.65)
 
-            // Secondary cross swell (Direction: -35 degrees)
+            // Secondary gentle cross swell (Direction: -35 degrees)
             const dir2 = x.mul(0.819).sub(z.mul(0.574))
-            const phase2 = dir2.mul(this.waveFrequency.mul(1.6)).sub(this.time.mul(this.waveSpeed.mul(1.1)))
-            const w2 = sin(phase2).mul(0.30)
+            const phase2 = dir2.mul(this.waveFrequency.mul(1.4)).sub(this.time.mul(this.waveSpeed.mul(0.9)))
+            const w2 = sin(phase2).mul(0.35)
 
-            // Medium wave (Direction: 80 degrees)
-            const dir3 = x.mul(0.174).add(z.mul(0.985))
-            const phase3 = dir3.mul(this.waveFrequency.mul(2.8)).add(this.time.mul(this.waveSpeed.mul(1.4)))
-            const w3 = cos(phase3).mul(0.10)
-
-            const totalWave = w1.add(w2).add(w3)
-            const elevation = sin(totalWave.mul(1.2)).mul(this.waveElevation)
+            const totalWave = w1.add(w2)
+            const elevation = sin(totalWave).mul(this.waveElevation)
 
             pos.y.addAssign(elevation)
-
-            // Smooth lateral drift
-            pos.x.addAssign(cos(phase1).mul(0.10))
-            pos.z.addAssign(cos(phase1).mul(0.10))
 
             return pos
         })
 
-        // Normal Node: Smooth analytical wave slope with multi-octave micro-ripples
+        // Normal Node: Smooth analytical calm wave slope with soft micro-ripples
         const normalNode = Fn(() =>
         {
             const pos = positionGeometry
@@ -78,26 +68,24 @@ export class Lake
             // Primary swell slopes
             const dir1 = x.mul(0.707).add(z.mul(0.707))
             const p1 = dir1.mul(this.waveFrequency).add(this.time.mul(this.waveSpeed))
-            const slope1 = cos(p1).mul(this.waveFrequency).mul(0.60)
+            const slope1 = cos(p1).mul(this.waveFrequency).mul(0.65)
 
             // Cross swell slopes
             const dir2 = x.mul(0.819).sub(z.mul(0.574))
-            const p2 = dir2.mul(this.waveFrequency.mul(1.6)).sub(this.time.mul(this.waveSpeed.mul(1.1)))
-            const slope2 = cos(p2).mul(this.waveFrequency.mul(1.6)).mul(0.30)
+            const p2 = dir2.mul(this.waveFrequency.mul(1.4)).sub(this.time.mul(this.waveSpeed.mul(0.9)))
+            const slope2 = cos(p2).mul(this.waveFrequency.mul(1.4)).mul(0.35)
 
-            // Smooth micro-ripples
-            const ripX = sin(x.mul(0.45).add(this.time.mul(1.2))).mul(0.08)
-                .add(sin(x.mul(1.1).sub(this.time.mul(1.8))).mul(0.04))
-            const ripZ = cos(z.mul(0.45).add(this.time.mul(1.0))).mul(0.08)
-                .add(cos(z.mul(1.1).sub(this.time.mul(1.6))).mul(0.04))
+            // Gentle micro-ripples
+            const ripX = sin(x.mul(0.35).add(this.time.mul(0.8))).mul(0.04)
+            const ripZ = cos(z.mul(0.35).add(this.time.mul(0.7))).mul(0.04)
 
             const nx = slope1.mul(0.707).add(slope2.mul(0.819)).add(ripX)
             const nz = slope1.mul(0.707).sub(slope2.mul(0.574)).add(ripZ)
 
-            return vec3(nx.mul(0.35).negate(), float(1.0), nz.mul(0.35).negate()).normalize()
+            return vec3(nx.mul(0.2).negate(), float(1.0), nz.mul(0.2).negate()).normalize()
         })
 
-        // Color Node: Smooth depth gradient + soft Fresnel sheen and foam crests
+        // Color Node: Smooth stylized depth gradient
         const colorNode = Fn(() =>
         {
             const pos = positionGeometry
@@ -106,39 +94,31 @@ export class Lake
 
             const dir1 = x.mul(0.707).add(z.mul(0.707))
             const p1 = dir1.mul(this.waveFrequency).add(this.time.mul(this.waveSpeed))
-            const w1 = sin(p1).mul(0.60)
+            const w1 = sin(p1).mul(0.65)
 
             const dir2 = x.mul(0.819).sub(z.mul(0.574))
-            const p2 = dir2.mul(this.waveFrequency.mul(1.6)).sub(this.time.mul(this.waveSpeed.mul(1.1)))
-            const w2 = sin(p2).mul(0.30)
+            const p2 = dir2.mul(this.waveFrequency.mul(1.4)).sub(this.time.mul(this.waveSpeed.mul(0.9)))
+            const w2 = sin(p2).mul(0.35)
 
             const totalWave = w1.add(w2)
-            const elevation = sin(totalWave.mul(1.2)).mul(this.waveElevation)
+            const elevation = sin(totalWave).mul(this.waveElevation)
 
             // Smooth depth gradient
             const heightNorm = elevation.div(this.waveElevation.mul(2.0)).add(0.5)
             const baseColor = mix(this.deepColor, this.surfaceColor, heightNorm)
 
-            // Crest highlight
-            const crestMask = smoothstep(float(0.05), this.waveElevation.mul(0.8), elevation)
-            const waterColor = mix(baseColor, this.shallowColor, crestMask.mul(0.55))
-
-            // Sunlight glint on wave crests
-            const glintMask = smoothstep(this.waveElevation.mul(0.4), this.waveElevation.mul(0.9), elevation)
-            const glintColor = mix(waterColor, this.sunGlintColor, glintMask.mul(0.25))
-
-            // White seafoam on top 10% of wave peaks
-            const foamMask = smoothstep(this.waveElevation.mul(0.72), this.waveElevation.mul(0.96), elevation)
-            const finalWater = mix(glintColor, this.foamColor, foamMask.mul(0.85))
+            // Soft surface highlight
+            const crestMask = smoothstep(float(0.01), this.waveElevation.mul(0.85), elevation)
+            const finalWater = mix(baseColor, this.shallowColor, crestMask.mul(0.4))
 
             return finalWater
         })
 
         this.material = new THREE.MeshStandardNodeMaterial({
-            roughness: 0.22,
-            metalness: 0.15,
+            roughness: 0.48,
+            metalness: 0.05,
             transparent: true,
-            opacity: 0.94,
+            opacity: 0.96,
             flatShading: false
         })
 

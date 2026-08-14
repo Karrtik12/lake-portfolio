@@ -1,7 +1,11 @@
 import { Game } from './Game.js'
 
 /**
- * Audio — Web Audio synthesis and sound effects manager for ambient water, boat engine, and UI chimes.
+ * Audio — Web Audio procedural synthesis and sound effects manager:
+ * - Natural shoreline ocean/lake wave swells with rhythmic lapping
+ * - Dynamic boat hull water spray and wake slicing audio responding to velocity
+ * - Outboard boat motor hum
+ * - Interactive chime triggers
  */
 export class Audio
 {
@@ -12,14 +16,35 @@ export class Audio
         this.muted = true
         this.ctx = null
         this.masterGain = null
+
+        // Audio components
         this.engineOsc = null
         this.engineGain = null
-        this.ambientGain = null
+        this.waveNoiseSource = null
+        this.waveFilter = null
+        this.waveGain = null
+        this.sprayNoiseSource = null
+        this.sprayFilter = null
+        this.sprayGain = null
 
         this.setupButtons()
         this.setupTabVisibility()
 
-        // Update loop for dynamic boat engine pitch
+        // Hook start button on loading screen to initialize AudioContext
+        const startBtn = document.querySelector('.js-loading-start')
+        if(startBtn)
+        {
+            startBtn.addEventListener('click', () =>
+            {
+                this.initContext()
+                if(this.muted)
+                {
+                    this.toggle()
+                }
+            })
+        }
+
+        // Update loop for dynamic boat engine and water spray
         this.game.ticker.events.on('tick', () =>
         {
             this.update()
@@ -37,46 +62,87 @@ export class Audio
 
         // Master Gain
         this.masterGain = this.ctx.createGain()
-        this.masterGain.gain.value = this.muted ? 0 : 0.6
+        this.masterGain.gain.value = this.muted ? 0 : 0.65
         this.masterGain.connect(this.ctx.destination)
 
-        // 1. Synthesized Water Ambient (Filtered White Noise)
-        this.createAmbientWater()
+        // 1. Natural Shoreline Wave Swells (Modulated Pink Noise)
+        this.createShorelineWaveAudio()
 
-        // 2. Synthesized Boat Motor Hum (Dual Oscillator with filter)
+        // 2. Dynamic Boat Hull Water Spray / Wake Sound
+        this.createBoatWaterSprayAudio()
+
+        // 3. Outboard Boat Motor Hum
         this.createBoatEngine()
     }
 
-    createAmbientWater()
+    createShorelineWaveAudio()
     {
-        const bufferSize = this.ctx.sampleRate * 2
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate)
-        const data = buffer.getChannelData(0)
+        // 4-second stereo pink/brown noise loop
+        const sampleRate = this.ctx.sampleRate
+        const length = sampleRate * 4
+        const buffer = this.ctx.createBuffer(2, length, sampleRate)
+        const left = buffer.getChannelData(0)
+        const right = buffer.getChannelData(1)
 
-        // Generate pink/brownish water noise
-        let lastOut = 0.0
-        for(let i = 0; i < bufferSize; i++)
+        let lastL = 0.0
+        let lastR = 0.0
+        for(let i = 0; i < length; i++)
         {
-            const white = Math.random() * 2 - 1
-            lastOut = (lastOut + 0.02 * white) / 1.02
-            data[i] = lastOut * 3.5
+            const whiteL = Math.random() * 2 - 1
+            const whiteR = Math.random() * 2 - 1
+            lastL = (lastL + 0.02 * whiteL) / 1.02
+            lastR = (lastR + 0.02 * whiteR) / 1.02
+            left[i] = lastL * 3.2
+            right[i] = lastR * 3.2
         }
 
-        const noise = this.ctx.createBufferSource()
-        noise.buffer = buffer
-        noise.loop = true
+        this.waveNoiseSource = this.ctx.createBufferSource()
+        this.waveNoiseSource.buffer = buffer
+        this.waveNoiseSource.loop = true
 
-        const filter = this.ctx.createBiquadFilter()
-        filter.type = 'lowpass'
-        filter.frequency.value = 320
+        this.waveFilter = this.ctx.createBiquadFilter()
+        this.waveFilter.type = 'lowpass'
+        this.waveFilter.frequency.value = 280
+        this.waveFilter.Q.value = 1.8
 
-        this.ambientGain = this.ctx.createGain()
-        this.ambientGain.gain.value = 0.25
+        this.waveGain = this.ctx.createGain()
+        this.waveGain.gain.value = 0.35
 
-        noise.connect(filter)
-        filter.connect(this.ambientGain)
-        this.ambientGain.connect(this.masterGain)
-        noise.start(0)
+        this.waveNoiseSource.connect(this.waveFilter)
+        this.waveFilter.connect(this.waveGain)
+        this.waveGain.connect(this.masterGain)
+        this.waveNoiseSource.start(0)
+    }
+
+    createBoatWaterSprayAudio()
+    {
+        // Dynamic water spray noise when cruising
+        const sampleRate = this.ctx.sampleRate
+        const length = sampleRate * 2
+        const buffer = this.ctx.createBuffer(1, length, sampleRate)
+        const data = buffer.getChannelData(0)
+
+        for(let i = 0; i < length; i++)
+        {
+            data[i] = (Math.random() * 2 - 1) * 0.5
+        }
+
+        this.sprayNoiseSource = this.ctx.createBufferSource()
+        this.sprayNoiseSource.buffer = buffer
+        this.sprayNoiseSource.loop = true
+
+        this.sprayFilter = this.ctx.createBiquadFilter()
+        this.sprayFilter.type = 'bandpass'
+        this.sprayFilter.frequency.value = 650
+        this.sprayFilter.Q.value = 1.2
+
+        this.sprayGain = this.ctx.createGain()
+        this.sprayGain.gain.value = 0.0
+
+        this.sprayNoiseSource.connect(this.sprayFilter)
+        this.sprayFilter.connect(this.sprayGain)
+        this.sprayGain.connect(this.masterGain)
+        this.sprayNoiseSource.start(0)
     }
 
     createBoatEngine()
@@ -87,7 +153,7 @@ export class Audio
 
         const filter = this.ctx.createBiquadFilter()
         filter.type = 'lowpass'
-        filter.frequency.value = 160
+        filter.frequency.value = 140
 
         this.engineGain = this.ctx.createGain()
         this.engineGain.gain.value = 0.0
@@ -131,7 +197,7 @@ export class Audio
         this.muted = !this.muted
         if(this.masterGain)
         {
-            this.masterGain.gain.setTargetAtTime(this.muted ? 0 : 0.6, this.ctx.currentTime, 0.05)
+            this.masterGain.gain.setTargetAtTime(this.muted ? 0 : 0.65, this.ctx.currentTime, 0.05)
         }
 
         this.updateButtons()
@@ -182,17 +248,46 @@ export class Audio
 
     update()
     {
-        if(this.muted || !this.ctx || !this.engineOsc || !this.engineGain) return
+        if(this.muted || !this.ctx) return
 
+        const now = this.ctx.currentTime
+
+        // 1. Natural Shoreline Wave Swell modulation (period = 3.6s)
+        if(this.waveFilter && this.waveGain)
+        {
+            const wavePhase = Math.sin(now * 1.74) * 0.5 + 0.5 // 0.0 to 1.0
+            const waveFreq = 180 + wavePhase * 420 // 180Hz to 600Hz
+            const waveVol = 0.18 + wavePhase * 0.26
+
+            this.waveFilter.frequency.setTargetAtTime(waveFreq, now, 0.12)
+            this.waveGain.gain.setTargetAtTime(waveVol, now, 0.12)
+        }
+
+        // 2. Dynamic boat speed modulation (engine rumble + hull water spray)
         const boat = this.game.boat
         if(boat)
         {
-            const speedNorm = Math.min(Math.abs(boat.speed) / 16.0, 1.0)
-            const targetFreq = 45 + speedNorm * 65 // 45Hz to 110Hz
-            const targetGain = 0.08 + speedNorm * 0.22
+            const speedNorm = Math.min(Math.abs(boat.speed) / 17.0, 1.0)
 
-            this.engineOsc.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.08)
-            this.engineGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.08)
+            // Outboard motor hum
+            if(this.engineOsc && this.engineGain)
+            {
+                const targetFreq = 42 + speedNorm * 68 // 42Hz to 110Hz
+                const targetGain = 0.05 + speedNorm * 0.22
+
+                this.engineOsc.frequency.setTargetAtTime(targetFreq, now, 0.08)
+                this.engineGain.gain.setTargetAtTime(targetGain, now, 0.08)
+            }
+
+            // Hull water spray / cutting wake sound
+            if(this.sprayFilter && this.sprayGain)
+            {
+                const sprayFreq = 550 + speedNorm * 750 // 550Hz to 1300Hz
+                const sprayVol = speedNorm * 0.32 // Silenced when idle, crisp when racing
+
+                this.sprayFilter.frequency.setTargetAtTime(sprayFreq, now, 0.08)
+                this.sprayGain.gain.setTargetAtTime(sprayVol, now, 0.08)
+            }
         }
     }
 }
