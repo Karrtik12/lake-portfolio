@@ -4,6 +4,7 @@ import { Game } from '../Game.js'
 /**
  * Trees — instanced clusters of low-poly deciduous trees and pine conifers
  * placed across the expanded outer shoreline perimeter and the 3 spacious islands.
+ * Specifically avoids the Lab Island billboard viewing corridor so all project cards stay 100% visible.
  */
 export class Trees
 {
@@ -61,30 +62,60 @@ export class Trees
 
     createIslandTrees()
     {
-        // Island tree clusters positioned around island high plateaus
-        const islandClusters = [
-            { center: [-58, -38], count: 14, radius: 14 }, // Socials
-            { center: [58, -35],  count: 16, radius: 16 }, // Lab
-            { center: [-52, 44],  count: 12, radius: 13 }  // About
-        ]
-
         const group = new THREE.Group()
 
-        for(const island of islandClusters)
+        // 1. Socials Island tree cluster (on high plateau)
+        for(let i = 0; i < 14; i++)
         {
-            for(let i = 0; i < island.count; i++)
-            {
-                const angle = Math.random() * Math.PI * 2
-                const r = 3.0 + Math.random() * (island.radius - 3.5)
+            const angle = Math.random() * Math.PI * 2
+            const r = 3.0 + Math.random() * 11.0
+            const x = -58 + Math.cos(angle) * r
+            const z = -38 + Math.sin(angle) * r
+            const y = 1.8 + Math.random() * 2.2
 
-                const x = island.center[0] + Math.cos(angle) * r
-                const z = island.center[1] + Math.sin(angle) * r
-                const y = 1.8 + (Math.random() * 2.5)
+            const tree = this.createRandomTree(0.9 + Math.random() * 0.5)
+            tree.position.set(x, y, z)
+            group.add(tree)
+        }
 
-                const tree = this.createRandomTree(0.9 + Math.random() * 0.6)
-                tree.position.set(x, y, z)
-                group.add(tree)
-            }
+        // 2. About Island tree cluster (on high plateau)
+        for(let i = 0; i < 14; i++)
+        {
+            const angle = Math.random() * Math.PI * 2
+            const r = 3.0 + Math.random() * 11.0
+            const x = -52 + Math.cos(angle) * r
+            const z = 44 + Math.sin(angle) * r
+            const y = 1.8 + Math.random() * 2.2
+
+            const tree = this.createRandomTree(0.9 + Math.random() * 0.5)
+            tree.position.set(x, y, z)
+            group.add(tree)
+        }
+
+        // 3. Lab Island trees — strictly placed BEHIND the billboard (z < -36.5) or far on outer flanks
+        // to guarantee 100% unobstructed view of the showcase billboard and cards!
+        const labTrees = [
+            // Background backdrop trees behind billboard
+            { x: 58,  z: -44, scale: 1.3 },
+            { x: 52,  z: -43, scale: 1.1 },
+            { x: 64,  z: -43, scale: 1.1 },
+            { x: 47,  z: -41, scale: 1.0 },
+            { x: 69,  z: -41, scale: 1.0 },
+            { x: 55,  z: -47, scale: 1.4 },
+            { x: 61,  z: -47, scale: 1.4 },
+            // Far west flank (safe clearance from billboard width)
+            { x: 40,  z: -34, scale: 1.0 },
+            { x: 38,  z: -28, scale: 0.9 },
+            // Far east flank (safe clearance from billboard width)
+            { x: 76,  z: -34, scale: 1.0 },
+            { x: 78,  z: -28, scale: 0.9 }
+        ]
+
+        for(const t of labTrees)
+        {
+            const tree = this.createRandomTree(t.scale)
+            tree.position.set(t.x, 1.3, t.z)
+            group.add(tree)
         }
 
         this.game.scene.add(group)

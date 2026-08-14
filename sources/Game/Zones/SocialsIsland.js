@@ -4,8 +4,7 @@ import socialLinks from '../../data/social.js'
 
 /**
  * SocialsIsland — places interactive markers for all channels around Socials Island,
- * each with a dedicated wooden landing pier spanning from dry beach into deep water
- * with the diamond marker placed right at the pier head.
+ * with wide, spacious separation between each pier across the lake-facing shoreline.
  */
 export class SocialsIsland
 {
@@ -21,10 +20,11 @@ export class SocialsIsland
     {
         const count = socialLinks.length
 
-        // Fan out symmetrically across the southeastern shore (facing lake center)
-        // Vector from island (-58, -38) to lake center (0, 0) is ~33 degrees (0.58 rad)
-        const baseAngle = 0.58
-        const spread = 0.95 // Total angular spread
+        // Fan out symmetrically across the southern and eastern coastline facing the lake
+        // baseAngle = 0.60 rad (southeast), spread = 2.15 rad (123 degrees)
+        // Yields ~13.5 meters of open water distance between adjacent pier heads!
+        const baseAngle = 0.60
+        const spread = 2.15
 
         for(let i = 0; i < count; i++)
         {
