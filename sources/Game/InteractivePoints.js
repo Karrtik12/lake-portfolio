@@ -414,22 +414,20 @@ export class InteractivePoints
             }
         }
 
+        const isTouch = this.game.inputs?.touch?.isTouchDevice || this.game.isMobile
+
         // Manage on-screen interaction toast prompt
         if(closestItem && !this.isToastVisible)
         {
             this.isToastVisible = true
-            const isTouch = this.game.inputs?.touch?.isTouchDevice || this.game.isMobile
             if(this.toastKeyEl)
             {
-                this.toastKeyEl.textContent = isTouch ? 'TAP ✨' : 'ENTER ↵'
-            }
-            if(this.game.inputs?.touch)
-            {
-                this.game.inputs.touch.setInteractVisible(true, 'OPEN')
+                this.toastKeyEl.style.display = isTouch ? 'none' : 'inline-block'
+                this.toastKeyEl.textContent = 'ENTER ↵'
             }
             if(this.toastEl && this.toastTextEl)
             {
-                this.toastTextEl.textContent = `Open ${closestItem.labelText}`
+                this.toastTextEl.textContent = isTouch ? `✨ Open ${closestItem.labelText}` : `Open ${closestItem.labelText}`
                 this.toastEl.style.display = 'flex'
                 gsap.killTweensOf(this.toastEl)
                 gsap.fromTo(this.toastEl, { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' })
@@ -437,15 +435,11 @@ export class InteractivePoints
         }
         else if(closestItem && this.isToastVisible && this.toastTextEl)
         {
-            this.toastTextEl.textContent = `Open ${closestItem.labelText}`
+            this.toastTextEl.textContent = isTouch ? `✨ Open ${closestItem.labelText}` : `Open ${closestItem.labelText}`
         }
         else if(!closestItem && this.isToastVisible)
         {
             this.isToastVisible = false
-            if(this.game.inputs?.touch)
-            {
-                this.game.inputs.touch.setInteractVisible(false)
-            }
             if(this.toastEl)
             {
                 gsap.killTweensOf(this.toastEl)

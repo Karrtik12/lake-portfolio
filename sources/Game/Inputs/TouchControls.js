@@ -163,18 +163,6 @@ export class TouchControls
             this.boostBtn.addEventListener('touchend', releaseBoost, { passive: false })
             this.boostBtn.addEventListener('touchcancel', releaseBoost, { passive: false })
         }
-
-        // 3. Interact Touch Button
-        if(this.interactBtn)
-        {
-            this.interactBtn.addEventListener('touchstart', (e) =>
-            {
-                e.preventDefault()
-                this.events.trigger('interact')
-                this.interactBtn.classList.add('is-active')
-                setTimeout(() => this.interactBtn.classList.remove('is-active'), 180)
-            }, { passive: false })
-        }
     }
 
     updateJoystickThumb(dx, dy)
@@ -228,19 +216,6 @@ export class TouchControls
         if(this.controlsContainer)
         {
             this.controlsContainer.style.display = 'none'
-        }
-    }
-
-    setInteractVisible(visible, label = 'Interact')
-    {
-        if(this.interactBtn)
-        {
-            this.interactBtn.style.display = visible ? 'flex' : 'none'
-            if(label)
-            {
-                const textSpan = this.interactBtn.querySelector('.js-touch-interact-text')
-                if(textSpan) textSpan.textContent = label
-            }
         }
     }
 }
