@@ -6,7 +6,8 @@ import projectsData from '../../data/projects.js'
 /**
  * LabIsland — 3D interactive Lab workstation showcase:
  * elevated on a large wooden deck stage platform with a central wooden display,
- * 3D purple navigation buttons, right-side project rack, left-side chalk instruction easel.
+ * 3D purple navigation buttons, right-side project rack, left-side chalk instruction easel,
+ * and a 3D floating interactive repository badge hovering above the billboard.
  */
 export class LabIsland
 {
@@ -16,6 +17,7 @@ export class LabIsland
         this.position = new THREE.Vector3(36, 1.2, -18)
         this.currentIndex = 0
         this.isFocused = false
+        this.lastFocusTime = 0
 
         // HUD elements
         this.minimapEl = document.querySelector('.js-minimap')
@@ -59,6 +61,16 @@ export class LabIsland
 
         this.createWorkstation3D()
         this.setupKeyboardAndMouseControls()
+
+        // Floating badge tick animation
+        this.game.ticker.events.on('tick', () =>
+        {
+            if(this.repoBadgeMesh)
+            {
+                const time = performance.now() * 0.002
+                this.repoBadgeMesh.position.y = 6.8 + Math.sin(time) * 0.08
+            }
+        })
     }
 
     createWorkstation3D()
@@ -102,7 +114,10 @@ export class LabIsland
         postR.position.set(3.85, 3.1, 0.2)
         this.group.add(postR)
 
-        // 3. Bruno Simon Style 3D Purple Navigation Buttons
+        // 3. Floating 3D Repository Button Mesh Hovering Outside/Above Billboard
+        this.createFloatingRepoBadge()
+
+        // 4. Bruno Simon Style 3D Purple Navigation Buttons
         const arrowGeo = new THREE.BoxGeometry(0.8, 0.8, 0.5)
         this.prevArrowMesh = new THREE.Mesh(arrowGeo, this.purpleMat)
         this.prevArrowMesh.position.set(-3.85, 3.6, 0.45)
@@ -115,10 +130,10 @@ export class LabIsland
         this.addArrowLabel(this.prevArrowMesh, '◄')
         this.addArrowLabel(this.nextArrowMesh, '►')
 
-        // 4. Right-Side Project Selector Rack
+        // 5. Right-Side Project Selector Rack
         this.createProjectRack()
 
-        // 5. Left-Side Chalkboard Instructions Easel
+        // 6. Left-Side Chalkboard Instructions Easel
         this.createInstructionsChalkboard()
 
         this.game.scene.add(this.group)
@@ -126,7 +141,7 @@ export class LabIsland
         // Render initial screen canvas
         this.renderScreenCanvas()
 
-        // 6. Interactive Ground Diamond Marker for approaching Lab Island
+        // 7. Interactive Ground Diamond Marker for approaching Lab Island
         this.marker = this.game.interactivePoints.create(
             new THREE.Vector3(36, 0.8, -12.5),
             '🔬 View Lab Showcase (Enter)',
@@ -166,6 +181,54 @@ export class LabIsland
             onClick: () => this.next(),
             onEnter: () => gsap.to(this.nextArrowMesh.scale, { x: 1.15, y: 1.15, z: 1.15, duration: 0.2 }),
             onLeave: () => gsap.to(this.nextArrowMesh.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.2 })
+        })
+    }
+
+    createFloatingRepoBadge()
+    {
+        const badgeCanvas = document.createElement('canvas')
+        badgeCanvas.width = 600
+        badgeCanvas.height = 140
+        const ctx = badgeCanvas.getContext('2d')
+
+        // Gradient background
+        const grad = ctx.createLinearGradient(0, 0, 600, 140)
+        grad.addColorStop(0, '#0284c7')
+        grad.addColorStop(0.5, '#2563eb')
+        grad.addColorStop(1, '#7c3aed')
+        ctx.fillStyle = grad
+        ctx.beginPath()
+        ctx.roundRect(8, 8, 584, 124, 62)
+        ctx.fill()
+
+        // Glowing border
+        ctx.strokeStyle = '#38bdf8'
+        ctx.lineWidth = 6
+        ctx.stroke()
+
+        // Text
+        ctx.fillStyle = '#ffffff'
+        ctx.font = 'bold 36px "Space Grotesk", sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('ENTER ↵  •  OPEN GITHUB REPO ↗', 300, 70)
+
+        const badgeTex = new THREE.CanvasTexture(badgeCanvas)
+        const badgeMat = new THREE.MeshBasicNodeMaterial({ map: badgeTex, transparent: true })
+        this.repoBadgeMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.84), badgeMat)
+        this.repoBadgeMesh.position.set(0, 6.8, 0.35)
+        this.group.add(this.repoBadgeMesh)
+
+        // Click on hovering badge to open repo
+        this.game.rayCursor.addIntersect({
+            mesh: this.repoBadgeMesh,
+            active: true,
+            onClick: () =>
+            {
+                this.openCurrentProjectRepo()
+            },
+            onEnter: () => gsap.to(this.repoBadgeMesh.scale, { x: 1.1, y: 1.1, z: 1.1, duration: 0.2 }),
+            onLeave: () => gsap.to(this.repoBadgeMesh.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.2 })
         })
     }
 
@@ -484,8 +547,8 @@ export class LabIsland
         ctx.lineWidth = 6
         ctx.strokeRect(16, 16, 1168, 718)
 
-        // Header Category Bar (Dates Removed)
-        ctx.font = 'bold 20px "Space Grotesk", sans-serif'
+        // Header Category Bar (Clean)
+        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#38bdf8'
         ctx.textAlign = 'left'
         ctx.fillText(`⚡ [ ${p.category.toUpperCase()} ]`, 80, 70)
@@ -504,20 +567,6 @@ export class LabIsland
         ctx.font = '22px "Inter", sans-serif'
         ctx.fillStyle = '#a855f7'
         ctx.fillText(p.subtitle || '', 80, 160)
-
-        // Interactive Repo Button in Header
-        ctx.fillStyle = 'rgba(56, 189, 248, 0.2)'
-        ctx.strokeStyle = '#38bdf8'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.roundRect(830, 115, 290, 44, 22)
-        ctx.fill()
-        ctx.stroke()
-
-        ctx.font = 'bold 18px "Space Grotesk", sans-serif'
-        ctx.fillStyle = '#e0f2fe'
-        ctx.textAlign = 'center'
-        ctx.fillText('[ENTER ↵] OPEN REPO ↗', 975, 143)
 
         // Central Architecture Preview Window
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)'
@@ -594,7 +643,7 @@ export class LabIsland
         ctx.font = 'bold 21px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#c084fc'
         ctx.textAlign = 'center'
-        ctx.fillText(`◄ [A] PREV  •  [ENTER ↵] OPEN GITHUB REPOSITORY ↗  •  [D] NEXT ►  •  [ESC] RETURN`, 600, 662)
+        ctx.fillText(`◄ [A] PREV  •  PROJECT [ ${this.currentIndex + 1} / ${projectsData.length} ]  •  [D] NEXT ►  •  [ESC] RETURN`, 600, 662)
 
         this.screenTexture.needsUpdate = true
     }
@@ -656,13 +705,13 @@ export class LabIsland
         this.lastFocusTime = performance.now()
 
         // Calculate exact distance to comfortably frame the ENTIRE workstation:
-        // Left chalkboard instructions, central display screen, right project carousel rack
+        // Left chalkboard instructions, central display screen, right project carousel rack, and top floating badge
         const camera = this.game.view.camera
         const aspect = camera.aspect || (window.innerWidth / window.innerHeight)
         const fovRad = THREE.MathUtils.degToRad(camera.fov || 45)
 
         const totalW = 14.8
-        const totalH = 6.2
+        const totalH = 6.6
 
         const distH = (totalH * 0.5) / Math.tan(fovRad * 0.5)
         const distW = (totalW * 0.5) / (aspect * Math.tan(fovRad * 0.5))
@@ -710,6 +759,11 @@ export class LabIsland
                 case 'Enter':
                 case 'NumpadEnter':
                 case 'Space':
+                    // Debounce check: ignore Enter key for 500ms after entering focus mode!
+                    if(performance.now() - this.lastFocusTime < 500)
+                    {
+                        return
+                    }
                     e.preventDefault()
                     this.openCurrentProjectRepo()
                     break
