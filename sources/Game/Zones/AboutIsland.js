@@ -3,7 +3,7 @@ import { Game } from '../Game.js'
 import aboutData from '../../data/about.js'
 
 /**
- * AboutIsland — displays personal biography, storytelling narrative, and journey,
+ * AboutIsland — displays personal biography and story in natural, conversational prose,
  * with its own dedicated wooden landing pier equipped with solid physics.
  */
 export class AboutIsland
@@ -55,63 +55,32 @@ export class AboutIsland
 
     openAboutModal()
     {
-        const chaptersHtml = aboutData.chapters.map(c => `
-            <div style="margin-bottom: 1.4rem;">
-                <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.45rem;">
-                    <span style="font-size: 0.72rem; font-weight: 600; color: #93c5fd; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.2rem 0.55rem; border-radius: 6px; letter-spacing: 0.04em;">
-                        ${c.badge}
-                    </span>
-                    <h3 style="font-size: 1.05rem; font-weight: 700; color: #ffffff; margin: 0;">
-                        ${c.title}
-                    </h3>
-                </div>
-                <p style="font-family: 'Inter', sans-serif; font-size: 0.9rem; line-height: 1.7; color: rgba(226, 232, 240, 0.88); margin: 0;">
-                    ${c.text}
-                </p>
-            </div>
+        const paragraphsHtml = aboutData.paragraphs.map(p => `
+            <p style="font-family: 'Inter', sans-serif; font-size: 0.93rem; line-height: 1.75; color: rgba(226, 232, 240, 0.9); margin: 0 0 1.25rem 0;">
+                ${p}
+            </p>
         `).join('')
 
         const content = `
             <div style="font-family: 'Space Grotesk', sans-serif; color: #e2e8f0;">
                 <!-- Header Greeting -->
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.15rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                    <div style="width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: #ffffff; flex-shrink: 0; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);">
+                    <div style="width: 54px; height: 54px; border-radius: 16px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 1.45rem; font-weight: 700; color: #ffffff; flex-shrink: 0; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);">
                         KC
                     </div>
                     <div>
-                        <div style="font-size: 0.8rem; color: #60a5fa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">
-                            Hello & Welcome 👋
-                        </div>
-                        <h2 style="font-size: 1.6rem; font-weight: 700; color: #ffffff; line-height: 1.2; margin: 0.1rem 0;">
+                        <h2 style="font-size: 1.55rem; font-weight: 700; color: #ffffff; line-height: 1.2; margin: 0;">
                             ${aboutData.name}
                         </h2>
-                        <div style="font-size: 0.82rem; color: rgba(255, 255, 255, 0.55);">
-                            ${aboutData.tagline}
+                        <div style="font-size: 0.85rem; color: #60a5fa; font-weight: 500; margin-top: 0.2rem;">
+                            ${aboutData.subtitle}
                         </div>
                     </div>
                 </div>
 
-                <!-- Story Narrative Chapters -->
-                <div style="padding-right: 0.25rem;">
-                    ${chaptersHtml}
-                </div>
-
-                <!-- Closing Note & Links -->
-                <div style="margin-top: 1.5rem; padding: 1.1rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08)); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
-                    <p style="font-family: 'Inter', sans-serif; font-size: 0.88rem; line-height: 1.6; color: #f1f5f9; margin: 0 0 0.85rem 0;">
-                        ${aboutData.closing}
-                    </p>
-                    <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-                        <a href="mailto:${aboutData.email}" style="padding: 0.5rem 0.85rem; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 8px; color: #ffffff; text-decoration: none; font-size: 0.8rem; font-weight: 500;">
-                            ✉️ Email Me
-                        </a>
-                        <a href="${aboutData.github}" target="_blank" rel="noopener noreferrer" style="padding: 0.5rem 0.85rem; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; color: #93c5fd; text-decoration: none; font-size: 0.8rem; font-weight: 500;">
-                            🐙 GitHub
-                        </a>
-                        <a href="${aboutData.linkedin}" target="_blank" rel="noopener noreferrer" style="padding: 0.5rem 0.85rem; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 8px; color: #c4b5fd; text-decoration: none; font-size: 0.8rem; font-weight: 500;">
-                            💼 LinkedIn
-                        </a>
-                    </div>
+                <!-- Conversational Story Paragraphs -->
+                <div style="padding: 0 0.1rem;">
+                    ${paragraphsHtml}
                 </div>
             </div>
         `

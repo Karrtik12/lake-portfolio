@@ -3,7 +3,7 @@ import { Game } from '../Game.js'
 import socialLinks from '../../data/social.js'
 
 /**
- * SocialsIsland — places interactive markers for social channels around Socials Island,
+ * SocialsIsland — places interactive markers for all channels (including Mail Me) around Socials Island,
  * each with its own wooden landing pier extending into the water with solid physics.
  */
 export class SocialsIsland
@@ -25,8 +25,8 @@ export class SocialsIsland
         for(let i = 0; i < count; i++)
         {
             const item = socialLinks[i]
-            // Fan out in a semicircle facing the lake center
-            const angle = (i / (count - 1 || 1)) * Math.PI * 0.65 - Math.PI * 0.08
+            // Fan out in an arc facing the lake center
+            const angle = (i / (count - 1 || 1)) * Math.PI * 0.72 - Math.PI * 0.1
 
             const dirX = Math.cos(angle)
             const dirZ = Math.sin(angle)
@@ -44,7 +44,7 @@ export class SocialsIsland
             // Create individual landing pier with colliders
             if(this.game.world?.props?.createShortPier)
             {
-                this.game.world.props.createShortPier(pierPos, pierAngle, 10, 2.8)
+                this.game.world.props.createShortPier(pierPos, pierAngle, 10, 2.6)
             }
 
             // Place diamond marker hovering right over the pier head

@@ -1,27 +1,13 @@
 export default {
     name: 'Kartikaye Chaturvedi',
-    tagline: 'Systems Engineer • Explorer • Horology Enthusiast',
-    email: 'kartikayechaturvedi12@gmail.com',
-    github: 'https://github.com/Karrtik12',
-    linkedin: 'https://www.linkedin.com/in/kartikaye-chaturvedi/',
+    subtitle: 'M.Tech @ IIT Delhi • Systems, DevOps & AI/ML',
+    paragraphs: [
+        `Hey there! I’m Kartikaye. I’m currently pursuing my Master’s in Computer Technology (C.Tech) at IIT Delhi, after wrapping up my undergrad in Electronics & Computer Engineering from Thapar Institute. Along the way, I spent some time working as a software engineer at AIEdge Technologies, building scalable APIs, mobile apps, and managing cloud infrastructure—which made me realize I really wanted to go even deeper into core compute and systems.`,
 
-    chapters: [
-        {
-            title: 'The Engineering Journey',
-            badge: '⚡ The Journey',
-            text: `My fascination with technology began with understanding how software speaks directly to hardware. I completed my Bachelor’s in Electronics & Computer Engineering (ENC) at Thapar Institute, where I built a strong foundation in low-level systems, compute architectures, and algorithms. After graduating, I worked in the industry as a Software Engineer at AIEdge Technologies—architecting scalable APIs, building cross-platform Flutter applications for production, and managing cloud infrastructure. Driven to dive deeper into core computing, I am currently pursuing my Master’s (M.Tech) in Computer Technology (C.Tech) at IIT Delhi.`
-        },
-        {
-            title: 'What Excites Me',
-            badge: '🔬 Systems & AI',
-            text: `I get genuinely energized working at the intersection of Systems Engineering, Cloud-Native DevOps, and AI/ML. Whether I’m crafting lightweight POSIX compatibility layers on bare-metal ARM Cortex microcontrollers, engineering autonomous multi-cloud Kubernetes resilience operators, or modeling complex spatiotemporal Graph Neural Networks for supply chain intelligence—I love tearing complex systems apart and rebuilding them to be robust, performant, and resilient.`
-        },
-        {
-            title: 'Life Outside the Terminal',
-            badge: '✨ Beyond The Screen',
-            text: `When I’m away from the keyboard, you’ll usually find me lifting at the gym, traveling with an aspiration to explore the world, or diving deep into the world of horology (I have a huge fascination for mechanical watchmaking and watch collecting). I’m also a big consumer of pop culture—stand-up comedy specials, cinema, television series, music, and great storytelling. If there's an intricate craft, a witty joke, or an inspiring adventure involved, count me in.`
-        }
-    ],
+        `On the engineering side, I naturally gravitate toward Systems Engineering, DevOps, and AI/ML. I get a real kick out of tearing complex architectures apart and rebuilding them to be fast, reliable, and rock-solid—whether that’s building low-level POSIX compatibility layers on bare-metal ARM microcontrollers, designing autonomous multi-cloud disaster recovery operators on Kubernetes, or modeling Graph Neural Networks for supply chain intelligence.`,
 
-    closing: `Always up for chatting about systems architecture, horology, travel, or a great movie recommendation. Let's connect!`
+        `When I’m off the clock and away from the terminal, you’ll usually catch me lifting at the gym, obsessing over mechanical watch engineering (horology and watch collecting have been a massive passion of mine lately), or looking up flights for my next trip—I love traveling and aspire to see as much of the world as I can.`,
+
+        `I’m also big on pop culture: stand-up comedy specials, cinema, binge-worthy TV series, and hunting for new music. If there’s an intricate craft, a great story, or a solid laugh involved, I’m all in.`
+    ]
 }
