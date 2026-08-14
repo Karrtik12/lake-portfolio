@@ -15,33 +15,30 @@ export class RayCursor
         this.intersects = []
         this.hoveredItem = null
 
-        // Track pointer
-        window.addEventListener('pointermove', (e) =>
+        let lastClickTime = 0
+        const handleClick = (e) =>
         {
-            this.pointer.x = (e.clientX / this.game.viewport.width) * 2 - 1
-            this.pointer.y = -(e.clientY / this.game.viewport.height) * 2 + 1
-        })
+            // Ignore if clicked on any UI element (modal, toast, menu, map, etc.)
+            if(e.target.closest && (e.target.closest('.modal') || e.target.closest('.interact-toast') || e.target.closest('.menu') || e.target.closest('.big-map-modal') || e.target.closest('.mobile-controls') || e.target.closest('.top-bar') || e.target.closest('.minimap')))
+            {
+                return
+            }
 
-        // Pointerdown / touch tap interaction for mobile & desktop
-        window.addEventListener('pointerdown', (e) =>
-        {
+            const now = performance.now()
+            if(now - lastClickTime < 350) return
+            lastClickTime = now
+
             this.pointer.x = (e.clientX / this.game.viewport.width) * 2 - 1
             this.pointer.y = -(e.clientY / this.game.viewport.height) * 2 + 1
             this.update()
-            if(this.hoveredItem && typeof this.hoveredItem.onClick === 'function')
-            {
-                this.hoveredItem.onClick()
-            }
-        })
 
-        // Click interaction
-        window.addEventListener('click', () =>
-        {
             if(this.hoveredItem && typeof this.hoveredItem.onClick === 'function')
             {
                 this.hoveredItem.onClick()
             }
-        })
+        }
+
+        window.addEventListener('click', handleClick)
 
         // Update loop
         this.game.ticker.events.on('tick', () =>

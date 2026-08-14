@@ -35,6 +35,7 @@ export class Modals
     open(htmlContent)
     {
         if(!this.modalElement || !this.contentElement) return
+        if(this.isOpen) return // Prevent duplicate open calls
 
         this.isOpen = true
         this.contentElement.innerHTML = `

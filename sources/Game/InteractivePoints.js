@@ -207,8 +207,13 @@ export class InteractivePoints
             gsap.to(label.scale, { x: 0, y: 0, z: 0, duration: 0.3, ease: 'power2.in' })
         }
 
+        let lastInteractTime = 0
         item.interact = () =>
         {
+            const now = performance.now()
+            if(now - lastInteractTime < 450) return
+            lastInteractTime = now
+
             gsap.to(diamond.scale, {
                 x: 1.8,
                 y: 1.8,
