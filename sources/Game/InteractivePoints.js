@@ -4,7 +4,7 @@ import { Game } from './Game.js'
 
 /**
  * InteractivePoints — manages in-world 3D diamond interactables, pulsing focus beams,
- * always-visible floating capsule labels, and the on-screen interactive toast button.
+ * high-resolution opaque floating labels, and the on-screen interactive toast button.
  */
 export class InteractivePoints
 {
@@ -150,26 +150,13 @@ export class InteractivePoints
         item.halo = halo
         item.group.add(halo)
 
-        // 3. Dynamic Canvas & 3D Floating Capsule Label (Always Visible)
-        // Measure text to make canvas match the exact snug capsule size
-        const measureCanvas = document.createElement('canvas')
-        const measureCtx = measureCanvas.getContext('2d')
-        measureCtx.font = '700 24px "Space Grotesk", sans-serif'
-        const textWidth = measureCtx.measureText(item.labelText).width
-
-        const canvasWidth = Math.ceil(textWidth + 48)
-        const canvasHeight = 64
-        const pillRadius = 30
-
+        // 3. High-Resolution 2X Retina Canvas for 3D Floating Capsule Label (Always 100% Opaque)
         const canvas = document.createElement('canvas')
-        canvas.width = canvasWidth
-        canvas.height = canvasHeight
+        canvas.width = 512
+        canvas.height = 128
         const ctx = canvas.getContext('2d')
         item.canvas = canvas
         item.ctx = ctx
-        item.canvasWidth = canvasWidth
-        item.canvasHeight = canvasHeight
-        item.pillRadius = pillRadius
 
         const texture = new THREE.CanvasTexture(canvas)
         texture.minFilter = THREE.LinearFilter
@@ -183,9 +170,9 @@ export class InteractivePoints
             depthTest: true
         })
 
-        // World sprite size accurately scaled to canvas aspect ratio
-        item.baseScaleY = 0.65
-        item.baseScaleX = (canvasWidth / canvasHeight) * item.baseScaleY
+        // Standard 3D world sprite size (4:1 aspect ratio matching 512:128)
+        item.baseScaleY = 0.75
+        item.baseScaleX = 3.0
 
         const label = new THREE.Sprite(labelMat)
         label.position.set(0, 1.75, 0)
@@ -247,28 +234,36 @@ export class InteractivePoints
     renderLabel(item, isFocused)
     {
         const ctx = item.ctx
-        const w = item.canvasWidth
-        const h = item.canvasHeight
-        const r = item.pillRadius
+        ctx.clearRect(0, 0, 512, 128)
 
-        ctx.clearRect(0, 0, w, h)
+        // Measure text with generous safety padding
+        ctx.font = '700 36px "Space Grotesk", sans-serif'
+        const textMetrics = ctx.measureText(item.labelText)
+        const textW = textMetrics.width
 
-        // 100% Solid, Fully Opaque Capsule Background (Never translucent)
-        ctx.fillStyle = isFocused ? '#0f172a' : '#090d16'
+        const padX = 42
+        const pillW = Math.min(480, Math.max(220, textW + padX * 2))
+        const pillH = 76
+        const pillX = (512 - pillW) * 0.5
+        const pillY = (128 - pillH) * 0.5
+        const pillRadius = pillH * 0.5
+
+        // Solid, rich, 100% opaque capsule fill (high contrast against water)
+        ctx.fillStyle = isFocused ? '#1e293b' : '#131d31'
         ctx.strokeStyle = isFocused ? '#fbbf24' : '#38bdf8'
-        ctx.lineWidth = isFocused ? 5 : 3
+        ctx.lineWidth = isFocused ? 7 : 4.5
 
         ctx.beginPath()
-        ctx.roundRect(3, 3, w - 6, h - 6, r)
+        ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius)
         ctx.fill()
         ctx.stroke()
 
-        // High-contrast crisp centered text
+        // Pure white high-contrast centered text (never offset or truncated)
         ctx.fillStyle = '#ffffff'
-        ctx.font = '700 24px "Space Grotesk", sans-serif'
+        ctx.font = '700 36px "Space Grotesk", sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText(item.labelText, w * 0.5, h * 0.5)
+        ctx.fillText(item.labelText, 256, 64)
 
         item.labelTexture.needsUpdate = true
     }

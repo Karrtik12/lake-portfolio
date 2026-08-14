@@ -52,7 +52,7 @@ export class AboutIsland
 
         this.game.interactivePoints.create(
             markerPos,
-            '👤 About Me',
+            'About Me',
             () =>
             {
                 this.openAboutModal()
