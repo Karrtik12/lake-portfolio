@@ -150,6 +150,55 @@ html, body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+.loading-socials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 2.2rem;
+    z-index: 10;
+    animation: fadeIn 0.8s ease backwards;
+    animation-delay: 0.2s;
+}
+
+.loading-social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.95rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: rgba(226, 232, 240, 0.75);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.loading-social-link svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.loading-social-link:hover {
+    color: #ffffff;
+    background: rgba(96, 165, 250, 0.15);
+    border-color: rgba(96, 165, 250, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(96, 165, 250, 0.2);
+}
+
+.loading-social-link:hover svg {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
 /* --- Persistent Bottom-Left Controls HUD Box --- */
 .controls {
     position: fixed;
