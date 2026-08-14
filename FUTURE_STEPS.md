@@ -4,7 +4,18 @@ This document outlines the planned aesthetic, visual, and architectural improvem
 
 ---
 
-## 🚤 1. Boat & Watercraft Visuals
+## 🎥 1. Free-Look Camera & Dynamic Orbit System
+
+- [ ] **Interactive Mouse Drag Free-Look Orbit**:
+  - Allow visitors to click and drag the mouse on the water surface while sailing to orbit the camera angle freely around the boat in 3D (360° horizontal yaw and vertical pitch constraint).
+- [ ] **3-Second Motion Auto-Reset Spring**:
+  - If the boat is in motion and no mouse drag or camera rotation input occurs for **3 seconds**, automatically and smoothly spring the camera angle back to the default trailing third-person view aligned behind the boat stern.
+- [ ] **Dynamic Speed FOV & Camera Shake**:
+  - Subtle speed-dependent camera pullback and gentle wave bumps when cruising at full throttle or activating Nitro boost.
+
+---
+
+## 🚤 2. Boat & Watercraft Visuals
 
 - [ ] **High-Fidelity 3D Boat Model**:
   - Replace the geometric boat placeholder with a custom-crafted, high-detail watercraft model (e.g., a classic mahogany runabout, luxury modern speedcraft, or futuristic cyber-skiff).
@@ -22,7 +33,7 @@ This document outlines the planned aesthetic, visual, and architectural improvem
 
 ---
 
-## 🌊 2. Water & Ocean Surface Fidelity
+## 🌊 3. Water & Ocean Surface Fidelity
 
 - [ ] **Real-Time Planar / Screen-Space Reflections (SSR)**:
   - Add real-time reflections of islands, sky, trees, and boat hull on the lake surface.
@@ -36,7 +47,7 @@ This document outlines the planned aesthetic, visual, and architectural improvem
 
 ---
 
-## 🏝️ 3. Terrain, Foliage & Environment Aesthetics
+## 🏝️ 4. Terrain, Foliage & Environment Aesthetics
 
 - [ ] **Multi-Layer PBR Terrain Texturing**:
   - Splat map shaders combining procedural wet sand, lush mossy grass, exposed granite cliff faces, and mountain snow.
@@ -55,7 +66,7 @@ This document outlines the planned aesthetic, visual, and architectural improvem
 
 ---
 
-## 🔬 4. Lab Island & Project Showcase Experience
+## 🔬 5. Lab Island & Project Showcase Experience
 
 - [ ] **Holographic 3D Project Projections**:
   - Floating 3D holographic diagrams and architecture models hovering above the workstation.
@@ -68,7 +79,7 @@ This document outlines the planned aesthetic, visual, and architectural improvem
 
 ---
 
-## 🎵 5. Audio & Sound Design
+## 🎵 6. Audio & Sound Design
 
 - [ ] **Dynamic Spatial Watercraft Audio**:
   - Outboard engine audio with authentic pitch modulation scaling with throttle, reverse, and Nitro boost.
@@ -80,7 +91,7 @@ This document outlines the planned aesthetic, visual, and architectural improvem
 
 ---
 
-## 📱 6. Mobile & Performance Optimizations
+## 📱 7. Mobile & Performance Optimizations
 
 - [ ] **Virtual On-Screen Touch Controls**:
   - Floating touch joystick for steering and touch pedals for throttle/boost on mobile and tablet devices.
