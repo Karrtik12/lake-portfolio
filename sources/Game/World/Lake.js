@@ -44,9 +44,10 @@ export class Lake
 
         // 3. Uniforms
         this.time = uniform(float(0))
-        this.deepColor = uniform(color('#061c48'))      // Deep vibrant indigo navy
-        this.surfaceColor = uniform(color('#0e35a6'))   // Electric royal blue (Bruno Simon folio)
-        this.shallowColor = uniform(color('#1d66db'))   // Coastal electric azure
+        this.deepColor = uniform(color('#0369a1'))      // Rich tropical sapphire blue (deep ocean drop-off)
+        this.surfaceColor = uniform(color('#06b6d4'))   // Radiant turquoise lagoon water
+        this.shallowColor = uniform(color('#38bdf8'))   // Light crystalline aquamarine
+        this.shoreWaterColor = uniform(color('#a5f3fc'))// Pale crystal aqua at the beach waterline
         this.foamColor = uniform(color('#ffffff'))      // Crisp white shoreline foam shards
 
         this.waveElevation = uniform(float(0.04))       // Serene, calm lake displacement
@@ -215,21 +216,22 @@ export class Lake
             // Combine all organic broken foam shards
             const totalFoam = foamSocials.add(foamLab).add(foamAbout).add(foamCoast).add(shoreContact.mul(0.6)).clamp(0.0, 1.0)
 
-            // Soft shallow electric azure transition near beaches
+            // Multi-layered tropical lagoon shoreline transition
             const totalNearShore = maskSocials.add(maskLab).add(maskAbout).add(maskCoast).clamp(0.0, 1.0)
-            waterCol = mix(waterCol, this.shallowColor, totalNearShore.mul(0.45))
+            const lagoonWater = mix(waterCol, this.shallowColor, totalNearShore.mul(0.65))
+            const finalWater = mix(lagoonWater, this.shoreWaterColor, shoreContact.mul(0.75))
 
             // Blend crisp white foam shards on top
-            const finalColor = mix(waterCol, this.foamColor, totalFoam.mul(0.92))
+            const finalColor = mix(finalWater, this.foamColor, totalFoam.mul(0.92))
 
             return finalColor
         })
 
         this.material = new THREE.MeshStandardNodeMaterial({
-            roughness: 0.65,
-            metalness: 0.0,
+            roughness: 0.35,
+            metalness: 0.08,
             transparent: true,
-            opacity: 0.98,
+            opacity: 0.94,
             flatShading: false
         })
 
