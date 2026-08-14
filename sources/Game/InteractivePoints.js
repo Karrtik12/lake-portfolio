@@ -163,22 +163,22 @@ export class InteractivePoints
         texture.magFilter = THREE.LinearFilter
         item.labelTexture = texture
 
-        const labelMat = new THREE.MeshBasicNodeMaterial({
+        const labelMat = new THREE.SpriteMaterial({
             map: texture,
             transparent: true,
-            alphaTest: 0.5,
-            depthWrite: true,
-            depthTest: true,
-            fog: false
+            alphaTest: 0.2,
+            depthTest: false,
+            depthWrite: false
         })
 
-        // Standard 3D world plane size (4:1 aspect ratio matching 512:128)
+        // Standard 3D world sprite size (4:1 aspect ratio matching 512:128)
         item.baseScaleY = 0.75
         item.baseScaleX = 3.0
 
-        const labelGeo = new THREE.PlaneGeometry(item.baseScaleX, item.baseScaleY)
-        const label = new THREE.Mesh(labelGeo, labelMat)
+        const label = new THREE.Sprite(labelMat)
         label.position.set(0, 1.75, 0)
+        label.scale.set(item.baseScaleX, item.baseScaleY, 1.0)
+        label.renderOrder = 999
         item.label = label
         item.group.add(label)
 
@@ -348,12 +348,6 @@ export class InteractivePoints
             }
 
             item.group.position.y = item.heightY + Math.sin(time * 2.5 + item.position.x) * 0.18
-
-            // Billboard label towards active camera (always visible)
-            if(this.game.view?.camera && item.label)
-            {
-                item.label.quaternion.copy(this.game.view.camera.quaternion)
-            }
 
             // Proximity check to player boat
             const dist = item.position.distanceTo(boatPos)
