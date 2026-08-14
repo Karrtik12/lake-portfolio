@@ -1,8 +1,10 @@
 import RAPIER from '@dimforge/rapier3d'
 import { Game } from '../Game.js'
+import { Shoreline } from '../World/Shoreline.js'
 
 /**
- * Physics — sets up Rapier3D world and registers boundary/obstacle colliders.
+ * Physics — sets up Rapier3D world and registers boundary/obstacle colliders
+ * matching exact high-resolution terrain contours.
  */
 export class Physics
 {
@@ -10,7 +12,7 @@ export class Physics
     {
         this.game = Game.getInstance()
 
-        // Initialize Rapier World with downward gravity (for rigid bodies)
+        // Initialize Rapier World with downward gravity
         const gravity = { x: 0.0, y: -9.81, z: 0.0 }
         this.world = new RAPIER.World(gravity)
 
@@ -27,9 +29,8 @@ export class Physics
 
     setShorelineColliders()
     {
-        // Segmented polygon barrier enclosing the lake (radius ~68)
-        const radius = 68
-        const segments = 32
+        // 96-segment high-resolution polygon barrier matching the exact coastline curve
+        const segments = 96
         const angleStep = (Math.PI * 2) / segments
 
         for(let i = 0; i < segments; i++)
@@ -37,10 +38,14 @@ export class Physics
             const angle1 = i * angleStep
             const angle2 = (i + 1) * angleStep
 
-            const x1 = Math.cos(angle1) * radius
-            const z1 = Math.sin(angle1) * radius
-            const x2 = Math.cos(angle2) * radius
-            const z2 = Math.sin(angle2) * radius
+            // Position barrier on the dry beach (coastRadius + 0.8m)
+            const r1 = Shoreline.getCoastRadius(angle1) + 0.8
+            const r2 = Shoreline.getCoastRadius(angle2) + 0.8
+
+            const x1 = Math.cos(angle1) * r1
+            const z1 = Math.sin(angle1) * r1
+            const x2 = Math.cos(angle2) * r2
+            const z2 = Math.sin(angle2) * r2
 
             const midX = (x1 + x2) * 0.5
             const midZ = (z1 + z2) * 0.5
@@ -52,8 +57,8 @@ export class Physics
                 .setRotation({ x: 0, y: Math.sin(segAngle * 0.5), z: 0, w: Math.cos(segAngle * 0.5) })
 
             const body = this.world.createRigidBody(bodyDesc)
-            const colliderDesc = RAPIER.ColliderDesc.cuboid(segLength * 0.5, 3.0, 1.5)
-                .setRestitution(0.3)
+            const colliderDesc = RAPIER.ColliderDesc.cuboid(segLength * 0.5, 3.0, 1.2)
+                .setRestitution(0.2)
                 .setFriction(0.2)
 
             this.world.createCollider(colliderDesc, body)
@@ -62,12 +67,12 @@ export class Physics
 
     setIslandColliders()
     {
-        // Cylinder colliders around each island
+        // Exact island landmass colliders
         const islandColliders = [
-            { x: -36, z: -22, radius: 10.5 }, // Socials
-            { x:  36, z: -20, radius: 12.0 }, // Lab
-            { x: -30, z:  24, radius:  9.5 }, // About
-            { x:   0, z:  48, radius:   5.0 }  // Dock pylon cluster
+            { x: -36, z: -22, radius:  9.8 }, // Socials Island
+            { x:  36, z: -20, radius: 11.2 }, // Lab Island
+            { x: -30, z:  24, radius:  9.0 }, // About Island
+            { x:   0, z:  48, radius:  4.5 }  // Spawn Dock
         ]
 
         for(const island of islandColliders)
@@ -77,7 +82,7 @@ export class Physics
 
             const body = this.world.createRigidBody(bodyDesc)
             const colliderDesc = RAPIER.ColliderDesc.cylinder(3.0, island.radius)
-                .setRestitution(0.4)
+                .setRestitution(0.3)
                 .setFriction(0.2)
 
             this.world.createCollider(colliderDesc, body)
@@ -86,7 +91,7 @@ export class Physics
 
     setBuoyColliders()
     {
-        // Solid physical collision barriers for navigational buoys (boat cannot pass through)
+        // Solid physical collision barriers for navigational buoys
         const buoyPositions = [
             { x: -14, z:  16 },
             { x:  14, z:  16 },
@@ -100,8 +105,8 @@ export class Physics
                 .setTranslation(buoy.x, 1.0, buoy.z)
 
             const body = this.world.createRigidBody(bodyDesc)
-            const colliderDesc = RAPIER.ColliderDesc.cylinder(3.0, 0.9)
-                .setRestitution(0.6) // Bouncy physical reaction
+            const colliderDesc = RAPIER.ColliderDesc.cylinder(2.0, 1.1)
+                .setRestitution(0.4)
                 .setFriction(0.2)
 
             this.world.createCollider(colliderDesc, body)
@@ -110,6 +115,7 @@ export class Physics
 
     update()
     {
+        // Step physics simulation by fixed delta
         this.world.step()
     }
 }

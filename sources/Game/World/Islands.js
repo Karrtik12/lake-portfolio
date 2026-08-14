@@ -69,10 +69,10 @@ export class Islands
 
     createOrganicIsland(def)
     {
-        // 100% Radial Disc Geometry: 96 radial rays x 64 concentric rings (ZERO straight/rectangular edges!)
+        // 100% Radial Disc Geometry: 144 radial rays x 96 concentric rings
         const maxRadius = Math.max(def.radiusX, def.radiusZ) * 1.6
-        const radialSegments = 96
-        const ringSegments = 64
+        const radialSegments = 144
+        const ringSegments = 96
 
         const geometry = new THREE.RingGeometry(0.001, maxRadius, radialSegments, ringSegments)
         geometry.rotateX(-Math.PI * 0.5)
