@@ -16,7 +16,7 @@ export default [
         category: 'Cloud & DevOps',
         description: 'Engineered an 11-tier microservice evaluation harness across Azure Public Cloud, Baadal Private Cloud, Multi-Cloud (Azure+GCP), and K3s Edge nodes with a zero-trust Tailscale VPN overlay mesh and automated Locust load benchmarking.',
         highlights: ['11-Tier Benchmark Harness', 'Zero-Trust Tailscale Mesh', '-76% p99 Latency via Auto-Scaling'],
-        stack: ['Kubernetes', 'Grafana', 'Prometheus', 'Locust', 'Docker', 'HydraGen', 'µBench', 'K3s', 'Azure'],
+        stack: ['Kubernetes', 'Grafana', 'Prometheus', 'Locust', 'Docker', 'K3s', 'Azure'],
         link: 'https://github.com/Karrtik12/MicroService-Monitoring-System'
     },
     {
