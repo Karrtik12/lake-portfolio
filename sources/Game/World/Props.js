@@ -176,9 +176,9 @@ export class Props
                 })
 
             const body = this.game.physics.world.createRigidBody(bodyDesc)
-            const colliderDesc = RAPIER.ColliderDesc.cuboid(width * 0.5, 1.4, length * 0.5)
-                .setRestitution(0.25)
-                .setFriction(0.3)
+            const colliderDesc = RAPIER.ColliderDesc.cuboid(width * 0.5 + 0.3, 2.5, length * 0.5 + 0.3)
+                .setRestitution(0.3)
+                .setFriction(0.5)
 
             this.game.physics.world.createCollider(colliderDesc, body)
         }
