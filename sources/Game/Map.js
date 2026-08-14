@@ -25,14 +25,14 @@ export class Map
         this.sidebarEl = document.querySelector('.js-big-map-sidebar')
 
         this.isBigMapOpen = false
-        this.worldRadius = 80 // World units mapped to radar radius
+        this.worldRadius = 140 // World units mapped to radar radius
 
         // Island definitions with icons and descriptions
         this.destinations = [
-            { id: 'socials', name: 'Socials Island', icon: '🏝️', x: -36, z: -22, r: 12, color: '#2d6a4f', desc: 'Social channels, contact info, GitHub & LinkedIn links' },
-            { id: 'lab',     name: 'Lab Island',     icon: '🔬', x:  36, z: -20, r: 14, color: '#1b4332', desc: 'Interactive 3D project showcase (Systems, DevOps, AI/ML)' },
-            { id: 'about',   name: 'About Island',   icon: '👤', x: -30, z:  24, r: 11, color: '#356e2c', desc: 'Personal biography, engineer background & experience' },
-            { id: 'dock',    name: 'Beach Pier',     icon: '🏠', x:   0, z:  66, r:  6, color: '#704828', desc: 'Starting beach pier & harbor moorage' }
+            { id: 'socials', name: 'Socials Island', icon: '🏝️', x: -58, z: -38, r: 18, color: '#2d6a4f', desc: 'Social channels, contact info, GitHub & LinkedIn links' },
+            { id: 'lab',     name: 'Lab Island',     icon: '🔬', x:  58, z: -35, r: 20, color: '#1b4332', desc: 'Interactive 3D project showcase (Systems, DevOps, AI/ML)' },
+            { id: 'about',   name: 'About Island',   icon: '👤', x: -52, z:  44, r: 17, color: '#356e2c', desc: 'Personal biography, engineer background & experience' },
+            { id: 'dock',    name: 'Beach Pier',     icon: '🏠', x:   0, z: 108, r:  8, color: '#704828', desc: 'Starting beach pier & harbor moorage' }
         ]
 
         this.setupEventListeners()

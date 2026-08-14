@@ -14,8 +14,8 @@ export class Lake
         this.game = Game.getInstance()
 
         // 1. High-density water plane geometry
-        this.size = 220
-        this.segments = 160
+        this.size = 320
+        this.segments = 200
         this.geometry = new THREE.PlaneGeometry(this.size, this.size, this.segments, this.segments)
         this.geometry.rotateX(-Math.PI * 0.5)
 

@@ -3,15 +3,15 @@ import { Game } from '../Game.js'
 import socialLinks from '../../data/social.js'
 
 /**
- * SocialsIsland — places interactive markers for all channels (including Mail Me) around Socials Island,
- * each with its own wooden landing pier extending into the water with solid physics.
+ * SocialsIsland — places interactive markers for all channels around Socials Island,
+ * with wide spacing and individual wooden landing piers extending into the water.
  */
 export class SocialsIsland
 {
     constructor()
     {
         this.game = Game.getInstance()
-        this.center = new THREE.Vector3(-36, 0, -22)
+        this.center = new THREE.Vector3(-58, 0, -38)
 
         this.setupSocialLinks()
     }
@@ -19,14 +19,14 @@ export class SocialsIsland
     setupSocialLinks()
     {
         const count = socialLinks.length
-        const pierRadius = 8.5
-        const markerRadius = 12.5
+        const pierRadius = 14.5
+        const markerRadius = 19.5
 
         for(let i = 0; i < count; i++)
         {
             const item = socialLinks[i]
-            // Fan out in an arc facing the lake center
-            const angle = (i / (count - 1 || 1)) * Math.PI * 0.72 - Math.PI * 0.1
+            // Wide fan-out arc across southeastern shore facing lake center
+            const angle = (i / (count - 1 || 1)) * Math.PI * 0.78 - Math.PI * 0.1
 
             const dirX = Math.cos(angle)
             const dirZ = Math.sin(angle)
@@ -44,10 +44,10 @@ export class SocialsIsland
             // Create individual landing pier with colliders
             if(this.game.world?.props?.createShortPier)
             {
-                this.game.world.props.createShortPier(pierPos, pierAngle, 10, 2.6)
+                this.game.world.props.createShortPier(pierPos, pierAngle, 10, 2.8)
             }
 
-            // Place diamond marker hovering right over the pier head
+            // Place diamond marker hovering right over the pier head in water
             const markerPos = new THREE.Vector3(
                 this.center.x + dirX * markerRadius,
                 0.8,

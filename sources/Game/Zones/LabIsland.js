@@ -14,7 +14,7 @@ export class LabIsland
     constructor()
     {
         this.game = Game.getInstance()
-        this.position = new THREE.Vector3(36, 1.2, -18)
+        this.position = new THREE.Vector3(58, 1.2, -33)
         this.currentIndex = 0
         this.isFocused = false
         this.lastFocusTime = 0
@@ -144,11 +144,11 @@ export class LabIsland
         // 7. Landing Pier & Interactive Ground Diamond Marker for approaching Lab Island
         if(this.game.world?.props?.createShortPier)
         {
-            this.game.world.props.createShortPier(new THREE.Vector3(36, 0, -9.5), Math.PI, 10, 3.2)
+            this.game.world.props.createShortPier(new THREE.Vector3(58, 0, -17.0), Math.PI, 10, 3.2)
         }
 
         this.marker = this.game.interactivePoints.create(
-            new THREE.Vector3(36, 0.8, -5.5),
+            new THREE.Vector3(58, 0.8, -12.5),
             '🔬 View Lab Showcase (Enter)',
             () =>
             {
@@ -722,8 +722,8 @@ export class LabIsland
         const distW = (totalW * 0.5) / (aspect * Math.tan(fovRad * 0.5))
         const d = Math.max(distH, distW) * 1.05
 
-        const targetLookAt = new THREE.Vector3(36, 4.4, -17.78)
-        const targetCamPos = new THREE.Vector3(36, 4.4, -17.78 + d)
+        const targetLookAt = new THREE.Vector3(58, 4.4, -32.78)
+        const targetCamPos = new THREE.Vector3(58, 4.4, -32.78 + d)
         this.game.view.setCinematic(targetCamPos, targetLookAt, 1.0)
 
         // Hide distracting HUD overlays during focus

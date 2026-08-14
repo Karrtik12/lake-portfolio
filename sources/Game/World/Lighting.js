@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Lighting — sun, hemisphere ambient, and shadow maps.
+ * Lighting — sun, hemisphere ambient, and shadow maps covering the expanded lake.
  */
 export class Lighting
 {
@@ -20,16 +20,16 @@ export class Lighting
 
         // Directional Sun Light
         this.sunLight = new THREE.DirectionalLight(0xffeedd, 2.2)
-        this.sunLight.position.set(60, 80, 50)
+        this.sunLight.position.set(100, 140, 80)
         this.sunLight.castShadow = true
 
         // Shadow configuration
         this.sunLight.shadow.mapSize.width = 2048
         this.sunLight.shadow.mapSize.height = 2048
         this.sunLight.shadow.camera.near = 10
-        this.sunLight.shadow.camera.far = 300
+        this.sunLight.shadow.camera.far = 450
 
-        const d = 90
+        const d = 160
         this.sunLight.shadow.camera.left = -d
         this.sunLight.shadow.camera.right = d
         this.sunLight.shadow.camera.top = d
@@ -41,7 +41,7 @@ export class Lighting
 
         // Soft Warm Fill Light from opposite direction
         this.fillLight = new THREE.DirectionalLight(0x7395b8, 0.6)
-        this.fillLight.position.set(-50, 30, -50)
+        this.fillLight.position.set(-80, 50, -80)
         this.game.scene.add(this.fillLight)
     }
 }

@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Shoreline — high-resolution outer mountain ring and coastal boundary enclosing the lake.
+ * Shoreline — high-resolution outer mountain ring and coastal boundary enclosing the expanded lake.
  * Built with dense radial geometry and crisp, clear beach contours to eliminate jagged facets.
  */
 export class Shoreline
@@ -11,8 +11,8 @@ export class Shoreline
     {
         this.game = Game.getInstance()
 
-        this.innerRadius = 66  // Deep underwater lake shelf
-        this.outerRadius = 150 // Mountain ring extent
+        this.innerRadius = 100 // Deep underwater lake shelf
+        this.outerRadius = 240 // Mountain ring extent
         this.segmentsRadial = 192 // High resolution for silky smooth coastline curves
         this.segmentsRing = 64
 
@@ -44,14 +44,14 @@ export class Shoreline
             const angle = Math.atan2(z, x)
 
             // Exact mathematical coastline boundary
-            const coastRadius = 72.0 + Math.sin(angle * 4.0) * 2.5 + Math.cos(angle * 8.0) * 1.5
+            const coastRadius = Shoreline.getCoastRadius(angle)
 
             let height = 0
             if(dist < coastRadius)
             {
                 // Underwater shelf dropping steeply to deep lake floor (prevents boat grounding)
                 const t = Math.max(0, (coastRadius - dist) / (coastRadius - this.innerRadius))
-                height = -t * 6.5
+                height = -t * 8.5
             }
             else
             {
@@ -59,19 +59,19 @@ export class Shoreline
                 const landDist = dist - coastRadius
                 const normalizedLand = landDist / (this.outerRadius - coastRadius)
 
-                const hill1 = Math.sin(angle * 6.0 + landDist * 0.08) * 3.5
-                const hill2 = Math.cos(angle * 12.0 + landDist * 0.05) * 2.5
-                const baseRise = Math.pow(normalizedLand, 1.35) * 32.0
+                const hill1 = Math.sin(angle * 6.0 + landDist * 0.06) * 4.5
+                const hill2 = Math.cos(angle * 12.0 + landDist * 0.04) * 3.0
+                const baseRise = Math.pow(normalizedLand, 1.35) * 45.0
 
                 // Smooth beach apron (elevation 0 to 1.2m near water)
-                if(landDist < 4.0)
+                if(landDist < 5.0)
                 {
-                    const beachT = landDist / 4.0
+                    const beachT = landDist / 5.0
                     height = beachT * 1.2
                 }
                 else
                 {
-                    height = 1.2 + Math.max(0, (baseRise + hill1 + hill2) * (landDist - 4.0) / (this.outerRadius - coastRadius - 4.0))
+                    height = 1.2 + Math.max(0, (baseRise + hill1 + hill2) * (landDist - 5.0) / (this.outerRadius - coastRadius - 5.0))
                 }
             }
 
@@ -84,33 +84,33 @@ export class Shoreline
                 // Underwater wet sand
                 vertexColor.copy(wetSand)
             }
-            else if(height < 1.4)
+            else if(height < 1.5)
             {
                 // Dry beach sand
                 vertexColor.copy(sandColor)
             }
-            else if(height < 3.2)
+            else if(height < 4.0)
             {
                 // Smooth transition from sand to grass
-                const t = (height - 1.4) / 1.8
+                const t = (height - 1.5) / 2.5
                 vertexColor.lerpColors(sandColor, grassColor, t)
             }
-            else if(height < 15.0)
+            else if(height < 20.0)
             {
                 // Rich lush grass slopes
-                const t = (height - 3.2) / 11.8
+                const t = (height - 4.0) / 16.0
                 vertexColor.lerpColors(grassColor, darkGrass, t)
             }
-            else if(height < 26.0)
+            else if(height < 35.0)
             {
                 // Rocky highlands
-                const t = (height - 15.0) / 11.0
+                const t = (height - 20.0) / 15.0
                 vertexColor.lerpColors(darkGrass, rockColor, t)
             }
             else
             {
                 // Mountain peak snow caps
-                const t = Math.min(1.0, (height - 26.0) / 6.0)
+                const t = Math.min(1.0, (height - 35.0) / 10.0)
                 vertexColor.lerpColors(rockColor, snowColor, t)
             }
 
@@ -140,6 +140,6 @@ export class Shoreline
      */
     static getCoastRadius(angle)
     {
-        return 72.0 + Math.sin(angle * 4.0) * 2.5 + Math.cos(angle * 8.0) * 1.5
+        return 115.0 + Math.sin(angle * 4.0) * 3.5 + Math.cos(angle * 8.0) * 2.0
     }
 }

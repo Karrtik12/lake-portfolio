@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Islands — manages the 3 organically sculpted island landmasses in the lake.
+ * Islands — manages the 3 organically sculpted island landmasses in the expanded lake.
  * Built using radial disc geometry to ensure 100% smooth, circular underwater shelves with zero rectangular edges.
  */
 export class Islands
@@ -12,15 +12,15 @@ export class Islands
         this.game = Game.getInstance()
         this.items = []
 
-        // Island definitions (positions, base radii, height profiles, organic shapes)
+        // Expanded island definitions (positions, base radii, height profiles, organic shapes)
         this.definitions = [
             {
                 id: 'socials',
                 name: 'Socials Island',
-                position: new THREE.Vector3(-36, 0, -22),
-                radiusX: 14,
-                radiusZ: 11,
-                maxHeight: 3.8,
+                position: new THREE.Vector3(-58, 0, -38),
+                radiusX: 24,
+                radiusZ: 20,
+                maxHeight: 5.2,
                 seed: 1.4,
                 colorSand: '#d4b483',
                 colorGrass: '#3a7d44',
@@ -30,10 +30,10 @@ export class Islands
             {
                 id: 'lab',
                 name: 'Lab Island',
-                position: new THREE.Vector3(36, 0, -20),
-                radiusX: 16,
-                radiusZ: 13,
-                maxHeight: 4.2,
+                position: new THREE.Vector3(58, 0, -35),
+                radiusX: 26,
+                radiusZ: 22,
+                maxHeight: 5.5,
                 seed: 2.8,
                 colorSand: '#d4b483',
                 colorGrass: '#2f6b52',
@@ -43,10 +43,10 @@ export class Islands
             {
                 id: 'about',
                 name: 'About Island',
-                position: new THREE.Vector3(-30, 0, 24),
-                radiusX: 12,
-                radiusZ: 12,
-                maxHeight: 3.4,
+                position: new THREE.Vector3(-52, 0, 44),
+                radiusX: 22,
+                radiusZ: 22,
+                maxHeight: 4.8,
                 seed: 4.2,
                 colorSand: '#d4b483',
                 colorGrass: '#447d3a',
@@ -107,7 +107,7 @@ export class Islands
             let height = 0
             if(def.id === 'lab')
             {
-                // Level flat plaza top for Lab Island (elevation 1.2 across entire central area)
+                // Level flat plaza top for Lab Island
                 if(organicDist < 0.72)
                 {
                     height = 1.2
@@ -139,7 +139,7 @@ export class Islands
                 if(organicDist < 1.0)
                 {
                     const plateauFactor = Math.cos(organicDist * Math.PI * 0.5)
-                    const smoothNoise = Math.sin(x * 0.3 + def.seed) * Math.cos(z * 0.3 - def.seed) * 0.35
+                    const smoothNoise = Math.sin(x * 0.2 + def.seed) * Math.cos(z * 0.2 - def.seed) * 0.45
                     height = Math.pow(plateauFactor, 1.25) * def.maxHeight + (smoothNoise * plateauFactor)
 
                     if(organicDist > 0.72)
@@ -172,29 +172,29 @@ export class Islands
                 const t = Math.min(1.0, (-height - 0.5) / 3.5)
                 vertexColor.lerpColors(sandCol, abyssCol, t)
             }
-            else if(height < 0.6)
+            else if(height < 0.7)
             {
                 // Sandy beach
                 vertexColor.copy(sandCol)
             }
-            else if(height < 1.8)
+            else if(height < 2.2)
             {
                 // Smooth beach to grass transition
-                const t = (height - 0.6) / 1.2
+                const t = (height - 0.7) / 1.5
                 const smoothT = t * t * (3 - 2 * t)
                 vertexColor.lerpColors(sandCol, grassCol, smoothT)
             }
-            else if(height < 3.0)
+            else if(height < 3.8)
             {
                 // Lush green plateau
-                const t = (height - 1.8) / 1.2
+                const t = (height - 2.2) / 1.6
                 const smoothT = t * t * (3 - 2 * t)
                 vertexColor.lerpColors(grassCol, highCol, smoothT)
             }
             else
             {
                 // High ridge
-                const t = Math.min(1.0, (height - 3.0) / 1.2)
+                const t = Math.min(1.0, (height - 3.8) / 1.4)
                 vertexColor.lerpColors(highCol, rockCol, t * 0.4)
             }
 

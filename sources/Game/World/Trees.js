@@ -2,7 +2,8 @@ import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
 
 /**
- * Trees — high-quality stylized low-poly trees and bushes with multi-cluster volumetric foliage and branching trunks.
+ * Trees — instanced clusters of low-poly deciduous trees and pine conifers
+ * placed across the expanded outer shoreline perimeter and the 3 spacious islands.
  */
 export class Trees
 {
@@ -10,148 +11,125 @@ export class Trees
     {
         this.game = Game.getInstance()
 
-        this.positions = []
-        this.generatePositions()
-        this.createInstancedTrees()
+        this.pineMaterial = new THREE.MeshStandardNodeMaterial({
+            color: '#1e3a29',
+            roughness: 0.85,
+            flatShading: true
+        })
+
+        this.deciduousMaterial = new THREE.MeshStandardNodeMaterial({
+            color: '#2d6a4f',
+            roughness: 0.85,
+            flatShading: true
+        })
+
+        this.trunkMaterial = new THREE.MeshStandardNodeMaterial({
+            color: '#422814',
+            roughness: 0.9,
+            flatShading: true
+        })
+
+        this.createShorelineTrees()
+        this.createIslandTrees()
     }
 
-    generatePositions()
+    createShorelineTrees()
     {
-        // 1. Shoreline perimeter forest (radius 76 to 115)
-        const shorelineTreeCount = 130
-        for(let i = 0; i < shorelineTreeCount; i++)
+        // 1. Shoreline perimeter forest (radius 125 to 195)
+        const treeCount = 90
+        const group = new THREE.Group()
+
+        for(let i = 0; i < treeCount; i++)
         {
-            const angle = Math.random() * Math.PI * 2
-            const r = 75 + Math.random() * 36
-            const x = Math.cos(angle) * r
-            const z = Math.sin(angle) * r
+            const angle = (i / treeCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.08
+            const radius = 126 + Math.random() * 55
 
-            // Shoreline slope height
-            const ringFactor = (r - 70) / (140 - 70)
-            const y = Math.pow(ringFactor, 1.4) * 22.0 + (Math.sin(angle * 7.0) * 2.0)
-            const scale = 0.85 + Math.random() * 0.65
-            const variant = Math.floor(Math.random() * 3) // 0: Pine, 1: Oak, 2: Birch
+            const x = Math.cos(angle) * radius
+            const z = Math.sin(angle) * radius
 
-            this.positions.push({ x, y: Math.max(0.6, y), z, scale, variant })
+            // Approximate terrain height on mountains
+            const landDist = radius - 115.0
+            const y = 2.0 + Math.pow(Math.max(0, landDist / 125.0), 1.35) * 40.0 + (Math.random() - 0.5) * 2.0
+
+            const tree = this.createRandomTree(1.2 + Math.random() * 0.8)
+            tree.position.set(x, y, z)
+            group.add(tree)
         }
 
-        // 2. Island trees (clustered naturally on plateaus)
-        const islandConfigs = [
-            { center: [-36, -22], count: 8, radius: 8 },  // Socials
-            { center: [36, -20], count: 9, radius: 9 },   // Lab
-            { center: [-30, 24], count: 7, radius: 7 }    // About
+        this.game.scene.add(group)
+    }
+
+    createIslandTrees()
+    {
+        // Island tree clusters positioned around island high plateaus
+        const islandClusters = [
+            { center: [-58, -38], count: 14, radius: 14 }, // Socials
+            { center: [58, -35],  count: 16, radius: 16 }, // Lab
+            { center: [-52, 44],  count: 12, radius: 13 }  // About
         ]
 
-        for(const island of islandConfigs)
+        const group = new THREE.Group()
+
+        for(const island of islandClusters)
         {
             for(let i = 0; i < island.count; i++)
             {
                 const angle = Math.random() * Math.PI * 2
-                const r = 2.0 + Math.random() * (island.radius - 2.5)
+                const r = 3.0 + Math.random() * (island.radius - 3.5)
+
                 const x = island.center[0] + Math.cos(angle) * r
                 const z = island.center[1] + Math.sin(angle) * r
+                const y = 1.8 + (Math.random() * 2.5)
 
-                // Keep clear sightline in front of Lab billboard (x: 36, z: -20)
-                if(island.center[0] === 36 && z > -20.5 && Math.abs(x - 36) < 6.0)
-                {
-                    continue
-                }
-
-                const y = 2.0 + Math.random() * 0.8
-                const scale = 0.75 + Math.random() * 0.5
-                const variant = Math.floor(Math.random() * 3)
-
-                this.positions.push({ x, y, z, scale, variant })
+                const tree = this.createRandomTree(0.9 + Math.random() * 0.6)
+                tree.position.set(x, y, z)
+                group.add(tree)
             }
         }
-    }
-
-    createInstancedTrees()
-    {
-        const totalCount = this.positions.length
-
-        // 1. Organic Branching Trunk Geometry
-        const trunkGeo = new THREE.CylinderGeometry(0.18, 0.45, 2.6, 7)
-        trunkGeo.translate(0, 1.3, 0)
-
-        // 2. Multi-cluster Volumetric Foliage (Stylized Dodecahedron Clumps)
-        const foliageMainGeo = new THREE.DodecahedronGeometry(1.6, 1)
-        foliageMainGeo.translate(0, 3.2, 0)
-
-        const foliageTopGeo = new THREE.DodecahedronGeometry(1.1, 1)
-        foliageTopGeo.translate(0.3, 4.4, 0.2)
-
-        const foliageSideGeo = new THREE.DodecahedronGeometry(1.0, 1)
-        foliageSideGeo.translate(-0.6, 2.8, -0.4)
-
-        // Materials with varied rich natural tones
-        const trunkMat = new THREE.MeshStandardNodeMaterial({
-            color: '#4a2f1b',
-            roughness: 0.88,
-            flatShading: true
-        })
-
-        const foliageMainMat = new THREE.MeshStandardNodeMaterial({
-            color: '#2d6a4f',
-            roughness: 0.75,
-            flatShading: true
-        })
-
-        const foliageTopMat = new THREE.MeshStandardNodeMaterial({
-            color: '#40916c',
-            roughness: 0.75,
-            flatShading: true
-        })
-
-        const foliageSideMat = new THREE.MeshStandardNodeMaterial({
-            color: '#1b4332',
-            roughness: 0.75,
-            flatShading: true
-        })
-
-        // Instanced Meshes
-        this.trunkMesh = new THREE.InstancedMesh(trunkGeo, trunkMat, totalCount)
-        this.foliageMainMesh = new THREE.InstancedMesh(foliageMainGeo, foliageMainMat, totalCount)
-        this.foliageTopMesh = new THREE.InstancedMesh(foliageTopGeo, foliageTopMat, totalCount)
-        this.foliageSideMesh = new THREE.InstancedMesh(foliageSideGeo, foliageSideMat, totalCount)
-
-        const dummy = new THREE.Object3D()
-
-        for(let i = 0; i < totalCount; i++)
-        {
-            const p = this.positions[i]
-            dummy.position.set(p.x, p.y, p.z)
-            dummy.rotation.y = Math.random() * Math.PI * 2
-            dummy.rotation.x = (Math.random() - 0.5) * 0.08
-            dummy.rotation.z = (Math.random() - 0.5) * 0.08
-            dummy.scale.setScalar(p.scale)
-            dummy.updateMatrix()
-
-            this.trunkMesh.setMatrixAt(i, dummy.matrix)
-            this.foliageMainMesh.setMatrixAt(i, dummy.matrix)
-            this.foliageTopMesh.setMatrixAt(i, dummy.matrix)
-            this.foliageSideMesh.setMatrixAt(i, dummy.matrix)
-        }
-
-        this.trunkMesh.instanceMatrix.needsUpdate = true
-        this.foliageMainMesh.instanceMatrix.needsUpdate = true
-        this.foliageTopMesh.instanceMatrix.needsUpdate = true
-        this.foliageSideMesh.instanceMatrix.needsUpdate = true
-
-        this.trunkMesh.castShadow = true
-        this.foliageMainMesh.castShadow = true
-        this.foliageTopMesh.castShadow = true
-        this.foliageSideMesh.castShadow = true
-
-        this.foliageMainMesh.receiveShadow = true
-        this.foliageTopMesh.receiveShadow = true
-
-        const group = new THREE.Group()
-        group.add(this.trunkMesh)
-        group.add(this.foliageMainMesh)
-        group.add(this.foliageTopMesh)
-        group.add(this.foliageSideMesh)
 
         this.game.scene.add(group)
+    }
+
+    createRandomTree(scale = 1.0)
+    {
+        const isPine = Math.random() > 0.4
+        const group = new THREE.Group()
+
+        // Trunk
+        const trunkHeight = (isPine ? 1.4 : 1.1) * scale
+        const trunkGeo = new THREE.CylinderGeometry(0.18 * scale, 0.28 * scale, trunkHeight, 6)
+        const trunk = new THREE.Mesh(trunkGeo, this.trunkMaterial)
+        trunk.position.y = trunkHeight * 0.5
+        trunk.castShadow = true
+        group.add(trunk)
+
+        if(isPine)
+        {
+            // 3 Tiered Pine Cones
+            const tiers = 3
+            for(let t = 0; t < tiers; t++)
+            {
+                const coneRadius = (1.5 - t * 0.35) * scale
+                const coneHeight = (1.6 - t * 0.25) * scale
+                const coneGeo = new THREE.ConeGeometry(coneRadius, coneHeight, 6)
+                const cone = new THREE.Mesh(coneGeo, this.pineMaterial)
+                cone.position.y = trunkHeight + (t * 0.95 * scale)
+                cone.castShadow = true
+                group.add(cone)
+            }
+        }
+        else
+        {
+            // Deciduous Foliage (faceted icosahedron)
+            const foliageRadius = (1.4 + Math.random() * 0.3) * scale
+            const foliageGeo = new THREE.IcosahedronGeometry(foliageRadius, 1)
+            const foliage = new THREE.Mesh(foliageGeo, this.deciduousMaterial)
+            foliage.position.y = trunkHeight + (1.1 * scale)
+            foliage.castShadow = true
+            group.add(foliage)
+        }
+
+        group.rotation.y = Math.random() * Math.PI * 2
+        return group
     }
 }

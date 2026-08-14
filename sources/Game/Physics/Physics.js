@@ -4,7 +4,7 @@ import { Shoreline } from '../World/Shoreline.js'
 
 /**
  * Physics — sets up Rapier3D world and registers boundary/obstacle colliders
- * matching exact high-resolution terrain contours.
+ * matching exact expanded terrain contours and islands.
  */
 export class Physics
 {
@@ -37,9 +37,9 @@ export class Physics
             const angle1 = i * angleStep
             const angle2 = (i + 1) * angleStep
 
-            // Position barrier on the dry beach (coastRadius + 0.8m)
-            const r1 = Shoreline.getCoastRadius(angle1) + 0.8
-            const r2 = Shoreline.getCoastRadius(angle2) + 0.8
+            // Position barrier on the dry beach (coastRadius + 1.0m)
+            const r1 = Shoreline.getCoastRadius(angle1) + 1.0
+            const r2 = Shoreline.getCoastRadius(angle2) + 1.0
 
             const x1 = Math.cos(angle1) * r1
             const z1 = Math.sin(angle1) * r1
@@ -56,7 +56,7 @@ export class Physics
                 .setRotation({ x: 0, y: Math.sin(segAngle * 0.5), z: 0, w: Math.cos(segAngle * 0.5) })
 
             const body = this.world.createRigidBody(bodyDesc)
-            const colliderDesc = RAPIER.ColliderDesc.cuboid(segLength * 0.5, 3.0, 1.2)
+            const colliderDesc = RAPIER.ColliderDesc.cuboid(segLength * 0.5, 3.0, 1.5)
                 .setRestitution(0.2)
                 .setFriction(0.2)
 
@@ -66,11 +66,11 @@ export class Physics
 
     setIslandColliders()
     {
-        // Exact island landmass colliders
+        // Expanded island landmass colliders
         const islandColliders = [
-            { x: -36, z: -22, radius:  9.8 }, // Socials Island
-            { x:  36, z: -20, radius: 11.2 }, // Lab Island
-            { x: -30, z:  24, radius:  9.0 }  // About Island
+            { x: -58, z: -38, radius: 17.5 }, // Socials Island
+            { x:  58, z: -35, radius: 19.5 }, // Lab Island
+            { x: -52, z:  44, radius: 16.5 }  // About Island
         ]
 
         for(const island of islandColliders)
@@ -85,15 +85,6 @@ export class Physics
 
             this.world.createCollider(colliderDesc, body)
         }
-
-        // Spawn beach pier collider (box enclosing the beach boardwalk at z=68)
-        const pierBodyDesc = RAPIER.RigidBodyDesc.fixed()
-            .setTranslation(0, 1.0, 68.0)
-        const pierBody = this.world.createRigidBody(pierBodyDesc)
-        const pierColliderDesc = RAPIER.ColliderDesc.cuboid(2.4, 2.0, 6.0)
-            .setRestitution(0.2)
-            .setFriction(0.2)
-        this.world.createCollider(pierColliderDesc, pierBody)
     }
 
     update()

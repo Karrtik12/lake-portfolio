@@ -3,7 +3,7 @@ import { Game } from '../Game.js'
 import { Events } from '../Events.js'
 
 /**
- * Zones — proximity trigger manager for island areas and spawn dock.
+ * Zones — proximity trigger manager for expanded island areas and spawn dock.
  */
 export class Zones
 {
@@ -13,7 +13,7 @@ export class Zones
         this.events = new Events()
         this.items = []
 
-        // Register default zones
+        // Register expanded zones
         this.registerDefaultZones()
 
         // Update loop
@@ -25,10 +25,10 @@ export class Zones
 
     registerDefaultZones()
     {
-        this.create('Spawn Dock', new THREE.Vector3(0, 0, 58), 20)
-        this.create('Socials Island', new THREE.Vector3(-36, 0, -22), 22)
-        this.create('Lab Island', new THREE.Vector3(36, 0, -20), 24)
-        this.create('About Island', new THREE.Vector3(-30, 0, 24), 20)
+        this.create('Spawn Dock', new THREE.Vector3(0, 0, 96), 34)
+        this.create('Socials Island', new THREE.Vector3(-58, 0, -38), 38)
+        this.create('Lab Island', new THREE.Vector3(58, 0, -35), 42)
+        this.create('About Island', new THREE.Vector3(-52, 0, 44), 38)
     }
 
     create(name, position, radius)

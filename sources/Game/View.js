@@ -22,11 +22,11 @@ export class View
             45,
             this.game.viewport.ratio,
             0.1,
-            500
+            800
         )
 
         // Default overview position — looking down at the lake
-        this.camera.position.set(0, 40, 40)
+        this.camera.position.set(0, 55, 75)
         this.camera.lookAt(0, 0, 0)
 
         // Follow camera configuration
