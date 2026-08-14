@@ -24,24 +24,23 @@ export class Title
         this.textElement.textContent = text
         this.element.style.display = 'flex'
 
-        gsap.killTweensOf(this.element)
+        gsap.killTweensOf(this.textElement)
         gsap.fromTo(
-            this.element,
-            { opacity: 0, y: -16, xPercent: -50 },
-            { opacity: 1, y: 0, xPercent: -50, duration: 0.45, ease: 'power2.out' }
+            this.textElement,
+            { opacity: 0, y: -16 },
+            { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' }
         )
     }
 
     hide()
     {
-        if(!this.element) return
+        if(!this.element || !this.textElement) return
 
         this.currentTitle = ''
-        gsap.killTweensOf(this.element)
-        gsap.to(this.element, {
+        gsap.killTweensOf(this.textElement)
+        gsap.to(this.textElement, {
             opacity: 0,
             y: -16,
-            xPercent: -50,
             duration: 0.35,
             ease: 'power2.in',
             onComplete: () =>

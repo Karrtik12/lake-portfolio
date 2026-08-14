@@ -331,13 +331,14 @@ html, body {
     to { opacity: 0; transform: translateX(-50%) translateY(20px); }
 }
 
-/* --- Zone Title (Top Center of the screen) --- */
+/* --- Zone Title (100% Absolute Horizontal Center) --- */
 .zone-title {
     position: fixed;
     top: 1.5rem;
     top: max(1.5rem, env(safe-area-inset-top));
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+    width: 100vw;
     z-index: 40;
     pointer-events: none;
     display: flex;
@@ -361,6 +362,7 @@ html, body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.2);
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
     white-space: nowrap;
+    display: inline-block;
 }
 
 /* --- Interactive Prompt Toast Button --- */
