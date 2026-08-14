@@ -21,6 +21,10 @@
                 </div>
                 <p class="loading-text js-loading-text">Loading...</p>
             </div>
+            <div class="orientation-prompt js-orientation-prompt" style="display: none;">
+                <span class="orientation-icon">🔄 📱</span>
+                <span class="orientation-text">Please rotate your device to landscape to explore</span>
+            </div>
             <button class="loading-start js-loading-start" style="display: none;">Click to Explore</button>
         </div>
 
@@ -105,7 +109,6 @@
                 <button class="menu-toggle js-menu-toggle" aria-label="Settings">⚙</button>
                 <div class="menu-panel js-menu-panel" style="display: none;">
                     <button class="menu-btn js-audio-toggle">🔇 Sound</button>
-                    <button class="menu-btn js-fullscreen-toggle">⛶ Fullscreen</button>
                     <button class="menu-btn js-quality-toggle">✨ Quality: High</button>
                     <button class="menu-btn js-reset-btn">🔄 Reset Position</button>
                 </div>
@@ -147,6 +150,16 @@
         <div class="modal js-modal" style="display: none;">
             <div class="modal-backdrop js-modal-backdrop"></div>
             <div class="modal-content js-modal-content"></div>
+        </div>
+
+        <!-- Landscape Orientation Blocker Modal -->
+        <div class="orientation-blocker js-orientation-blocker" style="display: none;">
+            <div class="orientation-blocker-backdrop"></div>
+            <div class="orientation-blocker-content">
+                <div class="orientation-blocker-icon">🔄 📱</div>
+                <h3 class="orientation-blocker-title">Landscape Mode Required</h3>
+                <p class="orientation-blocker-desc">This 3D lake world is designed for widescreen navigation. Please rotate your device to landscape to continue sailing.</p>
+            </div>
         </div>
 
         <!-- Three.js Canvas -->

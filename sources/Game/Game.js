@@ -92,41 +92,107 @@ export class Game
         this.loadingText = document.querySelector('.js-loading-text')
         this.loadingStart = document.querySelector('.js-loading-start')
         this.controlsElement = document.querySelector('.js-controls')
+        this.orientationPrompt = document.querySelector('.js-orientation-prompt')
+        this.orientationBlocker = document.querySelector('.js-orientation-blocker')
 
         // Detect mobile devices
         this.isMobile = this.detectMobile()
+        this.hasStarted = false
 
         // Ready state
         this.loadingBar.style.width = '100%'
         this.loadingText.textContent = 'Ready to sail'
+
+        // Setup orientation detection listeners
+        this.setupOrientationChecks()
     }
 
     detectMobile()
     {
         const userAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-        const smallScreen = window.innerWidth <= 768
+        const smallScreen = Math.min(window.innerWidth, window.innerHeight) <= 768
         const touchOnly = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
         return userAgent || (smallScreen && touchOnly)
+    }
+
+    setupOrientationChecks()
+    {
+        this.checkOrientation()
+
+        window.addEventListener('resize', () => this.checkOrientation())
+        window.addEventListener('orientationchange', () =>
+        {
+            setTimeout(() => this.checkOrientation(), 150)
+        })
+    }
+
+    checkOrientation()
+    {
+        const isPortrait = this.isMobile && (window.innerHeight > window.innerWidth)
+
+        if(!this.hasStarted)
+        {
+            // On loading screen: require landscape before enabling "Click to Explore"
+            if(isPortrait)
+            {
+                if(this.orientationPrompt) this.orientationPrompt.style.display = 'flex'
+                if(this.loadingStart)
+                {
+                    this.loadingStart.disabled = true
+                    this.loadingStart.textContent = 'Rotate to Landscape 🔄'
+                    this.loadingStart.classList.add('is-disabled')
+                }
+            }
+            else
+            {
+                if(this.orientationPrompt) this.orientationPrompt.style.display = 'none'
+                if(this.loadingStart)
+                {
+                    this.loadingStart.disabled = false
+                    this.loadingStart.textContent = 'Click to Explore'
+                    this.loadingStart.classList.remove('is-disabled')
+                }
+            }
+        }
+        else
+        {
+            // During active gameplay: show blocker dialog if rotated to portrait
+            if(isPortrait)
+            {
+                if(this.orientationBlocker) this.orientationBlocker.style.display = 'flex'
+            }
+            else
+            {
+                if(this.orientationBlocker) this.orientationBlocker.style.display = 'none'
+            }
+        }
     }
 
     showStartButton()
     {
         this.loadingStart.style.display = 'block'
-        this.loadingStart.disabled = false
-        this.loadingStart.textContent = 'Click to Explore'
-        this.loadingStart.classList.remove('is-disabled')
+        this.checkOrientation()
 
-        const onStart = () =>
+        const onStart = (e) =>
         {
+            // Only start if not in portrait mode on mobile
+            if(this.isMobile && window.innerHeight > window.innerWidth)
+            {
+                e.preventDefault()
+                return
+            }
             this.start()
         }
 
-        this.loadingStart.addEventListener('click', onStart, { once: true })
-        this.loadingStart.addEventListener('touchend', onStart, { once: true })
+        this.loadingStart.addEventListener('click', onStart)
+        this.loadingStart.addEventListener('touchend', onStart)
     }
 
     start()
     {
+        if(this.hasStarted) return
+        this.hasStarted = true
+
         // Hide loading screen
         this.loadingElement.classList.add('is-hidden')
 
@@ -143,6 +209,8 @@ export class Game
         {
             if(this.controlsElement) this.controlsElement.style.display = 'flex'
         }
+
+        this.checkOrientation()
 
         // Setup menu toggle
         this.setupMenu()

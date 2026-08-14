@@ -127,29 +127,41 @@ html, body {
     50% { box-shadow: 0 0 30px rgba(167, 139, 250, 0.4); }
 }
 
-.loading-start.is-disabled {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.35);
-    cursor: not-allowed;
-    animation: none;
-    box-shadow: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.orientation-prompt {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1.4rem;
+    margin-bottom: 1.2rem;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 50px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    animation: pulseOrientation 2s infinite ease-in-out;
 }
 
-.loading-start.is-disabled:hover {
-    transform: none;
-    box-shadow: none;
+.orientation-icon {
+    font-size: 1.3rem;
+    animation: rotatePhone 2.5s infinite ease-in-out;
 }
 
-.mobile-message {
-    margin-top: 1.25rem;
+.orientation-text {
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.45);
+    font-weight: 600;
+    color: #fbbf24;
     letter-spacing: 0.02em;
-    line-height: 1.5;
-    max-width: 320px;
-    text-align: center;
-    animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes rotatePhone {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-90deg); }
+}
+
+@keyframes pulseOrientation {
+    0%, 100% { box-shadow: 0 0 16px rgba(251, 191, 36, 0.2); }
+    50% { box-shadow: 0 0 28px rgba(251, 191, 36, 0.5); }
 }
 
 @keyframes fadeIn {
@@ -1013,13 +1025,13 @@ html, body {
     .minimap {
         width: 90px;
         height: 90px;
-        bottom: 5.5rem;
-        right: 1rem;
+        top: max(0.8rem, env(safe-area-inset-top));
+        left: max(0.8rem, env(safe-area-inset-left));
     }
 
     .minimap-hint {
-        font-size: 0.65rem;
-        padding: 0.15rem 0.4rem;
+        font-size: 0.62rem;
+        padding: 1px 0;
     }
 
     .controls {
@@ -1044,5 +1056,59 @@ html, body {
         font-size: 0.75rem;
         padding: 0.45rem 0.8rem;
     }
+}
+
+/* --- Landscape Orientation Blocker Modal --- */
+.orientation-blocker {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.orientation-blocker-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 12, 22, 0.94);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+}
+
+.orientation-blocker-content {
+    position: relative;
+    max-width: 360px;
+    padding: 2.2rem 1.8rem;
+    background: rgba(13, 20, 36, 0.95);
+    border: 2px solid rgba(251, 191, 36, 0.6);
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(251, 191, 36, 0.25);
+    animation: fadeIn 0.4s ease-out;
+}
+
+.orientation-blocker-icon {
+    font-size: 3rem;
+    margin-bottom: 1.2rem;
+    animation: rotatePhone 2.5s infinite ease-in-out;
+}
+
+.orientation-blocker-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.8rem;
+}
+
+.orientation-blocker-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: rgba(226, 232, 240, 0.85);
 }
 
