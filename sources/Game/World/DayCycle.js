@@ -97,34 +97,34 @@ export class DayCycle
             {
                 time: 0.68, // Dusk / Sunset (West)
                 name: 'Sunset',
-                sunColor: new THREE.Color('#e11d48'),
-                sunIntensity: 1.4,
-                fillColor: new THREE.Color('#a855f7'),
-                fillIntensity: 0.5,
+                sunColor: new THREE.Color('#fb7185'),
+                sunIntensity: 1.8,
+                fillColor: new THREE.Color('#c084fc'),
+                fillIntensity: 0.7,
                 hemiSky: new THREE.Color('#f472b6'),
-                hemiGround: new THREE.Color('#3b0764'),
-                hemiIntensity: 0.95,
+                hemiGround: new THREE.Color('#4c1d95'),
+                hemiIntensity: 1.2,
                 skyTop: new THREE.Color('#1e1b4b'),
-                skyHorizon: new THREE.Color('#c026d3'),
+                skyHorizon: new THREE.Color('#d946ef'),
                 skyGround: new THREE.Color('#2e1065'),
-                waterDeep: new THREE.Color('#081a38'),
-                waterSurface: new THREE.Color('#0369a1')
+                waterDeep: new THREE.Color('#0b2a59'),
+                waterSurface: new THREE.Color('#0284c7')
             },
             {
-                time: 0.82, // Night / Midnight Moon
+                time: 0.82, // Night / Midnight Moon (Glowing mystical moonlight)
                 name: 'Night',
-                sunColor: new THREE.Color('#7dd3fc'), // Pale cool moonlight
-                sunIntensity: 0.85,
+                sunColor: new THREE.Color('#93c5fd'), // Glowing pale moonlight
+                sunIntensity: 1.5,
                 fillColor: new THREE.Color('#38bdf8'),
-                fillIntensity: 0.35,
-                hemiSky: new THREE.Color('#1e293b'),
-                hemiGround: new THREE.Color('#020617'),
-                hemiIntensity: 0.6,
-                skyTop: new THREE.Color('#020617'),
-                skyHorizon: new THREE.Color('#0f172a'),
-                skyGround: new THREE.Color('#020617'),
-                waterDeep: new THREE.Color('#020b18'),
-                waterSurface: new THREE.Color('#03284c')
+                fillIntensity: 0.8,
+                hemiSky: new THREE.Color('#38bdf8'),
+                hemiGround: new THREE.Color('#0c2a4d'),
+                hemiIntensity: 1.15,
+                skyTop: new THREE.Color('#050c1e'),
+                skyHorizon: new THREE.Color('#1e3a8a'),
+                skyGround: new THREE.Color('#07152b'),
+                waterDeep: new THREE.Color('#062447'),
+                waterSurface: new THREE.Color('#0a4d80')
             }
         ]
 

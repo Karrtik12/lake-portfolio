@@ -248,6 +248,44 @@ export class BoatVisual
         this.group.add(navRed)
 
         // ----------------------------------------------------
+        // High-Intensity Nautical LED Headlights / Bow Searchlights
+        // ----------------------------------------------------
+        const headlightHousingGeo = new THREE.CylinderGeometry(0.12, 0.14, 0.2, 12)
+        headlightHousingGeo.rotateX(Math.PI * 0.5)
+
+        const headlightLensGeo = new THREE.CircleGeometry(0.11, 12)
+        headlightLensGeo.rotateY(Math.PI) // Face forward (-Z)
+
+        this.headlightLensMat = new THREE.MeshBasicNodeMaterial({
+            color: '#fffbeb'
+        })
+
+        // Port & Starboard Headlight Pods
+        const headlightL = new THREE.Mesh(headlightHousingGeo, chromeMat)
+        headlightL.position.set(-0.48, 0.82, -2.35)
+        const lensL = new THREE.Mesh(headlightLensGeo, this.headlightLensMat)
+        lensL.position.set(0, 0, -0.11)
+        headlightL.add(lensL)
+        this.group.add(headlightL)
+
+        const headlightR = new THREE.Mesh(headlightHousingGeo, chromeMat)
+        headlightR.position.set(0.48, 0.82, -2.35)
+        const lensR = new THREE.Mesh(headlightLensGeo, this.headlightLensMat)
+        lensR.position.set(0, 0, -0.11)
+        headlightR.add(lensR)
+        this.group.add(headlightR)
+
+        // Forward Projecting Spotlight Beam
+        this.headlightBeam = new THREE.SpotLight(0xfffaed, 4.2, 55.0, Math.PI * 0.3, 0.5, 1.2)
+        this.headlightBeam.position.set(0, 0.85, -2.4)
+        
+        this.headlightTarget = new THREE.Object3D()
+        this.headlightTarget.position.set(0, 0.0, -28.0)
+        this.group.add(this.headlightTarget)
+        this.headlightBeam.target = this.headlightTarget
+        this.group.add(this.headlightBeam)
+
+        // ----------------------------------------------------
         // 4. Solid Cockpit Interior Floor (Teak Wood Planks)
         // ----------------------------------------------------
         const cockpitLength = 2.4
@@ -547,6 +585,28 @@ export class BoatVisual
         {
             const steerAngle = THREE.MathUtils.clamp(-boat.angularVelocity * 0.35, -0.6, 0.6)
             this.motorGroup.rotation.y = THREE.MathUtils.lerp(this.motorGroup.rotation.y, steerAngle, 8.0 * delta)
+        }
+
+        // 7. Automatic Headlights & Bow Searchlight Intensity based on Day/Night
+        if(this.headlightBeam)
+        {
+            const dayCycle = this.game.world?.dayCycle
+            const timeOfDay = dayCycle ? dayCycle.timeOfDay : 0.5
+
+            // Darker between sunset (0.65) and dawn (0.15)
+            let isDark = false
+            if(timeOfDay >= 0.62 || timeOfDay <= 0.18)
+            {
+                isDark = true
+            }
+
+            const targetBeamIntensity = isDark ? 4.8 : 0.6
+            this.headlightBeam.intensity = THREE.MathUtils.lerp(this.headlightBeam.intensity, targetBeamIntensity, 4.0 * delta)
+
+            if(this.headlightLensMat)
+            {
+                this.headlightLensMat.color.set(isDark ? '#fffbeb' : '#e2e8f0')
+            }
         }
     }
 }
