@@ -9,6 +9,27 @@ import { Game } from '../Game.js'
  */
 export class Lake
 {
+    /**
+     * Physical wave elevation at any coordinate (X, Z) and time (t).
+     * Used by boat hydrodynamics and buoyancy solver.
+     */
+    static getWaveElevation(x, z, time)
+    {
+        const freq = 0.075
+        const speed = 0.8
+        const elevation = 0.04
+
+        const dir1 = x * 0.707 + z * 0.707
+        const phase1 = dir1 * freq + time * speed
+        const w1 = Math.sin(phase1) * 0.65
+
+        const dir2 = x * 0.819 - z * 0.574
+        const phase2 = dir2 * (freq * 1.4) - time * (speed * 0.85)
+        const w2 = Math.sin(phase2) * 0.35
+
+        return Math.sin(w1 + w2) * elevation
+    }
+
     constructor()
     {
         this.game = Game.getInstance()

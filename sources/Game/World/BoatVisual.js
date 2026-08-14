@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu'
 import { Game } from '../Game.js'
+import { Lake } from './Lake.js'
 import { lerp } from '../utilities/maths.js'
 
 /**
@@ -500,23 +501,40 @@ export class BoatVisual
 
         const boat = this.game.boat
 
-        // 1. Position from physics
+        // 1. Base position from physics body
         this.group.position.copy(boat.position)
 
-        // 2. Wave Bobbing Animation on Water
-        const time = this.game.wind ? this.game.wind.time : performance.now() * 0.001
-        const waveBobY = Math.sin(time * 2.2 + boat.position.x * 0.1) * 0.07
-        const waveRock = Math.cos(time * 1.8 + boat.position.z * 0.1) * 0.025
-        this.group.position.y = boat.position.y + waveBobY
+        const time = performance.now() * 0.001
+        const forwardDir = new THREE.Vector3(-Math.sin(boat.rotation), 0, -Math.cos(boat.rotation))
+        const rightDir = new THREE.Vector3(forwardDir.z, 0, -forwardDir.x)
 
-        // 3. Dynamic Roll (Leaning into turns)
-        const targetRoll = -boat.angularVelocity * 0.14 + waveRock
-        this.currentRoll = lerp(this.currentRoll, targetRoll, 6.0 * delta)
+        // 2. Hydrodynamic Wave Sampling across 4 hull points
+        const bowPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(1.5))
+        const sternPos = boat.position.clone().add(forwardDir.clone().multiplyScalar(-1.5))
+        const portPos = boat.position.clone().add(rightDir.clone().multiplyScalar(-0.65))
+        const starboardPos = boat.position.clone().add(rightDir.clone().multiplyScalar(0.65))
 
-        // 4. Dynamic Pitch (Bow lifts up on acceleration)
+        const waveBow = Lake.getWaveElevation(bowPos.x, bowPos.z, time)
+        const waveStern = Lake.getWaveElevation(sternPos.x, sternPos.z, time)
+        const wavePort = Lake.getWaveElevation(portPos.x, portPos.z, time)
+        const waveStarboard = Lake.getWaveElevation(starboardPos.x, starboardPos.z, time)
+
+        // Physical wave pitch and roll
+        const wavePitch = (waveStern - waveBow) / 3.0
+        const waveRoll = (wavePort - waveStarboard) / 1.3
+        const waveHeave = (waveBow + waveStern + wavePort + waveStarboard) * 0.25
+
+        // Vertical buoyant bobbing
+        this.group.position.y = boat.position.y + waveHeave
+
+        // 3. Dynamic Roll (Leaning into turns + wave slope)
+        const targetRoll = -boat.angularVelocity * 0.14 + waveRoll
+        this.currentRoll = lerp(this.currentRoll, targetRoll, 7.0 * delta)
+
+        // 4. Dynamic Pitch (Bow lifts up on acceleration + riding oncoming wave crests)
         const speedNorm = (boat.speed || 0) / 16.0
-        const targetPitch = speedNorm * 0.09 + Math.sin(time * 1.5) * 0.018
-        this.currentPitch = lerp(this.currentPitch, targetPitch, 4.0 * delta)
+        const targetPitch = speedNorm * 0.08 + wavePitch
+        this.currentPitch = lerp(this.currentPitch, targetPitch, 5.0 * delta)
 
         // 5. Apply Combined Rotations
         this.group.rotation.set(0, 0, 0)
