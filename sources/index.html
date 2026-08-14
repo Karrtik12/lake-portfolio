@@ -108,10 +108,35 @@
             </div>
         </div>
 
-        <!-- Mobile Controls -->
+        <!-- Mobile Touchscreen Controls -->
         <div class="mobile-controls js-mobile-controls" style="display: none;">
-            <div class="mobile-joystick js-mobile-joystick"></div>
-            <button class="mobile-interact js-mobile-interact" style="display: none;">Interact</button>
+            <!-- Left Side: Virtual Analog Joystick Zone -->
+            <div class="joystick-zone js-joystick-zone">
+                <div class="joystick-base js-joystick-base" style="display: none;">
+                    <div class="joystick-thumb js-joystick-thumb"></div>
+                </div>
+                <div class="joystick-hint">🕹️ Touch & Drag to Steer</div>
+            </div>
+
+            <!-- Right Side: Action Buttons -->
+            <div class="mobile-actions">
+                <button class="touch-btn touch-btn-boost js-touch-boost" aria-label="Nitro Boost">
+                    <span class="touch-btn-icon">⚡</span>
+                    <span class="touch-btn-label">NITRO</span>
+                </button>
+                <button class="touch-btn touch-btn-interact js-touch-interact" style="display: none;" aria-label="Interact">
+                    <span class="touch-btn-icon">✨</span>
+                    <span class="touch-btn-label js-touch-interact-text">INTERACT</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Lab Island Mobile Navigation Overlay -->
+        <div class="lab-mobile-nav js-lab-mobile-nav" style="display: none;">
+            <button class="lab-mobile-btn js-lab-prev">◀ PREV</button>
+            <button class="lab-mobile-btn lab-mobile-btn-primary js-lab-repo">🔗 REPO</button>
+            <button class="lab-mobile-btn js-lab-next">NEXT ▶</button>
+            <button class="lab-mobile-btn lab-mobile-btn-exit js-lab-exit">✕ EXIT</button>
         </div>
 
         <!-- Modal Overlay -->

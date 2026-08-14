@@ -98,40 +98,31 @@ export class Game
 
         // Ready state
         this.loadingBar.style.width = '100%'
-        this.loadingText.textContent = this.isMobile ? '' : 'Ready to sail'
+        this.loadingText.textContent = 'Ready to sail'
     }
 
     detectMobile()
     {
         const userAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         const smallScreen = window.innerWidth <= 768
-        const touchOnly = 'ontouchstart' in window && navigator.maxTouchPoints > 0 && !window.matchMedia('(pointer: fine)').matches
+        const touchOnly = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
         return userAgent || (smallScreen && touchOnly)
     }
 
     showStartButton()
     {
-        if(this.isMobile)
-        {
-            // Disable the button and show mobile-not-supported message
-            this.loadingStart.style.display = 'block'
-            this.loadingStart.disabled = true
-            this.loadingStart.textContent = 'Desktop Only'
-            this.loadingStart.classList.add('is-disabled')
-
-            // Show mobile message below the button
-            const mobileMsg = document.createElement('p')
-            mobileMsg.className = 'mobile-message'
-            mobileMsg.textContent = 'Mobile devices are not supported yet. Please visit on a desktop browser.'
-            this.loadingStart.insertAdjacentElement('afterend', mobileMsg)
-            return
-        }
-
         this.loadingStart.style.display = 'block'
-        this.loadingStart.addEventListener('click', () =>
+        this.loadingStart.disabled = false
+        this.loadingStart.textContent = 'Click to Explore'
+        this.loadingStart.classList.remove('is-disabled')
+
+        const onStart = () =>
         {
             this.start()
-        }, { once: true })
+        }
+
+        this.loadingStart.addEventListener('click', onStart, { once: true })
+        this.loadingStart.addEventListener('touchend', onStart, { once: true })
     }
 
     start()
@@ -142,8 +133,16 @@ export class Game
         // Switch camera to follow boat
         this.view.setMode(View.MODE_FOLLOW)
 
-        // Show persistent bottom-left controls HUD
-        this.controlsElement.style.display = 'flex'
+        // Show controls HUD on desktop, or mobile touch controls on mobile/touchscreen
+        if(this.isMobile || this.inputs.touch?.isTouchDevice)
+        {
+            if(this.controlsElement) this.controlsElement.style.display = 'none'
+            if(this.inputs.touch) this.inputs.touch.show()
+        }
+        else
+        {
+            if(this.controlsElement) this.controlsElement.style.display = 'flex'
+        }
 
         // Setup menu toggle
         this.setupMenu()
@@ -157,22 +156,36 @@ export class Game
         const menuPanel = document.querySelector('.js-menu-panel')
         let menuOpen = false
 
-        menuToggle.addEventListener('click', () =>
+        menuToggle.addEventListener('click', (e) =>
         {
+            e.stopPropagation()
             menuOpen = !menuOpen
             menuPanel.style.display = menuOpen ? 'block' : 'none'
         })
 
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) =>
+        {
+            if(menuOpen && !menuPanel.contains(e.target) && e.target !== menuToggle)
+            {
+                menuOpen = false
+                menuPanel.style.display = 'none'
+            }
+        })
+
         // Reset position
         const resetBtn = document.querySelector('.js-reset-btn')
-        resetBtn.addEventListener('click', () =>
+        if(resetBtn)
         {
-            if(this.boat)
+            resetBtn.addEventListener('click', () =>
             {
-                this.boat.reset()
-            }
-            menuOpen = false
-            menuPanel.style.display = 'none'
-        })
+                if(this.boat)
+                {
+                    this.boat.reset()
+                }
+                menuOpen = false
+                menuPanel.style.display = 'none'
+            })
+        }
     }
 }

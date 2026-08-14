@@ -43,6 +43,15 @@ export class View
         this.game.viewport.events.on('resize', () =>
         {
             this.camera.aspect = this.game.viewport.ratio
+            // Adaptive FOV for narrow mobile screens
+            if(this.game.viewport.ratio < 1.0)
+            {
+                this.camera.fov = 45 / Math.max(0.65, this.game.viewport.ratio)
+            }
+            else
+            {
+                this.camera.fov = 45
+            }
             this.camera.updateProjectionMatrix()
         })
 

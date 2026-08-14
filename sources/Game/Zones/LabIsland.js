@@ -738,6 +738,17 @@ export class LabIsland
         const controlsEl = document.querySelector('.js-controls')
         if(controlsEl) controlsEl.style.display = 'none'
 
+        // Show mobile carousel navigation overlay on touch devices
+        this.labMobileNav = document.querySelector('.js-lab-mobile-nav')
+        if(this.labMobileNav)
+        {
+            this.labMobileNav.style.display = 'flex'
+        }
+        if(this.game.inputs?.touch)
+        {
+            this.game.inputs.touch.hide()
+        }
+
         if(this.game.audio)
         {
             this.game.audio.playChime()
@@ -752,17 +763,66 @@ export class LabIsland
         // Smoothly exit cinematic mode back to boat follow
         this.game.view.exitCinematic()
 
+        // Hide mobile carousel navigation overlay
+        if(this.labMobileNav)
+        {
+            this.labMobileNav.style.display = 'none'
+        }
+        if(this.game.inputs?.touch?.isTouchDevice)
+        {
+            this.game.inputs.touch.show()
+        }
+
         // Restore HUD overlays when boat is back in focus
         if(this.minimapEl) this.minimapEl.style.display = 'block'
         if(this.menuToggleEl) this.menuToggleEl.style.display = 'flex'
         if(this.zoneTitleEl) this.zoneTitleEl.style.display = 'block'
         const controlsEl = document.querySelector('.js-controls')
-        if(controlsEl) controlsEl.style.display = 'flex'
+        if(controlsEl && !this.game.inputs?.touch?.isTouchDevice)
+        {
+            controlsEl.style.display = 'flex'
+        }
     }
 
     setupKeyboardAndMouseControls()
     {
-        // Keyboard controls
+        // 1. Mobile Touch Carousel Buttons
+        const btnPrev = document.querySelector('.js-lab-prev')
+        const btnNext = document.querySelector('.js-lab-next')
+        const btnRepo = document.querySelector('.js-lab-repo')
+        const btnExit = document.querySelector('.js-lab-exit')
+
+        if(btnPrev) btnPrev.addEventListener('click', () => { if(this.isFocused) this.prev() })
+        if(btnNext) btnNext.addEventListener('click', () => { if(this.isFocused) this.next() })
+        if(btnRepo) btnRepo.addEventListener('click', () => { if(this.isFocused) this.openCurrentProjectRepo() })
+        if(btnExit) btnExit.addEventListener('click', () => { if(this.isFocused) this.exitFocus() })
+
+        // 2. Touch Swipe Gestures for mobile carousel navigation
+        let touchStartX = 0
+        let touchStartY = 0
+
+        window.addEventListener('touchstart', (e) =>
+        {
+            if(!this.isFocused || !e.touches[0]) return
+            touchStartX = e.touches[0].clientX
+            touchStartY = e.touches[0].clientY
+        }, { passive: true })
+
+        window.addEventListener('touchend', (e) =>
+        {
+            if(!this.isFocused || !e.changedTouches[0]) return
+            const dx = e.changedTouches[0].clientX - touchStartX
+            const dy = e.changedTouches[0].clientY - touchStartY
+
+            // Detect horizontal swipe if horizontal movement is dominant
+            if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5)
+            {
+                if(dx < 0) this.next() // Swipe left -> Next
+                else this.prev()       // Swipe right -> Prev
+            }
+        }, { passive: true })
+
+        // 3. Keyboard controls
         window.addEventListener('keydown', (e) =>
         {
             if(!this.isFocused) return

@@ -396,6 +396,10 @@ export class InteractivePoints
         if(closestItem && !this.isToastVisible)
         {
             this.isToastVisible = true
+            if(this.game.inputs?.touch)
+            {
+                this.game.inputs.touch.setInteractVisible(true, 'OPEN')
+            }
             if(this.toastEl && this.toastTextEl)
             {
                 this.toastTextEl.textContent = `Open ${closestItem.labelText}`
@@ -411,6 +415,10 @@ export class InteractivePoints
         else if(!closestItem && this.isToastVisible)
         {
             this.isToastVisible = false
+            if(this.game.inputs?.touch)
+            {
+                this.game.inputs.touch.setInteractVisible(false)
+            }
             if(this.toastEl)
             {
                 gsap.killTweensOf(this.toastEl)
