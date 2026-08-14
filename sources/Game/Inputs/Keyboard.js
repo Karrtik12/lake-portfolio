@@ -67,6 +67,9 @@ export class Keyboard
                 if(pressed) this.events.trigger('reset')
                 this.keys.reset = pressed
                 break
+            case 'KeyF':
+                if(pressed && !event.repeat) this.events.trigger('toggleFullscreen')
+                break
             case 'Escape':
                 if(pressed)
                 {

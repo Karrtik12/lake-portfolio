@@ -17,6 +17,7 @@ export class Inputs
         this.keyboard.events.on('interact', () => this.events.trigger('interact'))
         this.keyboard.events.on('reset', () => this.events.trigger('reset'))
         this.keyboard.events.on('escape', () => this.events.trigger('escape'))
+        this.keyboard.events.on('toggleFullscreen', () => this.events.trigger('toggleFullscreen'))
 
         // Forward touch events
         this.touch.events.on('interact', () => this.events.trigger('interact'))

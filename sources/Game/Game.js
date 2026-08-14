@@ -280,6 +280,12 @@ export class Game
         if(fsBtn) fsBtn.addEventListener('click', toggleFullscreen)
         if(fsToggle) fsToggle.addEventListener('click', toggleFullscreen)
 
+        // Desktop keyboard shortcut [F] toggles fullscreen
+        this.inputs.events.on('toggleFullscreen', () =>
+        {
+            toggleFullscreen()
+        })
+
         // Reset position
         const resetBtn = document.querySelector('.js-reset-btn')
         if(resetBtn)
