@@ -253,18 +253,18 @@ export class InteractivePoints
 
         ctx.clearRect(0, 0, w, h)
 
-        // Capsule background with border
-        ctx.fillStyle = isFocused ? 'rgba(10, 16, 32, 0.96)' : 'rgba(10, 16, 30, 0.88)'
+        // 100% Solid, Fully Opaque Capsule Background (Never translucent)
+        ctx.fillStyle = isFocused ? '#0f172a' : '#090d16'
         ctx.strokeStyle = isFocused ? '#fbbf24' : '#38bdf8'
-        ctx.lineWidth = isFocused ? 4.5 : 2.5
+        ctx.lineWidth = isFocused ? 5 : 3
 
         ctx.beginPath()
         ctx.roundRect(3, 3, w - 6, h - 6, r)
         ctx.fill()
         ctx.stroke()
 
-        // Crisp centered text
-        ctx.fillStyle = isFocused ? '#ffffff' : '#f8fafc'
+        // High-contrast crisp centered text
+        ctx.fillStyle = '#ffffff'
         ctx.font = '700 24px "Space Grotesk", sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
