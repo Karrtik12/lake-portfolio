@@ -3,7 +3,7 @@ import { Game } from './Game.js'
 
 /**
  * Map — manages the real-time HUD minimap and the expanded interactive Big Map modal,
- * including interactive diamond markers with hover tooltip cards.
+ * including interactive diamond markers with hover tooltip cards and cross-browser aligned badges.
  */
 export class Map
 {
@@ -303,7 +303,7 @@ export class Map
         // Concentric distance radar rings
         ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)'
         ctx.lineWidth = 1
-        for(let r = 60; r <= w * 0.44; r += 60)
+        for(let r = 70; r <= w * 0.44; r += 70)
         {
             ctx.beginPath()
             ctx.arc(center.x, center.y, r, 0, Math.PI * 2)
@@ -317,10 +317,10 @@ export class Map
         ctx.fill()
 
         ctx.strokeStyle = '#387545'
-        ctx.lineWidth = 6
+        ctx.lineWidth = 7
         ctx.stroke()
 
-        // 1. Draw Islands with clean, centered badges
+        // 1. Draw Islands with robust, cross-browser decoupled icon + text measurement
         for(const island of this.destinations)
         {
             const p = this.worldToCanvas(island.x, island.z, w, h)
@@ -329,7 +329,7 @@ export class Map
             // Beach halo
             ctx.fillStyle = '#deb887'
             ctx.beginPath()
-            ctx.arc(p.x, p.y, mapR + 3, 0, Math.PI * 2)
+            ctx.arc(p.x, p.y, mapR + 3.5, 0, Math.PI * 2)
             ctx.fill()
 
             // Island green plateau
@@ -338,30 +338,37 @@ export class Map
             ctx.arc(p.x, p.y, mapR, 0, Math.PI * 2)
             ctx.fill()
 
-            // Text Label Badge
+            // Text Label Badge: Measure text cleanly and decouple emoji from text width
             ctx.font = '700 13px "Space Grotesk", sans-serif'
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-
-            const label = `${island.icon} ${island.name}`
-            const textMetrics = ctx.measureText(label)
-            const badgeW = textMetrics.width + 24
+            const textMetrics = ctx.measureText(island.name)
+            const textW = textMetrics.width
+            const iconW = 20
+            const gap = 6
+            const padX = 12
+            const badgeW = iconW + gap + textW + padX * 2
             const badgeH = 26
             const badgeX = p.x - badgeW * 0.5
-            const badgeY = p.y - mapR - 30
+            const badgeY = p.y - mapR - 32
 
             // Glass badge background
             ctx.fillStyle = 'rgba(10, 16, 30, 0.92)'
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)'
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)'
             ctx.lineWidth = 1.5
             ctx.beginPath()
             ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 6)
             ctx.fill()
             ctx.stroke()
 
-            // Centered text
+            // Render Icon (left side of badge)
+            ctx.textAlign = 'left'
+            ctx.textBaseline = 'middle'
+            ctx.font = '14px sans-serif'
+            ctx.fillText(island.icon, badgeX + padX, badgeY + badgeH * 0.5)
+
+            // Render Island Name Text (right after icon)
+            ctx.font = '700 13px "Space Grotesk", sans-serif'
             ctx.fillStyle = '#ffffff'
-            ctx.fillText(label, p.x, badgeY + badgeH * 0.5)
+            ctx.fillText(island.name, badgeX + padX + iconW + gap, badgeY + badgeH * 0.5)
         }
 
         // 2. Draw Interactive Diamond Markers with hover detection
@@ -373,7 +380,7 @@ export class Map
         {
             const dp = this.worldToCanvas(diamond.x, diamond.z, w, h)
             const distToMouse = Math.hypot(this.mousePos.x - dp.x, this.mousePos.y - dp.y)
-            const isHovered = distToMouse < 14
+            const isHovered = distToMouse < 15
 
             if(isHovered)
             {
@@ -383,9 +390,9 @@ export class Map
 
             // Pulsing halo for each diamond
             const pulse = (Math.sin(time * 3.5 + diamond.x) + 1) * 0.5
-            const haloR = isHovered ? 13 : 8 + pulse * 2.5
+            const haloR = isHovered ? 14 : 9 + pulse * 2.5
 
-            ctx.fillStyle = isHovered ? 'rgba(251, 191, 36, 0.35)' : 'rgba(56, 189, 248, 0.22)'
+            ctx.fillStyle = isHovered ? 'rgba(251, 191, 36, 0.38)' : 'rgba(56, 189, 248, 0.24)'
             ctx.beginPath()
             ctx.arc(dp.x, dp.y, haloR, 0, Math.PI * 2)
             ctx.fill()
@@ -395,10 +402,10 @@ export class Map
             ctx.translate(dp.x, dp.y)
             ctx.rotate(time * 1.5)
 
-            const size = isHovered ? 8 : 6
+            const size = isHovered ? 8.5 : 6.5
             ctx.fillStyle = isHovered ? '#fbbf24' : '#38bdf8'
             ctx.strokeStyle = '#ffffff'
-            ctx.lineWidth = 1.2
+            ctx.lineWidth = 1.4
 
             ctx.beginPath()
             ctx.moveTo(0, -size)
@@ -426,7 +433,7 @@ export class Map
             const bp = this.worldToCanvas(b.position.x, b.position.z, w, h)
 
             // Pulsing location ripple
-            const pulse = 10 + Math.sin(time * 4.0) * 4
+            const pulse = 12 + Math.sin(time * 4.0) * 4
             ctx.fillStyle = 'rgba(56, 189, 248, 0.25)'
             ctx.beginPath()
             ctx.arc(bp.x, bp.y, pulse, 0, Math.PI * 2)
@@ -438,41 +445,46 @@ export class Map
 
             ctx.fillStyle = '#38bdf8'
             ctx.strokeStyle = '#ffffff'
-            ctx.lineWidth = 2
+            ctx.lineWidth = 2.2
 
             ctx.beginPath()
-            ctx.moveTo(0, -10)
-            ctx.lineTo(7, 8)
-            ctx.lineTo(0, 4)
-            ctx.lineTo(-7, 8)
+            ctx.moveTo(0, -11)
+            ctx.lineTo(8, 9)
+            ctx.lineTo(0, 4.5)
+            ctx.lineTo(-8, 9)
             ctx.closePath()
             ctx.fill()
             ctx.stroke()
 
             ctx.restore()
 
-            // Boat label badge
+            // Boat label badge (cleanly measured)
             ctx.font = '700 12px "Space Grotesk", sans-serif'
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-
-            const boatLabel = '⛵ YOU ARE HERE'
-            const textMetrics = ctx.measureText(boatLabel)
-            const bBadgeW = textMetrics.width + 16
+            const boatText = 'YOU ARE HERE'
+            const bTextW = ctx.measureText(boatText).width
+            const bIconW = 18
+            const bPad = 10
+            const bBadgeW = bIconW + 4 + bTextW + bPad * 2
             const bBadgeH = 22
             const bBadgeX = bp.x - bBadgeW * 0.5
-            const bBadgeY = bp.y + 16
+            const bBadgeY = bp.y + 18
 
-            ctx.fillStyle = 'rgba(10, 16, 30, 0.9)'
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)'
+            ctx.fillStyle = 'rgba(10, 16, 30, 0.92)'
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)'
             ctx.lineWidth = 1.2
             ctx.beginPath()
             ctx.roundRect(bBadgeX, bBadgeY, bBadgeW, bBadgeH, 5)
             ctx.fill()
             ctx.stroke()
 
+            ctx.textAlign = 'left'
+            ctx.textBaseline = 'middle'
+            ctx.font = '13px sans-serif'
+            ctx.fillText('⛵', bBadgeX + bPad, bBadgeY + bBadgeH * 0.5)
+
+            ctx.font = '700 12px "Space Grotesk", sans-serif'
             ctx.fillStyle = '#38bdf8'
-            ctx.fillText(boatLabel, bp.x, bBadgeY + bBadgeH * 0.5)
+            ctx.fillText(boatText, bBadgeX + bPad + bIconW + 4, bBadgeY + bBadgeH * 0.5)
         }
 
         // 4. Draw Rich Floating Tooltip for Hovered Diamond
@@ -488,25 +500,25 @@ export class Map
             const sub = 'Click to open / inspect'
             const subMetrics = ctx.measureText(sub)
 
-            const tooltipW = Math.max(titleMetrics.width, subMetrics.width) + 28
-            const tooltipH = 46
+            const tooltipW = Math.max(titleMetrics.width, subMetrics.width) + 32
+            const tooltipH = 48
 
             // Position above or below diamond with boundary clamp
             let tooltipX = hoveredCanvasPos.x - tooltipW * 0.5
-            tooltipX = Math.max(10, Math.min(w - tooltipW - 10, tooltipX))
+            tooltipX = Math.max(12, Math.min(w - tooltipW - 12, tooltipX))
 
-            let tooltipY = hoveredCanvasPos.y - tooltipH - 16
-            if(tooltipY < 10)
+            let tooltipY = hoveredCanvasPos.y - tooltipH - 18
+            if(tooltipY < 12)
             {
-                tooltipY = hoveredCanvasPos.y + 16
+                tooltipY = hoveredCanvasPos.y + 18
             }
 
             // Glass tooltip card
             ctx.fillStyle = 'rgba(13, 20, 36, 0.96)'
             ctx.strokeStyle = '#fbbf24'
             ctx.lineWidth = 1.5
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)'
-            ctx.shadowBlur = 16
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.65)'
+            ctx.shadowBlur = 18
             ctx.beginPath()
             ctx.roundRect(tooltipX, tooltipY, tooltipW, tooltipH, 8)
             ctx.fill()
@@ -519,12 +531,12 @@ export class Map
             ctx.fillStyle = '#fbbf24'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
-            ctx.fillText(`💎 ${title}`, tooltipX + tooltipW * 0.5, tooltipY + 16)
+            ctx.fillText(`💎 ${title}`, tooltipX + tooltipW * 0.5, tooltipY + 17)
 
             // Subtitle action hint
             ctx.font = '500 11px "Inter", sans-serif'
-            ctx.fillStyle = 'rgba(226, 232, 240, 0.8)'
-            ctx.fillText(sub, tooltipX + tooltipW * 0.5, tooltipY + 32)
+            ctx.fillStyle = 'rgba(226, 232, 240, 0.85)'
+            ctx.fillText(sub, tooltipX + tooltipW * 0.5, tooltipY + 34)
 
             ctx.restore()
         }
