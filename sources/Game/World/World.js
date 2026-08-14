@@ -3,6 +3,7 @@ import { Wind } from './Wind.js'
 import { Fog } from './Fog.js'
 import { Sky } from './Sky.js'
 import { Lighting } from './Lighting.js'
+import { DayCycle } from './DayCycle.js'
 import { Lake } from './Lake.js'
 import { Shoreline } from './Shoreline.js'
 import { Islands } from './Islands.js'
@@ -13,7 +14,7 @@ import { Wake } from './Wake.js'
 import { BoostEffect } from './BoostEffect.js'
 
 /**
- * World — orchestrates and initializes all environment, boat visual, and terrain elements.
+ * World — orchestrates and initializes all environment, boat visual, day-night cycle, and terrain elements.
  */
 export class World
 {
@@ -27,6 +28,7 @@ export class World
         this.fog = new Fog()
         this.sky = new Sky()
         this.lighting = new Lighting()
+        this.dayCycle = new DayCycle()
         this.lake = new Lake()
         this.shoreline = new Shoreline()
         this.islands = new Islands()

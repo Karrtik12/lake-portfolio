@@ -1,9 +1,10 @@
 import * as THREE from 'three/webgpu'
-import { color, float, Fn, max, mix, normalize, positionWorld, pow, vec3 } from 'three/tsl'
+import { color, float, Fn, max, mix, normalize, positionWorld, pow, uniform } from 'three/tsl'
 import { Game } from '../Game.js'
 
 /**
- * Sky — creates a dome with a smooth atmospheric gradient using WebGPU TSL NodeMaterial.
+ * Sky — dynamic atmospheric dome gradient with WebGPU TSL NodeMaterial,
+ * animated across the 24-hour sun and day-night cycle.
  */
 export class Sky
 {
@@ -11,19 +12,19 @@ export class Sky
     {
         this.game = Game.getInstance()
 
-        const geometry = new THREE.SphereGeometry(300, 32, 20)
+        const geometry = new THREE.SphereGeometry(320, 32, 24)
 
-        const topColor = color('#142340')     // Deep sapphire sky
-        const horizonColor = color('#5b8bb8') // Soft horizon blue
-        const groundColor = color('#162238')  // Fog-matched bottom
+        this.topColorUniform = uniform(color('#0369a1'))     // Deep sky
+        this.horizonColorUniform = uniform(color('#38bdf8')) // Soft horizon
+        this.groundColorUniform = uniform(color('#0c4a6e'))  // Lower boundary
 
         const colorNode = Fn(() =>
         {
             const normPos = normalize(positionWorld)
             const h = normPos.y
 
-            const skyMix = mix(horizonColor, topColor, max(pow(max(h, float(0.0)), float(0.7)), float(0.0)))
-            const finalColor = mix(skyMix, groundColor, max(h.mul(-2.0), float(0.0)))
+            const skyMix = mix(this.horizonColorUniform, this.topColorUniform, max(pow(max(h, float(0.0)), float(0.7)), float(0.0)))
+            const finalColor = mix(skyMix, this.groundColorUniform, max(h.mul(-2.0), float(0.0)))
 
             return finalColor
         })
