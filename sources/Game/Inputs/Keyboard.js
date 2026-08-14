@@ -60,7 +60,6 @@ export class Keyboard
                 this.keys.boost = pressed
                 break
             case 'Enter':
-            case 'Space':
                 if(pressed) this.events.trigger('interact')
                 this.keys.interact = pressed
                 break

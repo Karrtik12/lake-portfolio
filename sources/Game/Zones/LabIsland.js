@@ -762,7 +762,6 @@ export class LabIsland
             {
                 case 'Enter':
                 case 'NumpadEnter':
-                case 'Space':
                     // Debounce check: ignore Enter key for 500ms after entering focus mode!
                     if(performance.now() - this.lastFocusTime < 500)
                     {

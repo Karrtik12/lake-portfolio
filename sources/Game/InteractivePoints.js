@@ -54,7 +54,7 @@ export class InteractivePoints
         this.toastTextEl = document.querySelector('.js-interact-toast-text')
         this.isToastVisible = false
 
-        // Listen for keyboard interact (Enter / Space)
+        // Listen for keyboard interact (Enter)
         this.game.inputs.events.on('interact', () =>
         {
             if(this.game.labIsland && this.game.labIsland.isFocused)
