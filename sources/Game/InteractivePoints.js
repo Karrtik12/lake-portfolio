@@ -169,12 +169,13 @@ export class InteractivePoints
         const labelMat = new THREE.SpriteMaterial({
             map: texture,
             transparent: true,
-            depthTest: false
+            depthWrite: false,
+            depthTest: true
         })
 
         const label = new THREE.Sprite(labelMat)
         label.position.set(0, 1.75, 0)
-        label.scale.set(3.6, 0.9, 1.0)
+        label.scale.set(2.8, 0.7, 1.0)
         item.label = label
         item.group.add(label)
 
@@ -194,8 +195,9 @@ export class InteractivePoints
             item.revealed = true
             item.label.visible = true
             item.group.visible = true
+            const targetW = item.pillWorldWidth || 2.4
             gsap.to(diamond.scale, { x: 1.0, y: 1.0, z: 1.0, duration: 0.4, ease: 'back.out(1.7)' })
-            gsap.to(label.scale, { x: 3.6, y: 0.9, z: 1.0, duration: 0.4, ease: 'back.out(1.5)' })
+            gsap.to(label.scale, { x: targetW, y: 0.7, z: 1.0, duration: 0.4, ease: 'back.out(1.5)' })
         }
 
         item.conceal = () =>
@@ -254,22 +256,42 @@ export class InteractivePoints
         const ctx = item.ctx
         ctx.clearRect(0, 0, 320, 80)
 
-        // Rounded pill background
-        ctx.fillStyle = isFocused ? 'rgba(15, 23, 42, 0.96)' : 'rgba(10, 14, 23, 0.85)'
+        // Dynamic measurement for snug, perfectly proportioned capsule pill
+        ctx.font = '700 23px "Space Grotesk", sans-serif'
+        const textMetrics = ctx.measureText(item.labelText)
+        const textWidth = textMetrics.width
+
+        const padX = 26
+        const pillW = Math.min(304, textWidth + padX * 2)
+        const pillH = 50
+        const pillX = (320 - pillW) * 0.5
+        const pillY = (80 - pillH) * 0.5
+        const pillRadius = pillH * 0.5 // Perfect capsule half-height radius
+
+        // Update 3D world sprite width dynamically to match snug text width
+        const worldWidth = (pillW / 320) * 3.2
+        item.pillWorldWidth = worldWidth
+        if(item.label && item.revealed)
+        {
+            item.label.scale.x = worldWidth
+        }
+
+        // Capsule background with glow border
+        ctx.fillStyle = isFocused ? 'rgba(10, 16, 32, 0.96)' : 'rgba(10, 16, 30, 0.88)'
         ctx.strokeStyle = isFocused ? '#fbbf24' : '#38bdf8'
-        ctx.lineWidth = isFocused ? 5 : 3
+        ctx.lineWidth = isFocused ? 4.5 : 2.5
 
         ctx.beginPath()
-        ctx.roundRect(8, 8, 304, 64, 32)
+        ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius)
         ctx.fill()
         ctx.stroke()
 
-        // Clean centered destination title on the 3D diamond (NO enter sign on diamond on any device)
+        // Centered text
         ctx.fillStyle = isFocused ? '#ffffff' : '#f8fafc'
-        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
+        ctx.font = '700 23px "Space Grotesk", sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText(item.labelText, 160, 40)
+        ctx.fillText(item.labelText, 160, pillY + pillH * 0.5)
 
         item.labelTexture.needsUpdate = true
     }
