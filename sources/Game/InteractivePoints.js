@@ -51,10 +51,29 @@ export class InteractivePoints
 
         // Toast prompt element
         this.toastEl = document.querySelector('.js-interact-toast')
+        this.toastKeyEl = document.querySelector('.js-interact-toast-key')
         this.toastTextEl = document.querySelector('.js-interact-toast-text')
         this.isToastVisible = false
 
-        // Listen for keyboard interact (Enter)
+        // Tap/click handler for the on-screen toast button
+        if(this.toastEl)
+        {
+            const handleToastClick = (e) =>
+            {
+                e.preventDefault()
+                e.stopPropagation()
+
+                if(this.activeItem && typeof this.activeItem.interact === 'function')
+                {
+                    this.activeItem.interact()
+                }
+            }
+
+            this.toastEl.addEventListener('click', handleToastClick)
+            this.toastEl.addEventListener('touchend', handleToastClick)
+        }
+
+        // Listen for keyboard/touch interact
         this.game.inputs.events.on('interact', () =>
         {
             if(this.game.labIsland && this.game.labIsland.isFocused)
@@ -245,11 +264,14 @@ export class InteractivePoints
 
         if(isFocused)
         {
-            // Glowing enter prompt tag
+            const isTouch = this.game.inputs?.touch?.isTouchDevice || this.game.isMobile
+            const promptText = isTouch ? 'TAP ✨' : 'PRESS [ENTER] ↵'
+
+            // Glowing enter/tap prompt tag
             ctx.fillStyle = '#fbbf24'
             ctx.font = 'bold 13px "Space Grotesk", sans-serif'
             ctx.textAlign = 'center'
-            ctx.fillText('PRESS [ENTER] ↵', 160, 26)
+            ctx.fillText(promptText, 160, 26)
 
             ctx.fillStyle = '#ffffff'
             ctx.font = 'bold 22px "Space Grotesk", sans-serif'
@@ -396,6 +418,11 @@ export class InteractivePoints
         if(closestItem && !this.isToastVisible)
         {
             this.isToastVisible = true
+            const isTouch = this.game.inputs?.touch?.isTouchDevice || this.game.isMobile
+            if(this.toastKeyEl)
+            {
+                this.toastKeyEl.textContent = isTouch ? 'TAP ✨' : 'ENTER ↵'
+            }
             if(this.game.inputs?.touch)
             {
                 this.game.inputs.touch.setInteractVisible(true, 'OPEN')

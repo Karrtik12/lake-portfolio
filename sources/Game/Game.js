@@ -173,6 +173,36 @@ export class Game
             }
         })
 
+        // Fullscreen toggle (both top-bar button and menu panel option)
+        const fsBtn = document.querySelector('.js-fullscreen-btn')
+        const fsToggle = document.querySelector('.js-fullscreen-toggle')
+
+        const toggleFullscreen = () =>
+        {
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement
+
+            if(!isFullscreen)
+            {
+                const el = document.documentElement
+                if(el.requestFullscreen) el.requestFullscreen()
+                else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen()
+                else if(el.mozRequestFullScreen) el.mozRequestFullScreen()
+                else if(el.msRequestFullscreen) el.msRequestFullscreen()
+            }
+            else
+            {
+                if(document.exitFullscreen) document.exitFullscreen()
+                else if(document.webkitExitFullscreen) document.webkitExitFullscreen()
+                else if(document.mozCancelFullScreen) document.mozCancelFullScreen()
+                else if(document.msExitFullscreen) document.msExitFullscreen()
+            }
+            menuOpen = false
+            if(menuPanel) menuPanel.style.display = 'none'
+        }
+
+        if(fsBtn) fsBtn.addEventListener('click', toggleFullscreen)
+        if(fsToggle) fsToggle.addEventListener('click', toggleFullscreen)
+
         // Reset position
         const resetBtn = document.querySelector('.js-reset-btn')
         if(resetBtn)
