@@ -56,19 +56,17 @@ export class Boat
     initPhysicsBody()
     {
         const bodyDesc = RAPIER.RigidBodyDesc.dynamic()
-            .setTranslation(this.position.x, 0.2, this.position.z)
+            .setTranslation(this.position.x, this.position.y, this.position.z)
             .setLinearDamping(this.linearDamping)
             .setAngularDamping(this.angularDamping)
             .lockRotations()
-            .enabledTranslations(true, false, true)
-            .setCcdEnabled(true)
 
         this.body = this.game.physics.world.createRigidBody(bodyDesc)
 
         // Solid boat hull collider
-        const colliderDesc = RAPIER.ColliderDesc.cuboid(1.2, 1.2, 2.4)
+        const colliderDesc = RAPIER.ColliderDesc.cuboid(1.1, 0.6, 2.3)
             .setRestitution(0.3)
-            .setFriction(0.4)
+            .setFriction(0.3)
             .setDensity(1.0)
 
         this.collider = this.game.physics.world.createCollider(colliderDesc, this.body)
@@ -157,12 +155,13 @@ export class Boat
             adjustedLinvel.normalize().multiplyScalar(currentTopSpeed)
         }
 
-        // Apply updated linear velocity to Rapier body
+        // Lock Y translation to water plane (y = 0.2)
         this.body.setLinvel({ x: adjustedLinvel.x, y: 0, z: adjustedLinvel.z }, true)
         const t = this.body.translation()
+        this.body.setTranslation({ x: t.x, y: 0.2, z: t.z }, true)
 
         // Update public state
-        this.position.set(t.x, 0.2, t.z)
+        this.position.set(t.x, t.y, t.z)
         this.velocity.set(adjustedLinvel.x, 0, adjustedLinvel.z)
         this.speed = forwardSpeed
     }
