@@ -331,28 +331,35 @@ html, body {
     to { opacity: 0; transform: translateX(-50%) translateY(20px); }
 }
 
-/* --- Zone Title --- */
+/* --- Zone Title (Centered in the middle of the screen) --- */
 .zone-title {
     position: fixed;
-    top: 2rem;
+    top: 45%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     z-index: 40;
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .zone-title-text {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-size: clamp(1.35rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.85);
-    padding: 0.5rem 1.5rem;
-    background: rgba(10, 14, 23, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    backdrop-filter: blur(12px);
+    color: #ffffff;
+    padding: 0.75rem 2.2rem;
+    background: rgba(10, 16, 30, 0.78);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 16px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.65), 0 0 30px rgba(56, 189, 248, 0.25);
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
 }
 
 /* --- Interactive Prompt Toast Button --- */
