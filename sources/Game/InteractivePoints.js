@@ -163,20 +163,22 @@ export class InteractivePoints
         texture.magFilter = THREE.LinearFilter
         item.labelTexture = texture
 
-        const labelMat = new THREE.SpriteMaterial({
+        const labelMat = new THREE.MeshBasicNodeMaterial({
             map: texture,
             transparent: true,
-            depthWrite: false,
-            depthTest: true
+            alphaTest: 0.5,
+            depthWrite: true,
+            depthTest: true,
+            fog: false
         })
 
-        // Standard 3D world sprite size (4:1 aspect ratio matching 512:128)
+        // Standard 3D world plane size (4:1 aspect ratio matching 512:128)
         item.baseScaleY = 0.75
         item.baseScaleX = 3.0
 
-        const label = new THREE.Sprite(labelMat)
+        const labelGeo = new THREE.PlaneGeometry(item.baseScaleX, item.baseScaleY)
+        const label = new THREE.Mesh(labelGeo, labelMat)
         label.position.set(0, 1.75, 0)
-        label.scale.set(item.baseScaleX, item.baseScaleY, 1.0)
         item.label = label
         item.group.add(label)
 
