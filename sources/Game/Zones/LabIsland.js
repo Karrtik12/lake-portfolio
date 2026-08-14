@@ -4,10 +4,9 @@ import { Game } from '../Game.js'
 import projectsData from '../../data/projects.js'
 
 /**
- * LabIsland — 3D interactive Lab workstation inspired by Bruno Simon's portfolio:
+ * LabIsland — 3D interactive Lab workstation showcase:
  * elevated on a large wooden deck stage platform with a central wooden display,
- * 3D purple navigation buttons, right-side project rack, left-side chalk instruction easel,
- * and foreground laboratory workbench props.
+ * 3D purple navigation buttons, right-side project rack, left-side chalk instruction easel.
  */
 export class LabIsland
 {
@@ -56,18 +55,7 @@ export class LabIsland
             flatShading: true
         })
 
-        this.cauldronMat = new THREE.MeshStandardNodeMaterial({
-            color: '#1e1b4b',
-            roughness: 0.6,
-            metalness: 0.5,
-            flatShading: true
-        })
-
-        this.liquidMat = new THREE.MeshBasicNodeMaterial({
-            color: '#c084fc'
-        })
-
-        this.projectRackMeshes = []
+        this.rackSlots = []
 
         this.createWorkstation3D()
         this.setupKeyboardAndMouseControls()
@@ -78,7 +66,7 @@ export class LabIsland
         this.group = new THREE.Group()
         this.group.position.copy(this.position)
 
-        // 1. Large Raised Wooden Deck Stage Platform (Ensures nothing hides inside island terrain)
+        // 1. Large Raised Wooden Deck Stage Platform
         this.createStagePlatform()
 
         // 2. Central Screen Canvas & Mesh
@@ -98,24 +86,24 @@ export class LabIsland
         this.group.add(this.screenMesh)
 
         // Screen Frame Structure
-        const frameTop = new THREE.Mesh(new THREE.BoxGeometry(7.8, 0.5, 0.5), this.woodMat)
-        frameTop.position.set(0, 6.05, 0.1)
-        frameTop.castShadow = true
+        const frameTop = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.35, 0.5), this.woodMat)
+        frameTop.position.set(0, 5.95, 0.2)
         this.group.add(frameTop)
 
+        const frameBottom = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.35, 0.5), this.woodMat)
+        frameBottom.position.set(0, 1.25, 0.2)
+        this.group.add(frameBottom)
+
         const postL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.2, 0.5), this.darkWoodMat)
-        postL.position.set(-3.85, 3.2, 0.1)
-        postL.castShadow = true
+        postL.position.set(-3.85, 3.1, 0.2)
         this.group.add(postL)
 
         const postR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 6.2, 0.5), this.darkWoodMat)
-        postR.position.set(3.85, 3.2, 0.1)
-        postR.castShadow = true
+        postR.position.set(3.85, 3.1, 0.2)
         this.group.add(postR)
 
-        // 3. 3D Purple Navigation Arrow Buttons on the Frame Sides
-        const arrowGeo = new THREE.BoxGeometry(0.85, 0.85, 0.5)
-
+        // 3. Bruno Simon Style 3D Purple Navigation Buttons
+        const arrowGeo = new THREE.BoxGeometry(0.8, 0.8, 0.5)
         this.prevArrowMesh = new THREE.Mesh(arrowGeo, this.purpleMat)
         this.prevArrowMesh.position.set(-3.85, 3.6, 0.45)
         this.group.add(this.prevArrowMesh)
@@ -124,14 +112,13 @@ export class LabIsland
         this.nextArrowMesh.position.set(3.85, 3.6, 0.45)
         this.group.add(this.nextArrowMesh)
 
-        // Add 3D arrow text labels onto the blocks
         this.addArrowLabel(this.prevArrowMesh, '◄')
         this.addArrowLabel(this.nextArrowMesh, '►')
 
-        // 4. Right-Side Project Selector Rack (Mounted on stage)
+        // 4. Right-Side Project Selector Rack
         this.createProjectRack()
 
-        // 5. Left-Side Chalkboard Instructions Easel (Mounted on stage)
+        // 5. Left-Side Chalkboard Instructions Easel
         this.createInstructionsChalkboard()
 
         this.game.scene.add(this.group)
@@ -139,7 +126,7 @@ export class LabIsland
         // Render initial screen canvas
         this.renderScreenCanvas()
 
-        // 7. Interactive Ground Diamond Marker for approaching Lab Island
+        // 6. Interactive Ground Diamond Marker for approaching Lab Island
         this.marker = this.game.interactivePoints.create(
             new THREE.Vector3(36, 0.8, -12.5),
             '🔬 View Lab Showcase (Enter)',
@@ -277,88 +264,123 @@ export class LabIsland
         post.position.set(1.5, 0, 0)
         rackGroup.add(post)
 
-        const total = projectsData.length
-        const cardHeight = 1.35
-        const cardSpacing = 1.55
-        const startY = (total - 1) * 0.5 * cardSpacing
+        // 3 Visible Slots: Top (prev), Center (active), Bottom (next)
+        const slotOffsets = [1.5, 0.0, -1.5]
+        const cardHeight = 1.3
+        const cardWidth = 2.6
 
-        for(let i = 0; i < total; i++)
+        for(let s = 0; s < 3; s++)
         {
-            const p = projectsData[i]
+            const yPos = slotOffsets[s]
 
-            // Canvas for card
             const canvas = document.createElement('canvas')
-            canvas.width = 400
+            canvas.width = 440
             canvas.height = 200
             const ctx = canvas.getContext('2d')
 
             const texture = new THREE.CanvasTexture(canvas)
             const cardMat = new THREE.MeshBasicNodeMaterial({ map: texture })
-            const cardMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.5, cardHeight), cardMat)
-
-            const yPos = startY - i * cardSpacing
+            const cardMesh = new THREE.Mesh(new THREE.PlaneGeometry(cardWidth, cardHeight), cardMat)
             cardMesh.position.set(0, yPos, 0.1)
 
             // Wooden border backing
-            const backMesh = new THREE.Mesh(new THREE.BoxGeometry(2.6, cardHeight + 0.1, 0.15), this.darkWoodMat)
+            const backMesh = new THREE.Mesh(new THREE.BoxGeometry(cardWidth + 0.1, cardHeight + 0.1, 0.15), this.darkWoodMat)
             backMesh.position.set(0, yPos, 0)
             rackGroup.add(backMesh)
-
             rackGroup.add(cardMesh)
 
-            const cardData = { mesh: cardMesh, canvas, ctx, texture, index: i, project: p }
-            this.projectRackMeshes.push(cardData)
+            const slotData = { mesh: cardMesh, canvas, ctx, texture, slotIndex: s, targetProjectIndex: 0 }
+            this.rackSlots.push(slotData)
 
-            this.renderRackCard(cardData, i === this.currentIndex)
-
-            // Clickable on raycursor
+            // Clickable
             this.game.rayCursor.addIntersect({
                 mesh: cardMesh,
                 active: true,
                 onClick: () =>
                 {
-                    this.currentIndex = i
+                    this.currentIndex = slotData.targetProjectIndex
                     this.updateAllViews()
                 },
                 onEnter: () => gsap.to(cardMesh.position, { z: 0.25, duration: 0.2 }),
-                onLeave: () =>
-                {
-                    if(this.currentIndex !== i) gsap.to(cardMesh.position, { z: 0.1, duration: 0.2 })
-                }
+                onLeave: () => gsap.to(cardMesh.position, { z: 0.1, duration: 0.2 })
             })
         }
 
         this.group.add(rackGroup)
+        this.updateRackSlots()
     }
 
-    renderRackCard(cardData, isActive)
+    updateRackSlots()
     {
-        const { ctx, texture, project, index } = cardData
-        ctx.clearRect(0, 0, 400, 200)
+        const total = projectsData.length
+        const prevIdx = (this.currentIndex - 1 + total) % total
+        const currIdx = this.currentIndex
+        const nextIdx = (this.currentIndex + 1) % total
+
+        const indices = [prevIdx, currIdx, nextIdx]
+
+        for(let s = 0; s < 3; s++)
+        {
+            const slot = this.rackSlots[s]
+            const pIdx = indices[s]
+            slot.targetProjectIndex = pIdx
+            const p = projectsData[pIdx]
+            const isActive = s === 1
+
+            this.renderRackCardSlot(slot, p, pIdx, isActive)
+        }
+    }
+
+    renderRackCardSlot(slot, project, projectIndex, isActive)
+    {
+        const { ctx, texture } = slot
+        ctx.clearRect(0, 0, 440, 200)
 
         // Background
-        ctx.fillStyle = isActive ? '#1e1b4b' : '#0f172a'
-        ctx.fillRect(0, 0, 400, 200)
+        ctx.fillStyle = isActive ? '#1e1b4b' : '#0b1120'
+        ctx.fillRect(0, 0, 440, 200)
 
         // Active border
-        ctx.strokeStyle = isActive ? '#c084fc' : 'rgba(255, 255, 255, 0.15)'
+        ctx.strokeStyle = isActive ? '#c084fc' : 'rgba(255, 255, 255, 0.12)'
         ctx.lineWidth = isActive ? 8 : 3
-        ctx.strokeRect(4, 4, 392, 192)
+        ctx.strokeRect(4, 4, 432, 192)
 
-        // Mini preview box / gradient
-        const grad = ctx.createLinearGradient(16, 16, 384, 184)
-        if(index === 0) { grad.addColorStop(0, '#0284c7'); grad.addColorStop(1, '#0f172a') }
-        else if(index === 1) { grad.addColorStop(0, '#7c3aed'); grad.addColorStop(1, '#0f172a') }
-        else { grad.addColorStop(0, '#059669'); grad.addColorStop(1, '#0f172a') }
-
+        // Gradient header banner
+        const grad = ctx.createLinearGradient(12, 12, 428, 100)
+        if(isActive)
+        {
+            grad.addColorStop(0, '#7c3aed')
+            grad.addColorStop(1, '#0284c7')
+        }
+        else
+        {
+            grad.addColorStop(0, '#1e293b')
+            grad.addColorStop(1, '#0f172a')
+        }
         ctx.fillStyle = grad
-        ctx.fillRect(16, 16, 368, 110)
+        ctx.fillRect(12, 12, 416, 96)
 
-        // Title banner
-        ctx.fillStyle = isActive ? '#fbbf24' : '#e2e8f0'
-        ctx.font = 'bold 24px "Space Grotesk", sans-serif'
+        // Category Tag
+        ctx.font = 'bold 16px "Space Grotesk", sans-serif'
+        ctx.fillStyle = isActive ? '#fbbf24' : '#94a3b8'
+        ctx.textAlign = 'left'
+        ctx.fillText(`[ ${project.category.toUpperCase()} ]`, 24, 42)
+
+        // Project Index Badge
+        ctx.textAlign = 'right'
+        ctx.fillText(`#${projectIndex + 1} / ${projectsData.length}`, 416, 42)
+
+        // Subtitle
+        ctx.font = '16px "Inter", sans-serif'
+        ctx.fillStyle = '#cbd5e1'
+        ctx.textAlign = 'left'
+        ctx.fillText(project.subtitle || '', 24, 78)
+
+        // Main Title (bottom row)
+        ctx.fillStyle = isActive ? '#ffffff' : '#94a3b8'
+        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
         ctx.textAlign = 'center'
-        ctx.fillText(project.title.toUpperCase(), 200, 165)
+        ctx.fillText(project.title.toUpperCase(), 220, 155)
 
         texture.needsUpdate = true
     }
@@ -367,28 +389,24 @@ export class LabIsland
     {
         const easelGroup = new THREE.Group()
         easelGroup.position.set(-5.6, 2.2, 0.8)
-        easelGroup.rotation.y = 0.35 // Angled towards viewer
+        easelGroup.rotation.y = 0.35
 
-        // Chalkboard canvas
         const canvas = document.createElement('canvas')
         canvas.width = 400
         canvas.height = 550
         const ctx = canvas.getContext('2d')
 
-        // Blackboard background
         ctx.fillStyle = '#1c242b'
         ctx.fillRect(0, 0, 400, 550)
 
-        // Chalk border
         ctx.strokeStyle = '#cbd5e1'
         ctx.lineWidth = 4
         ctx.strokeRect(10, 10, 380, 530)
 
-        // Instructions chalk text
         ctx.fillStyle = '#f8fafc'
         ctx.textAlign = 'left'
 
-        ctx.font = 'bold 36px "Space Grotesk", sans-serif'
+        ctx.font = 'bold 34px "Space Grotesk", sans-serif'
         ctx.fillText('NEXT  ► [D]', 40, 90)
         ctx.fillText('PREV  ◄ [A]', 40, 180)
         ctx.fillText('SCROLL  ↕', 40, 270)
@@ -396,7 +414,7 @@ export class LabIsland
         ctx.fillStyle = '#f87171'
         ctx.fillText('EXIT  [ESC]', 40, 380)
 
-        ctx.font = '20px "Space Grotesk", sans-serif'
+        ctx.font = '19px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#94a3b8'
         ctx.fillText('Click cards to select', 40, 470)
 
@@ -430,73 +448,17 @@ export class LabIsland
         this.group.add(easelGroup)
     }
 
-    createWorkbenchProps()
-    {
-        const tableGroup = new THREE.Group()
-        tableGroup.position.set(0, 0.75, 1.2) // Mounted firmly on top of stage
-
-        // Wooden table top
-        const tableTop = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.35, 1.6), this.woodMat)
-        tableTop.position.set(0, 1.0, 0)
-        tableTop.castShadow = true
-        tableGroup.add(tableTop)
-
-        // Table legs
-        const legGeo = new THREE.CylinderGeometry(0.14, 0.16, 1.0, 6)
-        const legPositions = [
-            [-3.3, 0.5, -0.6],
-            [ 3.3, 0.5, -0.6],
-            [-3.3, 0.5,  0.6],
-            [ 3.3, 0.5,  0.6]
-        ]
-        for(const pos of legPositions)
-        {
-            const leg = new THREE.Mesh(legGeo, this.darkWoodMat)
-            leg.position.set(pos[0], pos[1], pos[2])
-            tableGroup.add(leg)
-        }
-
-        // 1. Glowing Cauldron / Alchemical Pot
-        const cauldron = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55, 1), this.cauldronMat)
-        cauldron.position.set(-2.2, 1.45, 0.1)
-        cauldron.scale.set(1.0, 0.85, 1.0)
-        tableGroup.add(cauldron)
-
-        const liquid = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.1, 12), this.liquidMat)
-        liquid.position.set(-2.2, 1.7, 0.1)
-        tableGroup.add(liquid)
-
-        // 2. Tech Books / Research Journals
-        const book1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.14, 1.0), new THREE.MeshStandardNodeMaterial({ color: '#d97706', roughness: 0.7 }))
-        book1.position.set(0.8, 1.25, 0.1)
-        book1.rotation.y = 0.2
-        tableGroup.add(book1)
-
-        const book2 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.9), new THREE.MeshStandardNodeMaterial({ color: '#2563eb', roughness: 0.7 }))
-        book2.position.set(0.9, 1.38, 0.05)
-        book2.rotation.y = -0.15
-        tableGroup.add(book2)
-
-        // 3. Candle & Flask Props
-        const flaskGeo = new THREE.ConeGeometry(0.2, 0.45, 8)
-        const flask = new THREE.Mesh(flaskGeo, new THREE.MeshStandardNodeMaterial({ color: '#10b981', roughness: 0.3 }))
-        flask.position.set(2.4, 1.4, 0.2)
-        tableGroup.add(flask)
-
-        this.group.add(tableGroup)
-    }
-
     renderScreenCanvas()
     {
         const ctx = this.screenCtx
         const p = projectsData[this.currentIndex]
 
         // Background
-        ctx.fillStyle = '#0a0e17'
+        ctx.fillStyle = '#070b14'
         ctx.fillRect(0, 0, 1200, 750)
 
-        // Procedural Starfield & Cyber Grid
-        ctx.strokeStyle = 'rgba(147, 51, 234, 0.12)'
+        // Subtle Cyber Matrix Grid
+        ctx.strokeStyle = 'rgba(147, 51, 234, 0.10)'
         ctx.lineWidth = 1
         for(let x = 0; x < 1200; x += 40)
         {
@@ -507,90 +469,115 @@ export class LabIsland
             ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1200, y); ctx.stroke()
         }
 
-        // Center Ambient Glow
-        const radGrad = ctx.createRadialGradient(600, 360, 20, 600, 360, 450)
-        radGrad.addColorStop(0, 'rgba(147, 51, 234, 0.22)')
-        radGrad.addColorStop(1, 'rgba(10, 14, 23, 0.0)')
+        // Center Ambient Radial Glow
+        const radGrad = ctx.createRadialGradient(600, 360, 20, 600, 360, 480)
+        radGrad.addColorStop(0, 'rgba(147, 51, 234, 0.18)')
+        radGrad.addColorStop(1, 'rgba(7, 11, 20, 0.0)')
         ctx.fillStyle = radGrad
         ctx.fillRect(0, 0, 1200, 750)
 
         // Outer Neon Border
         ctx.strokeStyle = '#c084fc'
-        ctx.lineWidth = 8
+        ctx.lineWidth = 6
         ctx.strokeRect(16, 16, 1168, 718)
 
-        // Project Title
-        ctx.font = 'bold 54px "Space Grotesk", sans-serif'
+        // Header Category & Date Bar
+        ctx.font = 'bold 20px "Space Grotesk", sans-serif'
+        ctx.fillStyle = '#38bdf8'
+        ctx.textAlign = 'left'
+        ctx.fillText(`⚡ [ ${p.category.toUpperCase()} ]`, 80, 70)
+
+        ctx.textAlign = 'right'
+        ctx.fillStyle = '#fbbf24'
+        ctx.fillText(`${p.date}  •  [ ${this.currentIndex + 1} / ${projectsData.length} ]`, 1120, 70)
+
+        // Main Project Title
+        ctx.font = 'bold 44px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#ffffff'
-        ctx.textAlign = 'center'
-        ctx.fillText(p.title.toUpperCase(), 600, 110)
+        ctx.textAlign = 'left'
+        ctx.fillText(p.title.toUpperCase(), 80, 125)
 
-        // URL / Repo Badge Pill (Bruno Simon style)
-        const repoText = 'GITHUB.COM/KARRTIK12'
-        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
-        const pillWidth = ctx.measureText(repoText).width + 48
+        // Subtitle / Architecture Focus
+        ctx.font = '22px "Inter", sans-serif'
+        ctx.fillStyle = '#a855f7'
+        ctx.fillText(p.subtitle || '', 80, 160)
 
-        ctx.fillStyle = '#9333ea'
-        ctx.beginPath()
-        ctx.roundRect(600 - pillWidth * 0.5, 140, pillWidth, 42, 21)
-        ctx.fill()
-
-        ctx.fillStyle = '#ffffff'
-        ctx.fillText(repoText, 600, 169)
-
-        // Central Graphic / Architecture Preview Window
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'
-        ctx.strokeStyle = 'rgba(192, 132, 252, 0.4)'
+        // Central Architecture Preview Window
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)'
+        ctx.strokeStyle = 'rgba(192, 132, 252, 0.45)'
         ctx.lineWidth = 2
         ctx.beginPath()
-        ctx.roundRect(80, 210, 1040, 230, 16)
+        ctx.roundRect(80, 185, 1040, 285, 16)
         ctx.fill()
         ctx.stroke()
 
-        // Description inside preview window
-        ctx.font = '24px "Inter", sans-serif'
-        ctx.fillStyle = '#e2e8f0'
+        // Short Project Description inside Preview Window
+        ctx.font = '23px "Inter", sans-serif'
+        ctx.fillStyle = '#f1f5f9'
         ctx.textAlign = 'left'
-        this.wrapText(ctx, p.description, 110, 270, 980, 40)
+        this.wrapText(ctx, p.description, 110, 235, 980, 36)
+
+        // Key Engineering Highlights / Metric Badges inside Preview Window
+        const highlights = p.highlights || []
+        let hX = 110
+        for(const h of highlights)
+        {
+            ctx.font = 'bold 18px "Space Grotesk", sans-serif'
+            const hWidth = ctx.measureText(h).width + 32
+
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.15)'
+            ctx.strokeStyle = '#38bdf8'
+            ctx.lineWidth = 1.5
+            ctx.beginPath()
+            ctx.roundRect(hX, 395, hWidth, 42, 10)
+            ctx.fill()
+            ctx.stroke()
+
+            ctx.fillStyle = '#e0f2fe'
+            ctx.textAlign = 'center'
+            ctx.fillText(h, hX + hWidth * 0.5, 422)
+
+            hX += hWidth + 14
+        }
 
         // Tech Stack Badges
-        ctx.font = 'bold 20px "Space Grotesk", sans-serif'
-        ctx.fillStyle = '#a855f7'
+        ctx.font = 'bold 19px "Space Grotesk", sans-serif'
+        ctx.fillStyle = '#c084fc'
         ctx.textAlign = 'left'
-        ctx.fillText('STACK // TECHNOLOGIES', 80, 490)
+        ctx.fillText('TECH STACK // TOOLS & FRAMEWORKS', 80, 505)
 
         let badgeX = 80
-        for(const tech of p.stack || [])
+        for(const tech of (p.stack || []).slice(0, 6))
         {
-            ctx.font = 'bold 22px "Space Grotesk", sans-serif'
+            ctx.font = 'bold 19px "Space Grotesk", sans-serif'
             const textWidth = ctx.measureText(tech).width
-            const badgeWidth = textWidth + 36
+            const badgeWidth = textWidth + 30
 
             ctx.fillStyle = 'rgba(147, 51, 234, 0.25)'
-            ctx.strokeStyle = '#c084fc'
-            ctx.lineWidth = 2
+            ctx.strokeStyle = '#a855f7'
+            ctx.lineWidth = 1.5
             ctx.beginPath()
-            ctx.roundRect(badgeX, 515, badgeWidth, 48, 12)
+            ctx.roundRect(badgeX, 525, badgeWidth, 42, 10)
             ctx.fill()
             ctx.stroke()
 
             ctx.fillStyle = '#f3e8ff'
             ctx.textAlign = 'center'
-            ctx.fillText(tech, badgeX + badgeWidth * 0.5, 547)
+            ctx.fillText(tech, badgeX + badgeWidth * 0.5, 552)
 
-            badgeX += badgeWidth + 18
+            badgeX += badgeWidth + 12
         }
 
-        // Footer Bar: Instructions
+        // Footer Navigation Bar
         ctx.fillStyle = 'rgba(15, 23, 42, 0.95)'
         ctx.beginPath()
-        ctx.roundRect(80, 620, 1040, 75, 16)
+        ctx.roundRect(80, 615, 1040, 75, 16)
         ctx.fill()
 
         ctx.font = 'bold 22px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#c084fc'
         ctx.textAlign = 'center'
-        ctx.fillText('◄ [A] PREV PROJECT  •  [D] NEXT PROJECT ►  •  [ESC / S] EXIT TO BOAT', 600, 668)
+        ctx.fillText(`◄ [A] PREV  •  PROJECT [ ${this.currentIndex + 1} / ${projectsData.length} ]  •  [D] NEXT ►  •  [ESC] RETURN`, 600, 662)
 
         this.screenTexture.needsUpdate = true
     }
@@ -621,10 +608,7 @@ export class LabIsland
     updateAllViews()
     {
         this.renderScreenCanvas()
-        for(const cardData of this.projectRackMeshes)
-        {
-            this.renderRackCard(cardData, cardData.index === this.currentIndex)
-        }
+        this.updateRackSlots()
         if(this.game.audio) this.game.audio.playChime()
     }
 
@@ -647,7 +631,7 @@ export class LabIsland
         this.lastFocusTime = performance.now()
 
         // Calculate exact distance to comfortably frame the ENTIRE workstation:
-        // Left chalkboard instructions, central display screen, right project carousel rack, and workbench props
+        // Left chalkboard instructions, central display screen, right project carousel rack
         const camera = this.game.view.camera
         const aspect = camera.aspect || (window.innerWidth / window.innerHeight)
         const fovRad = THREE.MathUtils.degToRad(camera.fov || 45)
@@ -680,50 +664,53 @@ export class LabIsland
         if(!this.isFocused) return
         this.isFocused = false
 
-        // Restore HUD elements
+        // Smoothly exit cinematic mode back to boat follow
+        this.game.view.exitCinematic()
+
+        // Restore HUD overlays
         if(this.minimapEl) this.minimapEl.style.display = 'block'
         if(this.menuToggleEl) this.menuToggleEl.style.display = 'flex'
-
-        // Smoothly zoom out camera and return to boat follow mode
-        this.game.view.exitCinematic()
+        if(this.zoneTitleEl) this.zoneTitleEl.style.display = 'block'
     }
 
     setupKeyboardAndMouseControls()
     {
-        // Global escape listener
-        this.game.inputs.events.on('escape', () =>
-        {
-            if(this.isFocused)
-            {
-                this.exitFocus()
-            }
-        })
-
-        // Wheel scroll pagination
-        window.addEventListener('wheel', (e) =>
-        {
-            if(!this.isFocused) return
-            if(e.deltaY > 20) this.next()
-            else if(e.deltaY < -20) this.prev()
-        }, { passive: true })
-
-        // Keyboard listeners
+        // Keyboard controls
         window.addEventListener('keydown', (e) =>
         {
             if(!this.isFocused) return
 
-            if(e.code === 'KeyA' || e.code === 'ArrowLeft')
+            switch(e.code)
             {
-                this.prev()
-            }
-            else if(e.code === 'KeyD' || e.code === 'ArrowRight')
-            {
-                this.next()
-            }
-            else if(e.code === 'Escape' || e.code === 'KeyS' || e.code === 'ArrowDown' || e.code === 'KeyW' || e.code === 'ArrowUp')
-            {
-                this.exitFocus()
+                case 'KeyD':
+                case 'ArrowRight':
+                    this.next()
+                    break
+
+                case 'KeyA':
+                case 'ArrowLeft':
+                    this.prev()
+                    break
+
+                case 'Escape':
+                case 'KeyS':
+                case 'KeyW':
+                case 'ArrowUp':
+                case 'ArrowDown':
+                    this.exitFocus()
+                    break
             }
         })
+
+        // Wheel scroll cycling on billboard
+        window.addEventListener('wheel', (e) =>
+        {
+            if(!this.isFocused) return
+            if(Math.abs(e.deltaY) > 30)
+            {
+                if(e.deltaY > 0) this.next()
+                else this.prev()
+            }
+        }, { passive: true })
     }
 }
