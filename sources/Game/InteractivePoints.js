@@ -57,6 +57,11 @@ export class InteractivePoints
         // Listen for keyboard interact (Enter / Space)
         this.game.inputs.events.on('interact', () =>
         {
+            if(this.game.labIsland && this.game.labIsland.isFocused)
+            {
+                return
+            }
+
             if(this.activeItem)
             {
                 this.activeItem.interact()

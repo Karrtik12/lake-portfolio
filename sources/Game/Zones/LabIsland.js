@@ -406,17 +406,20 @@ export class LabIsland
         ctx.fillStyle = '#f8fafc'
         ctx.textAlign = 'left'
 
-        ctx.font = 'bold 34px "Space Grotesk", sans-serif'
-        ctx.fillText('NEXT  ► [D]', 40, 90)
-        ctx.fillText('PREV  ◄ [A]', 40, 180)
-        ctx.fillText('SCROLL  ↕', 40, 270)
+        ctx.font = 'bold 30px "Space Grotesk", sans-serif'
+        ctx.fillText('NEXT   ► [D]', 40, 80)
+        ctx.fillText('PREV   ◄ [A]', 40, 155)
+
+        ctx.fillStyle = '#38bdf8'
+        ctx.fillText('REPO   ↗ [ENTER]', 40, 235)
 
         ctx.fillStyle = '#f87171'
-        ctx.fillText('EXIT  [ESC]', 40, 380)
+        ctx.fillText('EXIT   [ESC]', 40, 315)
 
         ctx.font = '19px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#94a3b8'
-        ctx.fillText('Click cards to select', 40, 470)
+        ctx.fillText('Scroll ↕ to cycle projects', 40, 430)
+        ctx.fillText('Click cards to select', 40, 475)
 
         const chalkTex = new THREE.CanvasTexture(canvas)
         const boardMat = new THREE.MeshBasicNodeMaterial({ map: chalkTex })
@@ -481,7 +484,7 @@ export class LabIsland
         ctx.lineWidth = 6
         ctx.strokeRect(16, 16, 1168, 718)
 
-        // Header Category & Date Bar
+        // Header Category Bar (Dates Removed)
         ctx.font = 'bold 20px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#38bdf8'
         ctx.textAlign = 'left'
@@ -489,7 +492,7 @@ export class LabIsland
 
         ctx.textAlign = 'right'
         ctx.fillStyle = '#fbbf24'
-        ctx.fillText(`${p.date}  •  [ ${this.currentIndex + 1} / ${projectsData.length} ]`, 1120, 70)
+        ctx.fillText(`PROJECT [ ${this.currentIndex + 1} / ${projectsData.length} ]`, 1120, 70)
 
         // Main Project Title
         ctx.font = 'bold 44px "Space Grotesk", sans-serif'
@@ -501,6 +504,20 @@ export class LabIsland
         ctx.font = '22px "Inter", sans-serif'
         ctx.fillStyle = '#a855f7'
         ctx.fillText(p.subtitle || '', 80, 160)
+
+        // Interactive Repo Button in Header
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.2)'
+        ctx.strokeStyle = '#38bdf8'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.roundRect(830, 115, 290, 44, 22)
+        ctx.fill()
+        ctx.stroke()
+
+        ctx.font = 'bold 18px "Space Grotesk", sans-serif'
+        ctx.fillStyle = '#e0f2fe'
+        ctx.textAlign = 'center'
+        ctx.fillText('[ENTER ↵] OPEN REPO ↗', 975, 143)
 
         // Central Architecture Preview Window
         ctx.fillStyle = 'rgba(15, 23, 42, 0.88)'
@@ -574,10 +591,10 @@ export class LabIsland
         ctx.roundRect(80, 615, 1040, 75, 16)
         ctx.fill()
 
-        ctx.font = 'bold 22px "Space Grotesk", sans-serif'
+        ctx.font = 'bold 21px "Space Grotesk", sans-serif'
         ctx.fillStyle = '#c084fc'
         ctx.textAlign = 'center'
-        ctx.fillText(`◄ [A] PREV  •  PROJECT [ ${this.currentIndex + 1} / ${projectsData.length} ]  •  [D] NEXT ►  •  [ESC] RETURN`, 600, 662)
+        ctx.fillText(`◄ [A] PREV  •  [ENTER ↵] OPEN GITHUB REPOSITORY ↗  •  [D] NEXT ►  •  [ESC] RETURN`, 600, 662)
 
         this.screenTexture.needsUpdate = true
     }
@@ -603,6 +620,14 @@ export class LabIsland
             }
         }
         ctx.fillText(line, x, y)
+    }
+
+    openCurrentProjectRepo()
+    {
+        const p = projectsData[this.currentIndex]
+        const url = p.link || 'https://github.com/Karrtik12?tab=repositories'
+        window.open(url, '_blank', 'noopener,noreferrer')
+        if(this.game.audio) this.game.audio.playChime()
     }
 
     updateAllViews()
@@ -682,6 +707,13 @@ export class LabIsland
 
             switch(e.code)
             {
+                case 'Enter':
+                case 'NumpadEnter':
+                case 'Space':
+                    e.preventDefault()
+                    this.openCurrentProjectRepo()
+                    break
+
                 case 'KeyD':
                 case 'ArrowRight':
                     this.next()
