@@ -1,65 +1,33 @@
 export default {
     name: 'Kartikaye Chaturvedi',
-    title: 'Systems, DevOps & AI/ML Engineer',
-    role: 'M.Tech Computer Technology @ IIT Delhi',
+    tagline: 'Systems Engineer • Explorer • Horology Enthusiast',
     location: 'Prayagraj / New Delhi, India',
     email: 'kartikayechaturvedi12@gmail.com',
     github: 'https://github.com/Karrtik12',
     linkedin: 'https://www.linkedin.com/in/kartikaye-chaturvedi/',
 
-    education: [
+    chapters: [
         {
-            institution: 'Indian Institute of Technology Delhi (IIT Delhi)',
-            degree: 'Master of Technology in Computer Technology (C.Tech)',
-            duration: '2025 – Present',
-            grade: 'GPA: 8.11'
+            title: 'Roots on the Move',
+            badge: '🌱 The Early Days',
+            text: `I’m originally from Prayagraj, but if you ask where I grew up, the answer is a little bit of everywhere. Because of my father’s job, my childhood was spent packing boxes and moving across various cities throughout Uttar Pradesh and Madhya Pradesh. Adapting to new environments every few years taught me to be observant, embrace change, and find comfort in the unfamiliar. More than anything, it instilled in me an insatiable curiosity about people and a lifelong aspiration to travel and experience the world.`
         },
         {
-            institution: 'Thapar Institute of Engineering and Technology',
-            degree: 'Bachelor of Engineering in Electronics & Computer (ENC)',
-            duration: '2019 – 2023',
-            grade: 'GPA: 8.67'
+            title: 'The Engineering Craft',
+            badge: '⚡ The Journey',
+            text: `That curiosity naturally evolved into a fascination with technology. I pursued my Bachelor’s in Electronics & Computer Engineering (ENC) at Thapar Institute, where I fell in love with understanding how software speaks directly to hardware. After working in industry as a Software Engineer at AIEdge Technologies—architecting APIs, enterprise dashboards, Flutter mobile apps, and managing cloud infrastructure—I wanted to push deeper into foundational compute. Today, I am pursuing my Master’s (M.Tech) in Computer Technology (C.Tech) at IIT Delhi.`
+        },
+        {
+            title: 'What Excites Me',
+            badge: '🔬 Systems & AI',
+            text: `I get genuinely energized working at the intersection of Systems Engineering, Cloud-Native DevOps, and AI/ML. Whether I’m crafting lightweight POSIX compatibility layers on bare-metal ARM Cortex microcontrollers, engineering autonomous multi-cloud Kubernetes resilience operators, or modeling complex spatiotemporal Graph Neural Networks for supply chain intelligence—I love tearing complex systems apart and rebuilding them to be robust, performant, and resilient.`
+        },
+        {
+            title: 'Life Outside the Terminal',
+            badge: '✨ Beyond The Screen',
+            text: `When I’m away from the keyboard, you’ll usually find me lifting at the gym, diving deep into the world of horology (I’m endlessly fascinated by mechanical watchmaking and watch collecting), or listening to music. I’m also a big consumer of pop culture—stand-up comedy specials, cinema, television series, and good storytelling. If there's an intricate craft, a witty joke, or an inspiring adventure involved, count me in.`
         }
     ],
 
-    experience: [
-        {
-            role: 'Software Engineer',
-            company: 'AIEdge Technologies',
-            duration: '2023 – 2024',
-            summary: 'Architected high-throughput RESTful APIs, enterprise CRM dashboards (Angular), 3 interconnected Flutter production apps on Play Store, and managed AWS EC2 cloud infrastructure.'
-        }
-    ],
-
-    technicalFocus: [
-        'Systems Engineering & POSIX OS Layers (C/C++, FreeRTOS, LwIP)',
-        'Cloud-Native DevOps & SRE (Kubernetes, Docker, Prometheus, Grafana, Locust)',
-        'Applied AI/ML & Deep Learning (PyTorch, GNNs, HeteroData, VLM Security)',
-        'High-Performance Backend & Distributed Systems (Python, FastAPI, Node.js)'
-    ],
-
-    story: `Originally from Prayagraj, I spent my childhood living across diverse cities in Uttar Pradesh and Madhya Pradesh following my father's job. This itinerant upbringing gave me an adaptable perspective and an insatiable curiosity for exploring new places and understanding how complex things work from the ground up.`,
-
-    interests: [
-        {
-            icon: '⌚',
-            title: 'Horology & Watches',
-            desc: 'Passionate about mechanical timepieces, watch craftsmanship, and building an intentional watch collection.'
-        },
-        {
-            icon: '🏋️',
-            title: 'Fitness & Gym',
-            desc: 'Dedicated to regular strength training, discipline, and physical fitness.'
-        },
-        {
-            icon: '✈️',
-            title: 'World Travel',
-            desc: 'Love discovering new cities, landscapes, and cultures with an aspiration to travel across the globe.'
-        },
-        {
-            icon: '🍿',
-            title: 'Pop Culture & Comedy',
-            desc: 'Big enthusiast of stand-up comedy specials, cinema, television series, music, and pop culture.'
-        }
-    ]
+    closing: `Always up for chatting about systems architecture, horology, travel stories, or a great movie recommendation. Let's connect!`
 }
