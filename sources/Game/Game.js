@@ -224,44 +224,163 @@ export class Game
         // Setup menu toggle
         this.setupMenu()
 
-        // Show 10-second onboarding tour hint banner
-        this.showTourHint()
+        // Start 4-step onboarding tour
+        this.startOnboardingTour()
 
         console.log('🚤 Lake Portfolio — started')
     }
 
-    showTourHint()
+    startOnboardingTour()
     {
-        const tourHint = document.querySelector('.js-tour-hint')
-        const tourClose = document.querySelector('.js-tour-hint-close')
-        if(!tourHint) return
+        const popover = document.querySelector('.js-tour-popover')
+        const badge = document.querySelector('.js-tour-step-badge')
+        const title = document.querySelector('.js-tour-title')
+        const desc = document.querySelector('.js-tour-desc')
+        const nextBtn = document.querySelector('.js-tour-next-btn')
+        const skipBtn = document.querySelector('.js-tour-skip')
+        const arrow = document.querySelector('.js-tour-arrow')
 
-        tourHint.style.display = 'flex'
-        tourHint.classList.remove('is-hidden')
+        if(!popover || !nextBtn) return
 
-        let isDismissed = false
-        const dismiss = () =>
-        {
-            if(isDismissed) return
-            isDismissed = true
-            tourHint.classList.add('is-hidden')
-            setTimeout(() =>
+        const tourSteps = [
             {
-                tourHint.style.display = 'none'
-            }, 650)
+                selector: '.js-minimap',
+                stepText: '1 of 4',
+                title: '🗺️ Minimap Radar',
+                desc: 'Click the radar to expand the lake map and fast travel to any island.',
+                btnText: 'Next ➔'
+            },
+            {
+                selector: '.js-celestial-widget',
+                stepText: '2 of 4',
+                title: '☀️ Day & Night Cycle',
+                desc: 'Click the dial to advance time across Dawn, High Noon, Sunset, and Moonlight.',
+                btnText: 'Next ➔'
+            },
+            {
+                selector: '.js-fullscreen-btn',
+                stepText: '3 of 4',
+                title: '⛶ Fullscreen Mode',
+                desc: 'Press [F] key or click here anytime to toggle full-screen view.',
+                btnText: 'Next ➔'
+            },
+            {
+                selector: '.js-menu-toggle',
+                stepText: '4 of 4',
+                title: '⚙️ Settings & Audio',
+                desc: 'Toggle background audio, adjust graphics quality, or reset boat position.',
+                btnText: 'Done ✓'
+            }
+        ]
+
+        let currentStepIndex = 0
+        let currentTargetEl = null
+
+        const positionPopover = (targetEl) =>
+        {
+            if(!targetEl) return
+            const rect = targetEl.getBoundingClientRect()
+            const popoverWidth = 295
+
+            let top = rect.bottom + 12
+            let left = rect.left
+
+            // If target is near right edge (like top-right buttons), align popover to target's right edge
+            if(rect.left > window.innerWidth * 0.5)
+            {
+                left = Math.max(12, rect.right - popoverWidth)
+                if(arrow)
+                {
+                    const arrowLeft = rect.left + rect.width * 0.5 - left - 8
+                    arrow.style.left = `${Math.max(16, Math.min(arrowLeft, popoverWidth - 24))}px`
+                }
+            }
+            else
+            {
+                left = Math.max(12, rect.left)
+                if(arrow)
+                {
+                    const arrowLeft = rect.left + rect.width * 0.5 - left - 8
+                    arrow.style.left = `${Math.max(16, Math.min(arrowLeft, popoverWidth - 24))}px`
+                }
+            }
+
+            popover.style.top = `${top}px`
+            popover.style.left = `${left}px`
         }
 
-        // Auto dismiss exactly after 10 seconds
-        const dismissTimer = setTimeout(dismiss, 10000)
-
-        if(tourClose)
+        const renderStep = (index) =>
         {
-            tourClose.addEventListener('click', () =>
+            if(index >= tourSteps.length)
             {
-                clearTimeout(dismissTimer)
-                dismiss()
-            }, { once: true })
+                closeTour()
+                return
+            }
+
+            if(currentTargetEl)
+            {
+                currentTargetEl.classList.remove('is-tour-highlighted')
+            }
+
+            const step = tourSteps[index]
+            currentTargetEl = document.querySelector(step.selector)
+
+            if(currentTargetEl)
+            {
+                currentTargetEl.classList.add('is-tour-highlighted')
+                positionPopover(currentTargetEl)
+            }
+
+            badge.textContent = step.stepText
+            title.textContent = step.title
+            desc.textContent = step.desc
+            nextBtn.textContent = step.btnText
+
+            if(index === tourSteps.length - 1)
+            {
+                nextBtn.classList.add('is-done')
+            }
+            else
+            {
+                nextBtn.classList.remove('is-done')
+            }
+
+            popover.style.display = 'flex'
         }
+
+        const closeTour = () =>
+        {
+            if(currentTargetEl)
+            {
+                currentTargetEl.classList.remove('is-tour-highlighted')
+            }
+            popover.style.display = 'none'
+        }
+
+        nextBtn.onclick = () =>
+        {
+            currentStepIndex++
+            renderStep(currentStepIndex)
+        }
+
+        if(skipBtn)
+        {
+            skipBtn.onclick = closeTour
+        }
+
+        window.addEventListener('resize', () =>
+        {
+            if(popover.style.display !== 'none' && currentTargetEl)
+            {
+                positionPopover(currentTargetEl)
+            }
+        })
+
+        // Initial render after brief start delay
+        setTimeout(() =>
+        {
+            renderStep(0)
+        }, 300)
     }
 
     setupMenu()

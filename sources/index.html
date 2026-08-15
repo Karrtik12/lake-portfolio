@@ -162,26 +162,20 @@
             </div>
         </div>
 
-        <!-- 10-Second Initial Exploration Tour Hint Banner -->
-        <div class="tour-hint js-tour-hint" style="display: none;">
-            <div class="tour-hint-content">
-                <div class="tour-hint-item">
-                    <span class="tour-hint-icon">🗺️</span>
-                    <span class="tour-hint-text"><strong>Minimap:</strong> Click to expand & fast travel</span>
-                </div>
-                <div class="tour-hint-separator">•</div>
-                <div class="tour-hint-item">
-                    <span class="tour-hint-icon">☀️</span>
-                    <span class="tour-hint-text"><strong>Time Cycle:</strong> Click to cycle Day / Night</span>
-                </div>
-                <div class="tour-hint-separator">•</div>
-                <div class="tour-hint-item">
-                    <span class="tour-hint-icon">⚙️</span>
-                    <span class="tour-hint-text"><strong>Settings:</strong> Fullscreen <strong>[F]</strong> & Audio</span>
-                </div>
+        <!-- Interactive 4-Step Onboarding Tour Tooltip -->
+        <div class="tour-popover js-tour-popover" style="display: none;">
+            <div class="tour-popover-arrow js-tour-arrow"></div>
+            <div class="tour-popover-header">
+                <span class="tour-popover-step js-tour-step-badge">1 of 4</span>
+                <button class="tour-popover-skip js-tour-skip" title="Skip Tour">Skip</button>
             </div>
-            <button class="tour-hint-close js-tour-hint-close" aria-label="Dismiss">✕</button>
-            <div class="tour-hint-progress js-tour-hint-progress"></div>
+            <div class="tour-popover-body">
+                <h4 class="tour-popover-title js-tour-title">🗺️ Minimap Radar</h4>
+                <p class="tour-popover-desc js-tour-desc">Click the radar to expand the full lake map and fast travel to any island.</p>
+            </div>
+            <div class="tour-popover-footer">
+                <button class="tour-popover-btn js-tour-next-btn">Next ➔</button>
+            </div>
         </div>
 
         <!-- Mobile Touchscreen Controls -->
