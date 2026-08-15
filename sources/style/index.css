@@ -710,13 +710,15 @@ html, body {
 }
 
 /* --- Top Bar: Fullscreen & Settings --- */
-/* --- Celestial Sun/Moon Phase Widget --- */
+/* --- Celestial Sun/Moon Phase Widget (Fixed Size & 100% Clickable) --- */
 .celestial-widget {
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    padding: 0.3rem 0.95rem 0.3rem 0.4rem;
+    padding: 0.3rem 0.85rem 0.3rem 0.4rem;
     height: 42px;
+    width: 148px;
+    flex-shrink: 0;
     background: rgba(10, 16, 30, 0.82);
     border: 1px solid rgba(56, 189, 248, 0.35);
     border-radius: 24px;
@@ -727,6 +729,11 @@ html, body {
     user-select: none;
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
     touch-action: manipulation;
+    pointer-events: auto;
+}
+
+.celestial-widget * {
+    pointer-events: none; /* Guarantees whole element is clickable anywhere */
 }
 
 .celestial-widget:hover {
@@ -740,6 +747,7 @@ html, body {
     position: relative;
     width: 32px;
     height: 32px;
+    flex-shrink: 0;
     border-radius: 50%;
     overflow: hidden;
     background: radial-gradient(circle, #0f172a 0%, #020617 100%);
@@ -809,6 +817,9 @@ html, body {
     flex-direction: column;
     gap: 0.1rem;
     line-height: 1.1;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .celestial-phase {
@@ -818,6 +829,9 @@ html, body {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #38bdf8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: color 0.3s ease;
 }
 
@@ -826,11 +840,131 @@ html, body {
     font-size: 0.65rem;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 @keyframes sunPulse {
     0%, 100% { transform: scale(1); opacity: 0.7; }
     50% { transform: scale(1.3); opacity: 1; }
+}
+
+/* --- 10-Second Onboarding Tour Hint Banner --- */
+.tour-hint {
+    position: fixed;
+    top: 4.8rem;
+    top: max(4.8rem, calc(env(safe-area-inset-top) + 3.8rem));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.55rem 1.2rem 0.65rem 1.3rem;
+    background: rgba(10, 16, 30, 0.88);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 30px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.2);
+    overflow: hidden;
+    pointer-events: auto;
+    animation: slideDownFade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tour-hint-content {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    white-space: nowrap;
+}
+
+.tour-hint-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.tour-hint-item strong {
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+.tour-hint-icon {
+    font-size: 0.95rem;
+}
+
+.tour-hint-separator {
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 0.75rem;
+}
+
+.tour-hint-close {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+    margin-left: 0.2rem;
+}
+
+.tour-hint-close:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+    transform: scale(1.1);
+}
+
+.tour-hint-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    transform-origin: left;
+    animation: tourCountdown 10s linear forwards;
+}
+
+@keyframes slideDownFade {
+    from { opacity: 0; transform: translate(-50%, -15px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes tourCountdown {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+
+@media (max-width: 900px) {
+    .tour-hint {
+        width: 92vw;
+        max-width: 480px;
+        padding: 0.5rem 0.9rem;
+    }
+    .tour-hint-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+        white-space: normal;
+    }
+    .tour-hint-separator {
+        display: none;
+    }
+    .tour-hint-item {
+        font-size: 0.74rem;
+    }
 }
 
 .top-bar {

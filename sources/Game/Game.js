@@ -224,7 +224,53 @@ export class Game
         // Setup menu toggle
         this.setupMenu()
 
+        // Show 10-second onboarding tour hint banner
+        this.showTourHint()
+
         console.log('🚤 Lake Portfolio — started')
+    }
+
+    showTourHint()
+    {
+        const tourHint = document.querySelector('.js-tour-hint')
+        const tourClose = document.querySelector('.js-tour-hint-close')
+        if(!tourHint) return
+
+        tourHint.style.display = 'flex'
+        tourHint.style.opacity = '1'
+
+        let dismissTimeout = setTimeout(() =>
+        {
+            this.dismissTourHint()
+        }, 10000)
+
+        const dismiss = () =>
+        {
+            clearTimeout(dismissTimeout)
+            this.dismissTourHint()
+        }
+
+        if(tourClose)
+        {
+            tourClose.addEventListener('click', dismiss, { once: true })
+        }
+    }
+
+    dismissTourHint()
+    {
+        const tourHint = document.querySelector('.js-tour-hint')
+        if(!tourHint) return
+
+        gsap.to(tourHint, {
+            opacity: 0,
+            y: -15,
+            duration: 0.5,
+            ease: 'power2.in',
+            onComplete: () =>
+            {
+                tourHint.style.display = 'none'
+            }
+        })
     }
 
     setupMenu()
