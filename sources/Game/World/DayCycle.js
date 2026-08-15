@@ -10,8 +10,9 @@ import { Game } from '../Game.js'
  * - High Noon (Brilliant Turquoise Sun)
  * - Golden Hour / Afternoon
  * - Dusk (Vibrant Crimson-Magenta Sunset)
- * - Twilight
  * - Midnight (Mystical Moonlight & Deep Starry Sky)
+ * 
+ * Features an interactive, aesthetic Sun/Moon celestial phase HUD widget.
  */
 export class DayCycle
 {
@@ -21,7 +22,7 @@ export class DayCycle
 
         // Full cycle duration in seconds (480s = 8 minutes per full natural 24h cycle)
         this.cycleDuration = 480.0
-        this.timeOfDay = 0.32 // Starts at bright vibrant morning/noon
+        this.timeOfDay = 0.35 // Starts at bright vibrant noon
         this.isPaused = false
 
         // Celestial trajectory configuration
@@ -33,8 +34,9 @@ export class DayCycle
             {
                 time: 0.00, // Dawn / Sunrise (East)
                 name: 'Dawn',
+                phaseColor: '#f97316',
                 sunColor: new THREE.Color('#ff8c5a'),
-                sunIntensity: 1.5,
+                sunIntensity: 1.6,
                 fillColor: new THREE.Color('#93c5fd'),
                 fillIntensity: 0.5,
                 hemiSky: new THREE.Color('#fda4af'),
@@ -49,6 +51,7 @@ export class DayCycle
             {
                 time: 0.18, // Morning
                 name: 'Morning',
+                phaseColor: '#38bdf8',
                 sunColor: new THREE.Color('#fff2db'),
                 sunIntensity: 2.3,
                 fillColor: new THREE.Color('#67e8f9'),
@@ -64,7 +67,8 @@ export class DayCycle
             },
             {
                 time: 0.35, // High Noon (Overhead Sun)
-                name: 'Noon',
+                name: 'High Noon',
+                phaseColor: '#fbbf24',
                 sunColor: new THREE.Color('#ffffff'),
                 sunIntensity: 2.7,
                 fillColor: new THREE.Color('#7dd3fc'),
@@ -81,6 +85,7 @@ export class DayCycle
             {
                 time: 0.55, // Golden Hour / Afternoon
                 name: 'Golden Hour',
+                phaseColor: '#f59e0b',
                 sunColor: new THREE.Color('#f59e0b'),
                 sunIntensity: 2.2,
                 fillColor: new THREE.Color('#f472b6'),
@@ -97,6 +102,7 @@ export class DayCycle
             {
                 time: 0.68, // Dusk / Sunset (West)
                 name: 'Sunset',
+                phaseColor: '#ec4899',
                 sunColor: new THREE.Color('#fb7185'),
                 sunIntensity: 1.8,
                 fillColor: new THREE.Color('#c084fc'),
@@ -111,8 +117,9 @@ export class DayCycle
                 waterSurface: new THREE.Color('#0284c7')
             },
             {
-                time: 0.82, // Night / Midnight Moon (Glowing mystical moonlight)
-                name: 'Night',
+                time: 0.82, // Night / Midnight Moon
+                name: 'Midnight',
+                phaseColor: '#a78bfa',
                 sunColor: new THREE.Color('#93c5fd'), // Glowing pale moonlight
                 sunIntensity: 1.5,
                 fillColor: new THREE.Color('#38bdf8'),
@@ -139,11 +146,47 @@ export class DayCycle
         this.currentWaterDeep = new THREE.Color()
         this.currentWaterSurface = new THREE.Color()
 
+        // UI Elements
+        this.setupUI()
+
         // Update loop
         this.game.ticker.events.on('tick', (delta) =>
         {
             this.update(delta)
         })
+    }
+
+    setupUI()
+    {
+        this.celestialWidget = document.querySelector('.js-celestial-widget')
+        this.celestialTrack = document.querySelector('.js-celestial-track')
+        this.celestialPhaseText = document.querySelector('.js-celestial-phase')
+        this.celestialTimeText = document.querySelector('.js-celestial-time')
+
+        if(this.celestialWidget)
+        {
+            this.celestialWidget.addEventListener('click', () =>
+            {
+                this.advanceToNextPhase()
+            })
+        }
+    }
+
+    advanceToNextPhase()
+    {
+        // Find next keyframe stop
+        let nextIndex = 0
+        for(let i = 0; i < this.keyframes.length; i++)
+        {
+            if(this.keyframes[i].time > this.timeOfDay + 0.02)
+            {
+                nextIndex = i
+                break
+            }
+        }
+
+        const targetTime = this.keyframes[nextIndex].time
+        this.timeOfDay = targetTime
     }
 
     update(delta = 0.016)
@@ -240,6 +283,26 @@ export class DayCycle
         {
             if(lake.deepColor) lake.deepColor.value.copy(this.currentWaterDeep)
             if(lake.surfaceColor) lake.surfaceColor.value.copy(this.currentWaterSurface)
+        }
+
+        // 6. Update Celestial Sun/Moon HUD Widget
+        if(this.celestialTrack && this.celestialPhaseText && this.celestialTimeText)
+        {
+            // Rotate celestial orbit track (360 deg)
+            const dialRotation = this.timeOfDay * 360.0 - 126.0
+            this.celestialTrack.style.transform = `rotate(${dialRotation}deg)`
+
+            // Compute 12-hour clock
+            const totalHours = (this.timeOfDay * 24.0 + 6.0) % 24.0 // 0.0 = 6:00 AM (Sunrise)
+            const hour = Math.floor(totalHours)
+            const minute = Math.floor((totalHours % 1) * 60.0)
+            const period = hour >= 12 ? 'PM' : 'AM'
+            const displayHour = hour % 12 === 0 ? 12 : hour % 12
+            const timeStr = `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`
+
+            this.celestialPhaseText.textContent = prevFrame.name
+            this.celestialPhaseText.style.color = prevFrame.phaseColor || '#38bdf8'
+            this.celestialTimeText.textContent = timeStr
         }
     }
 }

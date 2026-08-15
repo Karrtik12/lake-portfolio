@@ -129,8 +129,28 @@
             </div>
         </div>
 
-        <!-- Top Bar: Fullscreen & Settings -->
+        <!-- Top Bar: Celestial Clock, Fullscreen & Settings -->
         <div class="top-bar">
+            <!-- Celestial Sun/Moon Phase Widget -->
+            <div class="celestial-widget js-celestial-widget" title="Click to cycle time of day">
+                <div class="celestial-dial">
+                    <div class="celestial-track js-celestial-track">
+                        <div class="celestial-sun">
+                            <div class="sun-core"></div>
+                            <div class="sun-glow"></div>
+                        </div>
+                        <div class="celestial-moon">
+                            <div class="moon-core"></div>
+                            <div class="moon-crescent"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="celestial-info">
+                    <span class="celestial-phase js-celestial-phase">HIGH NOON</span>
+                    <span class="celestial-time js-celestial-time">12:00 PM</span>
+                </div>
+            </div>
+
             <button class="top-btn js-fullscreen-btn" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">⛶</button>
             <div class="menu">
                 <button class="menu-toggle js-menu-toggle" aria-label="Settings">⚙</button>
