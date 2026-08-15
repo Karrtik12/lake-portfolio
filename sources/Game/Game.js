@@ -237,40 +237,31 @@ export class Game
         if(!tourHint) return
 
         tourHint.style.display = 'flex'
-        tourHint.style.opacity = '1'
+        tourHint.classList.remove('is-hidden')
 
-        let dismissTimeout = setTimeout(() =>
-        {
-            this.dismissTourHint()
-        }, 10000)
-
+        let isDismissed = false
         const dismiss = () =>
         {
-            clearTimeout(dismissTimeout)
-            this.dismissTourHint()
+            if(isDismissed) return
+            isDismissed = true
+            tourHint.classList.add('is-hidden')
+            setTimeout(() =>
+            {
+                tourHint.style.display = 'none'
+            }, 650)
         }
+
+        // Auto dismiss exactly after 10 seconds
+        const dismissTimer = setTimeout(dismiss, 10000)
 
         if(tourClose)
         {
-            tourClose.addEventListener('click', dismiss, { once: true })
-        }
-    }
-
-    dismissTourHint()
-    {
-        const tourHint = document.querySelector('.js-tour-hint')
-        if(!tourHint) return
-
-        gsap.to(tourHint, {
-            opacity: 0,
-            y: -15,
-            duration: 0.5,
-            ease: 'power2.in',
-            onComplete: () =>
+            tourClose.addEventListener('click', () =>
             {
-                tourHint.style.display = 'none'
-            }
-        })
+                clearTimeout(dismissTimer)
+                dismiss()
+            }, { once: true })
+        }
     }
 
     setupMenu()

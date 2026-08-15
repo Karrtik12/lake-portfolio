@@ -871,6 +871,14 @@ html, body {
     overflow: hidden;
     pointer-events: auto;
     animation: slideDownFade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
+}
+
+.tour-hint.is-hidden {
+    opacity: 0 !important;
+    transform: translate(-50%, -20px) !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }
 
 .tour-hint-content {
