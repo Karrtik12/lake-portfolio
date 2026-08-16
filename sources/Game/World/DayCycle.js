@@ -22,19 +22,36 @@ export class DayCycle
 
         // Full cycle duration in seconds (480s = 8 minutes per full natural 24h cycle)
         this.cycleDuration = 480.0
-        this.timeOfDay = 0.35 // Starts at bright vibrant noon
+        this.timeOfDay = 0.50 // Starts at bright vibrant High Noon (12:00 PM)
         this.isPaused = false
 
         // Celestial trajectory configuration
         this.sunOrbitRadius = 190.0
         this.sunHeight = 150.0
 
-        // Keyframe Presets
+        // Keyframe Presets (Normalized 24-hour timeline where 0.0 = 12:00 AM, 0.5 = 12:00 PM)
         this.keyframes = [
             {
-                time: 0.00, // Dawn / Sunrise (East)
+                time: 0.00, // 12:00 AM - 5:30 AM (Midnight / Deep Night)
+                name: 'Midnight',
+                phaseColor: '#a78bfa',
+                sunColor: new THREE.Color('#93c5fd'), // Glowing pale moonlight
+                sunIntensity: 1.5,
+                fillColor: new THREE.Color('#38bdf8'),
+                fillIntensity: 0.8,
+                hemiSky: new THREE.Color('#38bdf8'),
+                hemiGround: new THREE.Color('#0c2a4d'),
+                hemiIntensity: 1.15,
+                skyTop: new THREE.Color('#050c1e'),
+                skyHorizon: new THREE.Color('#1e3a8a'),
+                skyGround: new THREE.Color('#07152b'),
+                waterDeep: new THREE.Color('#062447'),
+                waterSurface: new THREE.Color('#0a4d80')
+            },
+            {
+                time: 0.23, // 5:30 AM - 7:00 AM (Dawn / Twilight Glow)
                 name: 'Dawn',
-                phaseColor: '#f97316',
+                phaseColor: '#fb923c',
                 sunColor: new THREE.Color('#ff8c5a'),
                 sunIntensity: 1.6,
                 fillColor: new THREE.Color('#93c5fd'),
@@ -49,7 +66,7 @@ export class DayCycle
                 waterSurface: new THREE.Color('#0d598a')
             },
             {
-                time: 0.18, // Morning
+                time: 0.29, // 7:00 AM - 11:30 AM (Crisp Daylight Morning)
                 name: 'Morning',
                 phaseColor: '#38bdf8',
                 sunColor: new THREE.Color('#fff2db'),
@@ -66,7 +83,7 @@ export class DayCycle
                 waterSurface: new THREE.Color('#06b6d4')
             },
             {
-                time: 0.35, // High Noon (Overhead Sun)
+                time: 0.48, // 11:30 AM - 1:30 PM (High Noon Overhead Sun)
                 name: 'High Noon',
                 phaseColor: '#fbbf24',
                 sunColor: new THREE.Color('#ffffff'),
@@ -83,7 +100,24 @@ export class DayCycle
                 waterSurface: new THREE.Color('#06b6d4')
             },
             {
-                time: 0.55, // Golden Hour / Afternoon
+                time: 0.56, // 1:30 PM - 5:30 PM (Warm Daylight Afternoon)
+                name: 'Afternoon',
+                phaseColor: '#60a5fa',
+                sunColor: new THREE.Color('#fff7ed'),
+                sunIntensity: 2.5,
+                fillColor: new THREE.Color('#bae6fd'),
+                fillIntensity: 0.65,
+                hemiSky: new THREE.Color('#bae6fd'),
+                hemiGround: new THREE.Color('#1e3a8a'),
+                hemiIntensity: 1.3,
+                skyTop: new THREE.Color('#0284c7'),
+                skyHorizon: new THREE.Color('#67e8f9'),
+                skyGround: new THREE.Color('#0c4a6e'),
+                waterDeep: new THREE.Color('#0284c7'),
+                waterSurface: new THREE.Color('#38bdf8')
+            },
+            {
+                time: 0.73, // 5:30 PM - 7:00 PM (Warm Golden Hour Rays)
                 name: 'Golden Hour',
                 phaseColor: '#f59e0b',
                 sunColor: new THREE.Color('#f59e0b'),
@@ -100,7 +134,7 @@ export class DayCycle
                 waterSurface: new THREE.Color('#0284c7')
             },
             {
-                time: 0.68, // Dusk / Sunset (West)
+                time: 0.79, // 7:00 PM - 8:30 PM (Crimson-Magenta Sunset)
                 name: 'Sunset',
                 phaseColor: '#ec4899',
                 sunColor: new THREE.Color('#fb7185'),
@@ -117,21 +151,21 @@ export class DayCycle
                 waterSurface: new THREE.Color('#0284c7')
             },
             {
-                time: 0.82, // Night / Midnight Moon
-                name: 'Midnight',
-                phaseColor: '#a78bfa',
-                sunColor: new THREE.Color('#93c5fd'), // Glowing pale moonlight
+                time: 0.85, // 8:30 PM - 12:00 AM (Deep Starry Night & Twilight)
+                name: 'Night',
+                phaseColor: '#818cf8',
+                sunColor: new THREE.Color('#93c5fd'),
                 sunIntensity: 1.5,
-                fillColor: new THREE.Color('#38bdf8'),
-                fillIntensity: 0.8,
-                hemiSky: new THREE.Color('#38bdf8'),
-                hemiGround: new THREE.Color('#0c2a4d'),
+                fillColor: new THREE.Color('#6366f1'),
+                fillIntensity: 0.75,
+                hemiSky: new THREE.Color('#4338ca'),
+                hemiGround: new THREE.Color('#0c1e3d'),
                 hemiIntensity: 1.15,
-                skyTop: new THREE.Color('#050c1e'),
-                skyHorizon: new THREE.Color('#1e3a8a'),
-                skyGround: new THREE.Color('#07152b'),
-                waterDeep: new THREE.Color('#062447'),
-                waterSurface: new THREE.Color('#0a4d80')
+                skyTop: new THREE.Color('#080d21'),
+                skyHorizon: new THREE.Color('#1e293b'),
+                skyGround: new THREE.Color('#070d1e'),
+                waterDeep: new THREE.Color('#04162e'),
+                waterSurface: new THREE.Color('#083358')
             }
         ]
 
@@ -289,11 +323,11 @@ export class DayCycle
         if(this.celestialTrack && this.celestialPhaseText && this.celestialTimeText)
         {
             // Rotate celestial orbit track (360 deg)
-            const dialRotation = this.timeOfDay * 360.0 - 126.0
+            const dialRotation = (this.timeOfDay - 0.5) * 360.0
             this.celestialTrack.style.transform = `rotate(${dialRotation}deg)`
 
             // Compute 12-hour clock
-            const totalHours = (this.timeOfDay * 24.0 + 6.0) % 24.0 // 0.0 = 6:00 AM (Sunrise)
+            const totalHours = (this.timeOfDay * 24.0) % 24.0
             const hour = Math.floor(totalHours)
             const minute = Math.floor((totalHours % 1) * 60.0)
             const period = hour >= 12 ? 'PM' : 'AM'
